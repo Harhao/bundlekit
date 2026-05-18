@@ -26,20 +26,19 @@ async function startBuildService() {
             ]
         });
         const command = args._[0];
-        await service.run(command, args, rawArgv);
 
-        // 增加 process 中断监听处理
+        // 在服务启动前注册进程信号处理，确保启动过程中也能优雅退出
         process.on('SIGINT', () => {
             logger.info('接收到 SIGINT 信号，正在优雅关闭服务...');
-            // 这里可以添加关闭服务的逻辑
             process.exit(0);
         });
 
         process.on('SIGTERM', () => {
             logger.info('接收到 SIGTERM 信号，正在优雅关闭服务...');
-            // 这里可以添加关闭服务的逻辑
             process.exit(0);
         });
+
+        await service.run(command, args, rawArgv);
        
     } catch (error) {
         // 增加打印错误信息

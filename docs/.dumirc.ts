@@ -10,6 +10,7 @@ export default defineConfig({
       { title: 'CLI', link: '/guide/cli' },
       { title: '打包器', link: '/guide/bundlers' },
       { title: '插件', link: '/guide/plugins' },
+      { title: '架构设计', link: '/guide/architecture' },
     ],
     footer: 'Open-source MIT Licensed | Copyright © Harhao ',
     socialLinks: {

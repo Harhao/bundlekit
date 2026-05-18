@@ -7,7 +7,6 @@ import {
     FileManager,
     Logger, 
     PackageManager,
-    Fetch, 
 } from "@devkit/shared-utils";
 import type {
     IBuildConfig,
@@ -62,8 +61,8 @@ export default class Service {
     }
 
     /**
-     * 获取构建配置
-     * @returns 构建配置
+     * 设置构建配置
+     * @param config 构建配置
      */
     public setBuildConfig(config: IBuildConfig) {
         if (!config) {
@@ -204,30 +203,17 @@ export default class Service {
     }
 
     /**
-     * 获取在线打包工具配置
-     * @param bundler 打包工具名称 vite/webpack/rollup/rspack/rolldown
+     * 获取打包工具注册表（bundler 名称 → 适配器包名）
      * @returns IBuildTools
      */
-    private async getOnlineBundlerConfig() {
-
-        const defaultBundlerPlugins = {
+    private getBundlerRegistry(): IBuildTools {
+        return {
             webpack: "@devkit/bundler-webpack",
             vite: "@devkit/bundler-vite",
             rollup: "@devkit/bundler-rollup",
             rspack: "@devkit/bundler-rspack",
             rolldown: "@devkit/bundler-rolldown",
         };
-
-        try {
-            const apiUrl = "https://cdn.example.com/devkit/bundler.json";
-            const fetch = new Fetch();
-            const res = await fetch.get(apiUrl);
-            const bundlerList = res.data as IBuildTools;
-            return bundlerList;
-        } catch (error) {
-            this.logger.log(`无法获取在线打包工具配置`, "构建工具");
-            return defaultBundlerPlugins;
-        }
     }
 
     /**
@@ -236,7 +222,7 @@ export default class Service {
      */
     public async startBuilder() {
 
-        const bundlerList = await this.getOnlineBundlerConfig() as IBuildTools;
+        const bundlerList = this.getBundlerRegistry();
         const finalBundler = this.buildConfig?.bundler || "vite";
         const packageName = bundlerList[finalBundler];
 
@@ -276,11 +262,9 @@ export default class Service {
      * @param rawArgv 原始命令参数 rawArgv = ['serve', '--open', '--port', '8080']
      */
     public async run(command: string, args: Record<string, unknown>, rawArgv: string[] = []) {
-        try {
-
-            if (this.isInitial) {
-                return;
-            }
+        if (this.isInitial) {
+            return;
+        }
 
             this.isInitial = true;
             // 解析项目内插件和内置插件处理  
@@ -325,9 +309,5 @@ export default class Service {
             const { fn } = runCommand;
 
             fn(args, rawArgv);
-
-        } catch (error) {
-            throw error;
-        }
     }
 }

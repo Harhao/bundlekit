@@ -1,16 +1,3 @@
 packages:
   - 'packages/*'
   - '!packages/__tests__' # 排除测试目录
-
-# 共享依赖配置
-shared-workspace-lockfile: true
-hoist: true
-hoist-pattern:
-  - '*eslint*'
-  - '*babel*'
-  - '*typescript*'
-
-# 依赖解析配置
-dependency-resolver:
-  prefer-workspace-packages: true
-  link-workspace-packages: true

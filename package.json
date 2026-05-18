@@ -12,8 +12,8 @@
     "build:webpack": "turbo run webpack:build",
     "build:vite": "turbo run vite:build",
     "build:rollup": "turbo run rollup:build",
-    "buld:rspack": "turbo run rspack:build",
-    "build:service": "turbo run service:build"
+    "build:service": "turbo run service:build",
+    "build:rspack": "turbo run rspack:build"
   },
   "author": "harhao@163.com",
   "license": "ISC",
