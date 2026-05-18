@@ -1,0 +1,18 @@
+schema: spec-driven
+
+context: |
+  Tech stack: TypeScript, pnpm workspace monorepo, Turborepo
+  Domain: Multi-bundler frontend build toolkit (abstracts Webpack, Vite, Rollup, Rspack)
+  Package manager: pnpm@8.15.9
+  Target: ES5, module ESNext
+  Style: No comments in code unless necessary
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always include a "Non-goals" section
+#     tasks:
+#       - Break tasks into chunks of max 2 hours

@@ -1,0 +1,32 @@
+export default {
+  mode: "development" as const,
+  bundler: "<%= bundler %>",
+  plugins: ["@devkit/plugin-react"],
+  config: {
+    development: {
+      target: "web" as const,
+      publicPath: "/",
+      entry: "src/index.tsx",
+      pages: [
+        { entry: "src/index.tsx", filename: "index.html", template: "public/index.html", inject: "body" },
+      ],
+      output: { dir: "dist", filename: "[name].js", formats: "umd" as const },
+      alias: { "@": "src" },
+      externals: [],
+      js: { sourcemap: true, minify: false, splitChunks: true },
+      devServer: { open: true, proxy: {}, https: false, host: "0.0.0.0", port: 3000 },
+    },
+    production: {
+      target: "web" as const,
+      publicPath: "/",
+      entry: "src/index.tsx",
+      pages: [
+        { entry: "src/index.tsx", filename: "index.html", template: "public/index.html", inject: "body" },
+      ],
+      output: { dir: "dist", filename: "[name].[contenthash:8].js", formats: "umd" as const },
+      alias: { "@": "src" },
+      externals: [],
+      js: { sourcemap: false, minify: true, splitChunks: true },
+    },
+  } as any,
+};

@@ -1,0 +1,30 @@
+{
+    "compilerOptions": {
+        "target": "es6",
+        "module": "esnext",
+        "outDir": "./dist",
+        "rootDir": ".",
+        "preserveConstEnums": true,
+        "removeComments": false,
+        "sourceMap": false,
+        "moduleResolution": "node",
+        "esModuleInterop": true,
+        "declaration": true,
+        "declarationDir": "./dist",
+        "paths": {
+            "@/*": [
+              "./lib/*"
+            ]
+          }
+    },
+    "include": [
+        "**/*.ts" // 全局匹配所有 .ts 文件
+    ],
+    "exclude": [
+        "node_modules",
+        "package.json",
+        "scripts",
+        "dist",
+        "tsconfig.json"
+    ]
+}

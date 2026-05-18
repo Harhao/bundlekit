@@ -1,0 +1,65 @@
+{
+  "name": "@devkit/service",
+  "version": "0.0.1",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "cjs": "./dist/index.cjs",
+  "description": "devkit-service is a tool for building and running applications using DevKit plugins.",
+  "bin": {
+    "ds": "./dist/index.mjs",
+    "devkit-service": "./dist/index.cjs"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "package.json",
+    "README.md"
+  ],
+  "scripts": {
+    "clean": "rimraf -rf ./dist",
+    "debug": "tsx ./index.ts serve --bundler webpack --mode production",
+    "service:build": "pnpm run clean && rollup -c ./scripts/rollup.config.js"
+  },
+  "dependencies": {
+    "@devkit/bundler-webpack": "workspace:*",
+    "@devkit/bundler-vite": "workspace:*",
+    "@devkit/bundler-rollup": "workspace:*",
+    "@devkit/bundler-rspack": "workspace:*",
+    "@devkit/shared-utils": "workspace:*",
+    "jiti": "^2.4.2",
+    "minimist": "^1.2.8",
+    "semver": "^7.7.1"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^11.1.6",
+    "@types/minimist": "^1.2.5",
+    "@types/semver": "^7.7.0",
+    "rimraf": "^5.0.1",
+    "rollup": "^4.13.0",
+    "tslib": "^2.6.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.8.2"
+  },
+  "keywords": [
+    "devkit-service",
+    "ds"
+  ],
+  "author": "harhao@163.com",
+  "license": "ISC",
+  "publishConfig": {
+    "registry": "https://npm.test.mail.163.com/"
+  },
+  "engines": {
+    "node": ">= 18.0.0"
+  }
+}

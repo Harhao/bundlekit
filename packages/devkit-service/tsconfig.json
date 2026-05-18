@@ -1,0 +1,32 @@
+{
+    "compilerOptions": {
+        "target": "es5",
+        "module": "esnext",
+        "outDir": "./dist",
+        "rootDir": "./",
+        "preserveConstEnums": true,
+        "removeComments": false,
+        "sourceMap": true,
+        "moduleResolution": "node",
+        "esModuleInterop": true,
+        "resolveJsonModule": true,
+        "importHelpers": true,
+        "paths": {
+            "@devkit/shared-utils": ["../devkit-shared-utils/lib/index.ts"],
+            "@devkit/bundler-vite": ["../devkit-bundler-vite/index.ts"],
+            "@devkit/bundler-webpack": ["../devkit-bundler-webpack/index.ts"],
+            "@devkit/bundler-rspack": ["../devkit-bundler-rspack/index.ts"],
+            "@devkit/bundler-rollup": ["../devkit-bundler-rollup/index.ts"],
+            "@devkit/bundler-rolldown": ["../devkit-bundler-rolldown/index.ts"]
+        }
+    },
+    "include": [
+        "lib/**/*.ts",
+        "index.ts"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist",
+        "scripts"
+    ]
+}

@@ -1,0 +1,1 @@
+export type IBuildEnv = "development" | "production" | "test" | "staging" | "gray";

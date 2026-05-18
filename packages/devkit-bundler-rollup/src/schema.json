@@ -1,0 +1,312 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Rollup Configuration Schema",
+    "type": "object",
+    "properties": {
+        "input": {
+            "oneOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            ]
+        },
+        "output": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "file": {
+                            "type": "string"
+                        },
+                        "format": {
+                            "type": "string",
+                            "enum": [
+                                "amd",
+                                "cjs",
+                                "es",
+                                "iife",
+                                "umd",
+                                "system"
+                            ]
+                        },
+                        "name": {
+                            "type": "string"
+                        },
+                        "globals": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "sourcemap": {
+                            "oneOf": [
+                                {
+                                    "type": "boolean"
+                                },
+                                {
+                                    "type": "string",
+                                    "enum": [
+                                        "inline",
+                                        "hidden"
+                                    ]
+                                }
+                            ]
+                        },
+                        "banner": {
+                            "type": "string"
+                        },
+                        "footer": {
+                            "type": "string"
+                        },
+                        "intro": {
+                            "type": "string"
+                        },
+                        "outro": {
+                            "type": "string"
+                        },
+                        "exports": {
+                            "type": "string",
+                            "enum": [
+                                "auto",
+                                "default",
+                                "named",
+                                "none"
+                            ]
+                        },
+                        "amd": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                },
+                                "define": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "paths": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "required": [
+                        "file",
+                        "format"
+                    ]
+                },
+                {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "file": {
+                                "type": "string"
+                            },
+                            "format": {
+                                "type": "string",
+                                "enum": [
+                                    "amd",
+                                    "cjs",
+                                    "es",
+                                    "iife",
+                                    "umd",
+                                    "system"
+                                ]
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "globals": {
+                                "type": "object",
+                                "additionalProperties": {
+                                    "type": "string"
+                                }
+                            },
+                            "sourcemap": {
+                                "oneOf": [
+                                    {
+                                        "type": "boolean"
+                                    },
+                                    {
+                                        "type": "string",
+                                        "enum": [
+                                            "inline",
+                                            "hidden"
+                                        ]
+                                    }
+                                ]
+                            },
+                            "banner": {
+                                "type": "string"
+                            },
+                            "footer": {
+                                "type": "string"
+                            },
+                            "intro": {
+                                "type": "string"
+                            },
+                            "outro": {
+                                "type": "string"
+                            },
+                            "exports": {
+                                "type": "string",
+                                "enum": [
+                                    "auto",
+                                    "default",
+                                    "named",
+                                    "none"
+                                ]
+                            },
+                            "amd": {
+                                "type": "object",
+                                "properties": {
+                                    "id": {
+                                        "type": "string"
+                                    },
+                                    "define": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "paths": {
+                                "type": "object",
+                                "additionalProperties": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "required": [
+                            "file",
+                            "format"
+                        ]
+                    }
+                }
+            ]
+        },
+        "plugins": {
+            "type": "array",
+            "items": {
+                "type": "object"
+            }
+        },
+        "external": {
+            "oneOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                {
+                    "type": "object",
+                    "instanceof": "RegExp"
+                }
+            ]
+        },
+        "watch": {
+            "type": "object",
+            "properties": {
+                "include": {
+                    "type": "string"
+                },
+                "exclude": {
+                    "type": "string"
+                },
+                "clearScreen": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "treeshake": {
+            "oneOf": [
+                {
+                    "type": "boolean"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "annotations": {
+                            "type": "boolean"
+                        },
+                        "moduleSideEffects": {
+                            "oneOf": [
+                                {
+                                    "type": "boolean"
+                                },
+                                {
+                                    "type": "string",
+                                    "enum": [
+                                        "no-external",
+                                        "no-treeshake"
+                                    ]
+                                }
+                            ]
+                        },
+                        "propertyReadSideEffects": {
+                            "type": "boolean"
+                        },
+                        "tryCatchDeoptimization": {
+                            "type": "boolean"
+                        },
+                        "unknownGlobalSideEffects": {
+                            "type": "boolean"
+                        }
+                    }
+                }
+            ]
+        },
+        "perf": {
+            "type": "boolean"
+        },
+        "onwarn": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "loc": {
+                    "type": "object",
+                    "properties": {
+                        "file": {
+                            "type": "string"
+                        },
+                        "line": {
+                            "type": "number"
+                        },
+                        "column": {
+                            "type": "number"
+                        }
+                    }
+                },
+                "frame": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "required": [
+        "input",
+        "output"
+    ],
+    "additionalProperties": false
+}

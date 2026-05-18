@@ -1,0 +1,22 @@
+{
+  "name": "@devkit/plugin-react",
+  "version": "1.0.0",
+  "description": "React plugin for devkit - provides React build support and project templates",
+  "main": "./index.ts",
+  "type": "module",
+  "scripts": {
+    "plugin:react:build": "echo 'plugin:react built successfully'"
+  },
+  "keywords": ["react", "devkit-plugin", "devkit"],
+  "author": "harhao@163.com",
+  "license": "ISC",
+  "dependencies": {
+    "@devkit/shared-utils": "workspace:*"
+  },
+  "publishConfig": {
+    "registry": "https://npm.test.mail.163.com/"
+  },
+  "engines": {
+    "node": ">= 18.0.0"
+  }
+}

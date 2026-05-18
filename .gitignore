@@ -1,0 +1,24 @@
+# See http://help.github.com/ignore-files/ for more about ignoring files.
+
+# dependencies
+npm
+node_modules
+
+# testing
+coverage
+
+# production
+build
+dist
+# example
+
+# misc
+.DS_Store
+.idea
+!.env
+*.log
+*.local
+!.vscode
+package-lock.json
+ssl_config.js
+.turbo

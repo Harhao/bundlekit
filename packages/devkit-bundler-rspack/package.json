@@ -1,0 +1,52 @@
+{
+  "name": "@devkit/bundler-rspack",
+  "version": "0.0.1",
+  "description": "A rspack bundler for @devkit/service",
+  "types": "./dist/index.d.ts",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "cjs": "./dist/index.cjs",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "clean": "rimraf ./dist",
+    "rspack:build": "pnpm run clean && rollup -c ./scripts/rollup.config.js"
+  },
+  "files": [
+    "dist",
+    "tsconfig.json",
+    "package.json"
+  ],
+  "keywords": [
+    "rspack",
+    "devkit-bundler",
+    "devkit-budnler-rspack",
+    "@devkit/bundler-rspack"
+  ],
+  "author": "harhao@163.com",
+  "license": "ISC",
+  "dependencies": {
+    "@devkit/shared-utils": "workspace:*",
+    "@rspack/core": "^1.3.4",
+    "@rspack/dev-server": "^1.1.1",
+    "schema-utils": "^4.3.0"
+  },
+  "devDependencies": {
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^12.1.2",
+    "rollup": "^4.40.0",
+    "tslib": "^2.6.2"
+  },
+  "publishConfig": {
+    "registry": "https://npm.test.mail.163.com/"
+  },
+  "engines": {
+    "node": ">= 18.0.0"
+  }
+}

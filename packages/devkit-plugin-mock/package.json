@@ -1,0 +1,23 @@
+{
+  "name": "@devkit/plugin-mock",
+  "version": "1.0.0",
+  "description": "Mock plugin for devkit - provides mock API server with proxy config",
+  "main": "./index.ts",
+  "type": "module",
+  "scripts": {
+    "plugin:mock:build": "echo 'plugin:mock built successfully'"
+  },
+  "keywords": ["mock", "devkit-plugin", "devkit"],
+  "author": "harhao@163.com",
+  "license": "ISC",
+  "dependencies": {
+    "@devkit/shared-utils": "workspace:*",
+    "json-server": "^0.17.3"
+  },
+  "publishConfig": {
+    "registry": "https://npm.test.mail.163.com/"
+  },
+  "engines": {
+    "node": ">= 18.0.0"
+  }
+}

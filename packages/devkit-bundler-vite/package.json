@@ -1,0 +1,55 @@
+{
+  "name": "@devkit/bundler-vite",
+  "version": "0.0.1",
+  "description": "A vite bundler for @devkit/service",
+  "types": "./dist/index.d.ts",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "cjs": "./dist/index.cjs",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "clean": "rimraf ./dist",
+    "postinstall": "pnpm patch-package || exit 0",
+    "vite:build": "pnpm run clean && rollup -c ./scripts/rollup.config.js"
+  },
+  "files": [
+    "dist",
+    "tsconfig.json",
+    "package.json"
+  ],
+  "dependencies": {
+    "@devkit/shared-utils": "workspace:*",
+    "@vitejs/plugin-react": "^4.4.1",
+    "@vitejs/plugin-vue": "^5.0.0",
+    "schema-utils": "^4.3.0",
+    "vite": "^4.3.9",
+    "vite-plugin-html": "^3.2.2"
+  },
+  "keywords": [
+    "vite",
+    "devkit-bundler",
+    "devkit-budnler-vite",
+    "@devkit/bundler-vite"
+  ],
+  "author": "harhao@163.com",
+  "license": "ISC",
+  "devDependencies": {
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^12.1.2",
+    "rollup": "^4.40.0",
+    "tslib": "^2.6.2"
+  },
+  "publishConfig": {
+    "registry": "https://npm.test.mail.163.com/"
+  },
+  "engines": {
+    "node": ">= 18.0.0"
+  }
+}

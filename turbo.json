@@ -1,0 +1,85 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "shared:build": {
+      "dependsOn": [],
+      "outputs": [
+        "packages/devkit-shared-utils/dist/**"
+      ]
+    },
+    "cli:build": {
+      "dependsOn": [
+        "shared:build"
+      ],
+      "outputs": [
+        "packages/devkit-cli/dist/**"
+      ]
+    },
+    "service:build": {
+      "dependsOn": [
+        "shared:build",
+        "webpack:build",
+        "vite:build",
+        "rollup:build",
+        "rspack:build"
+      ],
+      "outputs": [
+        "packages/devkit-service/dist/**"
+      ]
+    },
+    "webpack:build": {
+      "dependsOn": [
+        "shared:build"
+      ],
+      "outputs": [
+        "packages/devkit-bundler-webpack/dist/**"
+      ]
+    },
+    "vite:build": {
+      "dependsOn": [
+        "shared:build"
+      ],
+      "outputs": [
+        "packages/devkit-bundler-vite/dist/**"
+      ]
+    },
+    "rollup:build": {
+      "dependsOn": [
+        "shared:build"
+      ],
+      "outputs": [
+        "packages/devkit-bundler-rollup/dist/**"
+      ]
+    },
+    "rspack:build": {
+      "dependsOn": [
+        "shared:build"
+      ],
+      "outputs": [
+        "packages/devkit-bundler-rspack/dist/**"
+      ]
+    },
+    "plugin:mock:build": {
+      "dependsOn": [
+        "shared:build"
+      ],
+      "outputs": [
+        "packages/devkit-plugin-mock/dist/**"
+      ]
+    },
+    "request:build": {
+      "dependsOn": [],
+      "outputs": [
+        "packages/devkit-request/dist/**"
+      ]
+    },
+    "plugin:react:build": {
+      "dependsOn": [
+        "shared:build"
+      ],
+      "outputs": [
+        "packages/devkit-plugin-react/dist/**"
+      ]
+    }
+  }
+}

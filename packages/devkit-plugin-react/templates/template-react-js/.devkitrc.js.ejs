@@ -1,0 +1,16 @@
+export default {
+  mode: "development",
+  bundler: "<%= bundler %>",
+  config: {
+    development: {
+      target: "web",
+      publicPath: "/",
+      entry: "src/index.jsx",
+      output: { dir: "dist", filename: "[name].js", formats: "umd" },
+      alias: { "@": "src" },
+      externals: [],
+      js: { sourcemap: true, minify: false, splitChunks: true },
+      devServer: { open: true, proxy: {}, https: false, host: "0.0.0.0", port: 3000 },
+    },
+  },
+};

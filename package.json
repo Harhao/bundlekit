@@ -1,0 +1,40 @@
+{
+  "name": "bundle-devkit",
+  "version": "1.0.0",
+  "description": "cli,devkit",
+  "keywords": [
+    "devkit",
+    "cli",
+    "devkit-cli"
+  ],
+  "scripts": {
+    "build:shared": "turbo run shared:build",
+    "build:webpack": "turbo run webpack:build",
+    "build:vite": "turbo run vite:build",
+    "build:rollup": "turbo run rollup:build",
+    "buld:rspack": "turbo run rspack:build",
+    "build:service": "turbo run service:build"
+  },
+  "author": "harhao@163.com",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "autoprefixer": "^10.4.14",
+    "concurrently": "^8.2.0",
+    "cross-env": "^7.0.3",
+    "nodemon": "^3.1.0",
+    "ora": "^6.3.1",
+    "patch-package": "^8.0.0",
+    "postcss": "^8.4.38",
+    "rimraf": "^5.0.1",
+    "tsx": "^4.19.2",
+    "turbo": "^2.5.6",
+    "typescript": "^5.8.2"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "vite-plugin-html@3.2.2": "patches/vite-plugin-html@3.2.2.patch"
+    }
+  },
+  "packageManager": "pnpm@8.15.9"
+}

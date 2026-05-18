@@ -1,0 +1,30 @@
+{
+    "compilerOptions": {
+        "target": "es5",
+        "module": "esnext",
+        "outDir": "./dist",
+        "rootDir": "./src",
+        "preserveConstEnums": true,
+        "removeComments": false,
+        "sourceMap": false,
+        "moduleResolution": "node",
+        "esModuleInterop": true,
+        "declaration": true,
+        "declarationDir": "./dist",
+        "resolveJsonModule": true,
+        "noImplicitReturns": false,
+        "paths": {
+            "@devkit/shared-utils": ["../devkit-shared-utils/lib/index.ts"]
+        }
+    },
+    "include": [
+        "src/**/*.ts"
+    ],
+    "exclude": [
+        "node_modules",
+        "package.json",
+        "scripts",
+        "dist",
+        "tsconfig.json"
+    ]
+}

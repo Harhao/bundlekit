@@ -1,0 +1,31 @@
+{
+  "name": "<%= projectName %>",
+  "version": "1.0.0",
+  "description": "<%= description %>",
+  "scripts": {
+    "clean": "rimraf dist",
+    "dev": "devkit-service serve --bundler <%= bundler %> --mode development",
+    "build": "devkit-service build --bundler <%= bundler %> --mode production"<% if (bundler === 'vite') { %>,
+    "vite:dev": "npm run clean && devkit-service serve --bundler vite --mode development",
+    "vite:prod": "npm run clean && devkit-service build --bundler vite --mode production"<% } %><% if (bundler === 'webpack') { %>,
+    "webpack:dev": "npm run clean && devkit-service serve --bundler webpack --mode development",
+    "webpack:prod": "npm run clean && devkit-service build --bundler webpack --mode production"<% } %><% if (bundler === 'rspack') { %>,
+    "rspack:dev": "npm run clean && devkit-service serve --bundler rspack --mode development",
+    "rspack:prod": "npm run clean && devkit-service build --bundler rspack --mode production"<% } %><% if (bundler === 'rollup') { %>,
+    "rollup:dev": "npm run clean && devkit-service serve --bundler rollup --mode development",
+    "rollup:prod": "npm run clean && devkit-service build --bundler rollup --mode production"<% } %><% if (bundler === 'rolldown') { %>,
+    "rolldown:dev": "npm run clean && devkit-service serve --bundler rolldown --mode development",
+    "rolldown:prod": "npm run clean && devkit-service build --bundler rolldown --mode production"<% } %>
+  },
+  "dependencies": {
+    "vue": "^3.5.0"
+  },
+  "devDependencies": {
+    "@devkit/service": "^0.0.1",
+    "@devkit/plugin-vue": "^1.0.0",
+    "@vitejs/plugin-vue": "^5.2.0",
+    "typescript": "^5.8.0",
+    "rimraf": "^5.0.1",
+    "vue-tsc": "^2.2.0"
+  }
+}

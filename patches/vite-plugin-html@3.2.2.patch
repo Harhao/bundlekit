@@ -1,0 +1,26 @@
+diff --git a/dist/index.cjs b/dist/index.cjs
+index 160461da8c43125db9e9ef37cdf4a06a540fe00d..566f791d850b8c71d5ccc3f2abbb37c2b23529c0 100644
+--- a/dist/index.cjs
++++ b/dist/index.cjs
+@@ -164,7 +164,7 @@ function createPlugin(userOptions = {}) {
+       let indexPage = null;
+       for (const page of _pages) {
+         if (page.filename !== "index.html") {
+-          rewrites.push(createRewire(page.template, page, baseUrl, keys));
++          rewrites.push(createRewire(page.filename, page, baseUrl, keys));
+         } else {
+           indexPage = page;
+         }
+diff --git a/dist/index.mjs b/dist/index.mjs
+index 5495ed84e32dfd3180c65f51583cdb885f615e5f..235f83449eebbdc613fac48ba8aace7b82ae3019 100644
+--- a/dist/index.mjs
++++ b/dist/index.mjs
+@@ -139,7 +139,7 @@ function createPlugin(userOptions = {}) {
+       let indexPage = null;
+       for (const page of _pages) {
+         if (page.filename !== "index.html") {
+-          rewrites.push(createRewire(page.template, page, baseUrl, keys));
++          rewrites.push(createRewire(page.filename, page, baseUrl, keys));
+         } else {
+           indexPage = page;
+         }
