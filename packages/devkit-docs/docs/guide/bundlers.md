@@ -15,7 +15,12 @@ devkit 通过 `IBuildToolAdapter` 接口统一五种打包器，一套 `.devkitr
 | Vite | `@devkit/bundler-vite` | Vite 4 + 框架感知插件 |
 | Rollup | `@devkit/bundler-rollup` | Rollup 4 + Babel + TypeScript |
 | Rspack | `@devkit/bundler-rspack` | Rspack 1.x + SWC loader |
-| Rolldown | `@devkit/bundler-rolldown` | Rolldown 1.x（Rust 实现，实验性） |
+| Rolldown | `@devkit/bundler-rolldown` | Rolldown 1.x（Rust 实现，实验性，需手动安装） |
+
+> **Rolldown 额外安装：** `@devkit/bundler-rolldown` 未内置在 `@devkit/service` 的依赖中，使用前需单独安装：
+> ```bash
+> pnpm add -D @devkit/bundler-rolldown
+> ```
 
 ## 工作原理
 
@@ -36,7 +41,7 @@ IBuildConfig（抽象配置）
 interface IBuildToolAdapter<T = any> {
   name: string;
   transformConfig(config: IBuildConfig): T;
-  validateConfig(config: T, buildConfig?: IBuildConfig): boolean;
+  validateConfig?(config: T, buildConfig?: IBuildConfig): boolean;  // 可选
   run(config: T): Promise<void>;
 }
 ```

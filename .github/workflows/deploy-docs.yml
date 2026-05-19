@@ -1,4 +1,4 @@
-name: Deploy Dumi Docs
+name: deploy-umi-docs
 
 on:
   push:

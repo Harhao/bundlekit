@@ -50,11 +50,14 @@ export default {
 
 **PluginAPI 可用方法：**
 
-| 方法 | 说明 |
+| 方法 / 属性 | 说明 |
 |------|------|
 | `api.modifyBuildConfig(config)` | 更新构建配置 |
 | `api.registerCommand(name, opts, fn)` | 注册自定义 devkit-service 命令 |
 | `api.addBuildPackage(pkg)` | 安装额外 npm 包 |
+| `api.getCwd()` | 获取项目根目录（等同于 `process.cwd()`） |
+| `api.pluginName` | 当前插件的 ID（只读） |
+| `api.version` | devkit-service 的版本号（只读） |
 | `api.service.getBuildConfig()` | 读取当前构建配置 |
 | `api.service.logger` | 日志工具 |
 
@@ -100,7 +103,12 @@ plugins: ["@devkit/plugin-vue"]
 plugins: ["@devkit/plugin-mock"]
 ```
 
-**效果：**修改 `devServer.proxy`，将 `/api` 代理到本地 mock server（默认端口 4000）。
+**效果：** 注册一个 `plugin:mock` 命令，启动本地 Mock Server（默认端口 4000），并将 `/api` 流量通过 `devServer.proxy` 代理到该 Mock Server。
+
+```bash
+# 在开发服务启动前，先单独启动 Mock Server
+devkit-service plugin:mock
+```
 
 **mock 数据格式（`mock/db.json`）：**
 
@@ -220,7 +228,7 @@ generator 让 `devkit-cli add my-plugin` 能自动更新项目配置，并通过
 
 ```ts
 // my-plugin/generator/index.ts
-import { addPluginToConfig, PackageManager } from "@devkit/shared-utils";
+import { addPluginToConfig } from "@devkit/shared-utils";
 import type { IGeneratorAPI } from "@devkit/shared-utils";
 
 export default async function generate(
@@ -241,9 +249,9 @@ export default async function generate(
   ]);
 
   if (installRequest) {
-    const pm = new PackageManager({ context });
-    await pm.add("@devkit/request", { dev: false });
-    api.log("@devkit/request 已安装");
+    // 3. 声明依赖，CLI 统一安装（推荐方式）
+    api.addDependency("@devkit/request", "^1.0.0", false);
+    api.log("@devkit/request 已加入安装队列");
   }
 }
 ```
@@ -256,6 +264,8 @@ export interface IGeneratorAPI {
   prompt<T extends Record<string, any>>(questions: any[]): Promise<T>;
   /** 输出成功提示 */
   log(message: string): void;
+  /** 声明需要安装的 npm 依赖，CLI 统一安装 */
+  addDependency(pkgName: string, version?: string, dev?: boolean): void;
 }
 ```
 

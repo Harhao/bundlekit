@@ -86,6 +86,7 @@ export default config;
   target: "web",           // 构建目标: "web" | "node"
   publicPath: "/",         // 公共路径前缀
   entry: "src/index.tsx",  // 入口文件，支持 string | Record<string, string>
+  bundler: "vite",         // 环境级打包器（可覆盖顶层 bundler 字段）
   output: {
     dir: "dist",           // 输出目录
     filename: "[name].js", // 输出文件名，支持 contenthash 占位
@@ -96,6 +97,8 @@ export default config;
 ```
 
 > `framework` 字段由 `plugin-react` / `plugin-vue` 的 `apply()` 自动写入，各打包器据此加载对应 loader / 插件。通常无需手动填写。
+>
+> `bundler` 字段可在某个具体环境中单独覆盖顶层的 `bundler` 设置，例如开发环境用 vite，生产环境用 webpack。
 
 ### 多页面（pages）
 
@@ -134,6 +137,7 @@ css: {
   modules: true,                     // CSS Modules
   extract: true,                     // 提取 CSS 为独立文件
   loaders: ["css", "less", "sass"],  // 预处理器列表
+  preload: true,                     // 是否预加载 CSS（link rel="preload"）
 }
 ```
 
@@ -168,12 +172,16 @@ devServer: {
 
 ```ts
 inject: {
-  position: "head",    // 注入位置: "head" | "body"
+  position: "head",    // 全局注入位置: "head" | "body"
   js: [
     { src: "https://cdn.example.com/init.js", defer: true },
+    { src: "https://cdn.example.com/async.js", async: true },
+    { content: "window.__INIT__ = true;", defer: false },  // 内联脚本
   ],
   css: [
     { href: "https://cdn.example.com/style.css", type: "link" },
+    { href: "https://cdn.example.com/critical.css", preload: true },  // 预加载
+    { content: "body { margin: 0; }", type: "inline" },               // 内联样式
   ],
 }
 ```
