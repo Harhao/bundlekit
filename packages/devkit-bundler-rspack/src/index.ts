@@ -1,9 +1,12 @@
 import path from "path";
+import { fileURLToPath } from "url";
 import Rspack, { type RspackOptions } from "@rspack/core";
 import { RspackDevServer } from "@rspack/dev-server";
 
 import { FileManager, Logger, validateBuildConfig } from "@devkit/shared-utils";
 import type { IBuildConfig, IBuildToolAdapter, IService, IBuildEnv } from "@devkit/shared-utils";
+
+const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
 export default class RspackBundler implements IBuildToolAdapter<RspackOptions> {
 
@@ -140,6 +143,13 @@ export default class RspackBundler implements IBuildToolAdapter<RspackOptions> {
             },
             externals: rawEnvConfig.externals || [],
             target: rawEnvConfig.target || "web",
+            resolveLoader: {
+                modules: [
+                    path.resolve(__dirname, "../../devkit-bundler-webpack/node_modules"),
+                    path.resolve(this.context, "node_modules"),
+                    "node_modules",
+                ],
+            },
             devServer: {
                 hot: true,
                 https: devServerCfg.https || false,

@@ -93,8 +93,8 @@ export default class TransformConfig {
                 ]
             },
             externals: this.buildConfig.externals || [],
-            // 声明 es2020 让 webpack 自动把内部 TerserPlugin ecma 升到 2020，支持可选链等现代语法
-            target: this.buildConfig.target === 'node' ? 'node' : ['web', 'es2020'],
+            // 使用 'web' 保证 webpack 运行时代码兼容 ES5，避免 Terser 在处理运行时 chunk 时的语法解析问题
+            target: this.buildConfig.target === 'node' ? 'node' : 'web',
             resolve: this.transformResolve(),
             module: {
                 rules: [
@@ -107,7 +107,10 @@ export default class TransformConfig {
             ...this.transformPerformance(),
             plugins: [
                 ...defaultPlugins,
-                ...(this.buildConfig.css?.extract ? [new MiniCssExtractPlugin({ filename: buildOutput?.filename || '[name].css' })] : []),
+                ...(this.buildConfig.css?.extract ? [new MiniCssExtractPlugin({
+                    // CSS 文件名必须用 .css 后缀，不能复用 JS 的 filename 模板
+                    filename: (buildOutput?.filename || '[name].js').replace(/\.js$/, '.css'),
+                })] : []),
                 ...this.transformPlugins(),
                 ...this.transformFrameworkPlugins()
             ]
@@ -143,7 +146,6 @@ export default class TransformConfig {
             test: new RegExp('\\.(js|jsx|ts|tsx)$'),
             exclude: /node_modules/,
             use: [
-                { loader: 'thread-loader', options: { workers: os.cpus().length } },
                 { loader: 'ts-loader', options: { happyPackMode: true, compilerOptions: tsCompilerOptions, transpileOnly: true } },
             ],
         }];

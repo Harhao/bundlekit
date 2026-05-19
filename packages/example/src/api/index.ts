@@ -20,10 +20,6 @@ const http = createRequest({
       }
       return data;
     },
-    error: (err) => {
-      console.error("[HTTP Error]", err?.message);
-      return Promise.reject(err);
-    },
   },
 });
 

@@ -5,6 +5,7 @@ import commonjs from "@rollup/plugin-commonjs";
 import typescript from "@rollup/plugin-typescript";
 import babel from "@rollup/plugin-babel";
 import image from "@rollup/plugin-image";
+import json from "@rollup/plugin-json";
 import postcss from "rollup-plugin-postcss";
 
 import { Logger, validateBuildConfig, FileManager } from "@devkit/shared-utils";
@@ -58,6 +59,8 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
                 file: path.resolve(resolvedOutDir, filename),
                 format: rollupFormat,
                 sourcemap: rawEnvConfig.js?.sourcemap || false,
+                // UMD/IIFE 不支持代码分割，inlineDynamicImports 把动态 import 内联进单文件
+                inlineDynamicImports: ['umd', 'iife'].includes(rollupFormat),
             },
             plugins: [
                 // TODO: 需要安装 @rollup/plugin-alias 后启用 alias 配置
@@ -69,6 +72,7 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
                 // }),
                 nodeResolve({ extensions, preferBuiltins: false }),
                 commonjs(),
+                json(),
                 image(),
                 postcss({
                     extract: cssConfig.extract || false,
