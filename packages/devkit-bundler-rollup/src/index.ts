@@ -7,7 +7,7 @@ import babel from "@rollup/plugin-babel";
 import image from "@rollup/plugin-image";
 import postcss from "rollup-plugin-postcss";
 
-import { Logger, validateBuildConfig } from "@devkit/shared-utils";
+import { Logger, validateBuildConfig, FileManager } from "@devkit/shared-utils";
 import type { IBuildConfig, IBuildToolAdapter, IService, IBuildEnv } from "@devkit/shared-utils";
 
 export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
@@ -25,6 +25,7 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
     }
 
     public transformConfig(config: IBuildConfig): RollupOptions {
+        const extensions = [".js", ".jsx", ".ts", ".tsx"];
         const rawEnvConfig = (config.config?.[this.mode] || config.config?.development || {}) as Record<string, any>;
 
         const entry = rawEnvConfig.entry

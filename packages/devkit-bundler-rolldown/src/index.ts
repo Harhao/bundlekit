@@ -43,7 +43,7 @@ export default class RolldownBundler implements IBuildToolAdapter {
             input: resolvedInput,
             output: {
                 dir: path.resolve(this.context, outDir),
-                format: rawEnvConfig.output?.formats === "iife" ? "iife" : "es",
+                format: (Array.isArray(rawEnvConfig.output?.formats) ? rawEnvConfig.output?.formats[0] : rawEnvConfig.output?.formats) === "iife" ? "iife" : "es",
                 sourcemap: jsConfig.sourcemap || false,
                 entryFileNames: "[name].js",
             },

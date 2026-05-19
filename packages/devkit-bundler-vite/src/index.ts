@@ -49,7 +49,7 @@ export default class ViteBundler implements IBuildToolAdapter<InlineConfig> {
         /** 按 framework 动态加载框架插件，避免硬编码 */
         const frameworkPlugins: Plugin[] = [];
         if (framework === "react") {
-            frameworkPlugins.push(react());
+            frameworkPlugins.push(...([] as Plugin[]).concat(react() as unknown as Plugin[]));
         } else if (framework === "vue3") {
             try {
                 const { default: vue } = await import("@vitejs/plugin-vue");

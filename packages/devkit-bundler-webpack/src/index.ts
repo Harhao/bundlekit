@@ -12,6 +12,7 @@ export default class WebpackBundler implements IBuildToolAdapter<Configuration> 
     private context: string;
     private mode: IBuildEnv;
     private logger: Logger = new Logger();
+    private buildConfig: IBuildConfig | null = null;
     public name: string = "@devkit/bundler-webpack";
 
     constructor(api: IService, mode: IBuildEnv) {
@@ -39,6 +40,7 @@ export default class WebpackBundler implements IBuildToolAdapter<Configuration> 
      * @returns Configuration webpack配置
      */
     public transformConfig(config: IBuildConfig) {
+        this.buildConfig = config;
         this.logger.info(`开始转换webpack配置`);
         const webpackConfig = this.getFormatWebpackConfg(config);
         return webpackConfig;
@@ -71,11 +73,12 @@ export default class WebpackBundler implements IBuildToolAdapter<Configuration> 
         }
     }
 
-    private async prodBuild(config: Configuration) {
-        try {
+    private async prodBuild(config: Configuration): Promise<void> {
+        return new Promise((resolve, reject) => {
             Webpack(config, (err, stats) => {
                 if (err) {
                     this.logger.error(`打包失败, 错误信息: ${err}`);
+                    reject(err);
                     return;
                 }
                 process.stdout.write(
@@ -87,13 +90,14 @@ export default class WebpackBundler implements IBuildToolAdapter<Configuration> 
                     }) + "\n\n"
                 );
                 if (stats.hasErrors()) {
-                    this.logger.error(`打包失败, 错误信息: ${err}`);
-                    process.exit(1);
+                    const buildError = new Error('webpack 构建包含错误');
+                    this.logger.error(`打包失败`);
+                    reject(buildError);
+                    return;
                 }
+                resolve();
             });
-        } catch (e) {
-            throw e;
-        }
+        });
     }
 
     /**
@@ -104,7 +108,7 @@ export default class WebpackBundler implements IBuildToolAdapter<Configuration> 
     public async run(config: Configuration) {
         try {
             this.logger.info(`开始使用webpack进行打包`);
-            this.validateConfig(config);
+            this.validateConfig(config, this.buildConfig);
             switch (this.mode) {
                 case "development": await this.devBuild(config); break;
                 case "production":

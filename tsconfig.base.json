@@ -1,13 +1,13 @@
 {
     "compilerOptions": {
-        "target": "es5",
+        "target": "es2020",
         "module": "esnext",
         "lib": [ "esnext" ],
         "sourceMap": true,
         "esModuleInterop": true,
         "allowJs": true,
         "skipLibCheck": true,
-        "strict": false,
+        "strict": true,
         "forceConsistentCasingInFileNames": true,
         "noFallthroughCasesInSwitch": true,
         "moduleResolution": "node",

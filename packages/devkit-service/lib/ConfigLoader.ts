@@ -68,8 +68,18 @@ export default class ConfigLoader {
 
     for (const env of Object.keys(resolved.config || {})) {
       const envConfig = { ...resolved.config[env] };
-      if (envConfig.entry && typeof envConfig.entry === "string") {
-        envConfig.entry = resolveDir(envConfig.entry);
+      if (envConfig.entry) {
+        if (typeof envConfig.entry === "string") {
+          envConfig.entry = resolveDir(envConfig.entry);
+        } else if (Array.isArray(envConfig.entry)) {
+          envConfig.entry = (envConfig.entry as string[]).map(resolveDir);
+        } else if (typeof envConfig.entry === "object") {
+          const resolved: Record<string, string> = {};
+          for (const [key, val] of Object.entries(envConfig.entry as Record<string, string>)) {
+            resolved[key] = resolveDir(val);
+          }
+          envConfig.entry = resolved;
+        }
       }
       if (envConfig.output) {
         const output = Array.isArray(envConfig.output) ? envConfig.output : [envConfig.output];

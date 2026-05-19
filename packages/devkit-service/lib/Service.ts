@@ -133,7 +133,7 @@ export default class Service {
             if (!this.skipPlugins?.has(plugin.id)) {
                 const { id, apply } = plugin;
                 const api = new PluginAPI({ id: id, service: this });
-                apply(api as unknown as IPluginAPIClass, buildConfig);
+                apply(api as unknown as IPluginAPIClass, this.getBuildConfig());
             }
         }
     }
@@ -206,7 +206,7 @@ export default class Service {
      * 获取打包工具注册表（bundler 名称 → 适配器包名）
      * @returns IBuildTools
      */
-    private getBundlerRegistry(): IBuildTools {
+    private getBundlerRegistry(): Record<IBuildTools, string> {
         return {
             webpack: "@devkit/bundler-webpack",
             vite: "@devkit/bundler-vite",
@@ -232,6 +232,10 @@ export default class Service {
         if (!isInstallBundler) {
 
             // 安装打包依赖, 安装bundler插件package
+            if (!this.packageManager) {
+                this.logger.error('packageManager is not initialized');
+                return;
+            }
             isInstallBundler = await this.packageManager.add(packageName, {
                 noSave: true,
             });

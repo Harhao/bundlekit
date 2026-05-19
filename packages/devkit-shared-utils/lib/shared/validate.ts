@@ -7,12 +7,13 @@ export interface ValidationResult {
 
 export function validateBuildConfig(config: IBuildConfig, mode: IBuildEnv): ValidationResult {
     const errors: string[] = [];
-    const envConfig = (config?.config?.[mode] || config?.config?.development) as Record<string, any>;
 
     if (!config) {
         errors.push("构建配置不能为空");
         return { valid: false, errors };
     }
+
+    const envConfig = (config?.config?.[mode] || config?.config?.development) as Record<string, any>;
 
     if (!envConfig) {
         errors.push(`未找到环境 "${mode}" 的构建配置`);

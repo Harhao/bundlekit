@@ -30,22 +30,22 @@ program
         const enquirer = new Enquirer();
 
         if (!options.template) {
-            const answer = await enquirer.prompt<{ template: string }>({
+            const answer = await enquirer.prompt({
                 type: "select",
                 name: "template",
                 message: "请选择项目模板:",
                 choices: templates,
-            });
+            }) as { template: string };
             options.template = answer.template;
         }
 
         if (!options.bundler) {
-            const answer = await enquirer.prompt<{ bundler: string }>({
+            const answer = await enquirer.prompt({
                 type: "select",
                 name: "bundler",
                 message: "请选择默认构建工具:",
                 choices: bundlers,
-            });
+            }) as { bundler: string };
             options.bundler = answer.bundler;
         }
 

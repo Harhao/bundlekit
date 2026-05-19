@@ -14,7 +14,8 @@
     "build:rollup": "turbo run rollup:build",
     "build:service": "turbo run service:build",
     "build:rspack": "turbo run rspack:build",
-    "build:all": "turbo run service:build cli:build plugin:mock:build plugin:react:build plugin:vue:build request:build rolldown:build"
+    "build:all": "turbo run service:build cli:build plugin:mock:build plugin:react:build plugin:vue:build request:build rolldown:build",
+    "test": "vitest run"
   },
   "author": "harhao@163.com",
   "license": "ISC",
@@ -30,7 +31,8 @@
     "rimraf": "^5.0.1",
     "tsx": "^4.19.2",
     "turbo": "^2.5.6",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "vitest": "^2.1.9"
   },
   "pnpm": {
     "patchedDependencies": {

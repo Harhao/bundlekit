@@ -1,5 +1,5 @@
 import path from "path";
-import Rspack from "@rspack/core";
+import Rspack, { type RspackOptions } from "@rspack/core";
 import { RspackDevServer } from "@rspack/dev-server";
 
 import { FileManager, Logger, validateBuildConfig } from "@devkit/shared-utils";

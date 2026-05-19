@@ -67,6 +67,10 @@ export default class TransformConfig {
             || (Array.isArray(this.buildConfig.output) ? (this.buildConfig.output as IBuildOutput[])[0]?.dir : undefined)
             || "dist";
 
+        const buildOutput = !Array.isArray(this.buildConfig.output) ? (this.buildConfig.output as IBuildOutput) : undefined;
+        const fmt = buildOutput?.formats;
+        const primaryFormat = Array.isArray(fmt) ? fmt[0] : (fmt || 'umd');
+
         this.transformConfig = {
             mode: this.mode || "none",
             stats: "errors-only",
@@ -75,7 +79,7 @@ export default class TransformConfig {
                 path: path.resolve(this.context, outDir),
                 filename: '[name].js',
                 library: {
-                    type: 'umd'
+                    type: primaryFormat
                 }
             },
             resolveLoader: {

@@ -22,7 +22,7 @@ export function buildGeneratorAPI(context: string, logger: Logger): IGeneratorAP
 
     const api: IGeneratorAPI = {
         prompt: <T extends Record<string, any>>(questions: any[]) =>
-            enquirer.prompt<T>(questions),
+            enquirer.prompt(questions) as Promise<T>,
 
         log: (message: string) => logger.done(message),
 

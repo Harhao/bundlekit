@@ -26,5 +26,5 @@ export const getDefaultConfig = (context: string): IBuildConfig => ({
       js: { sourcemap: false, minify: true, splitChunks: true },
       devServer: { open: false, proxy: {}, https: false, host: "0.0.0.0", port: 3000 },
     },
-  } as any as IBuildConfig["config"],
+  },
 });
