@@ -4,6 +4,7 @@ import path from "path";
 import Webpack from "webpack";
 import HtmlWebpackPlugin from "html-webpack-plugin";
 import MiniCssExtractPlugin from "mini-css-extract-plugin";
+import TerserPlugin from "terser-webpack-plugin";
 
 import { fileURLToPath } from "url";
 import { Logger } from "@devkit/shared-utils";
@@ -74,6 +75,7 @@ export default class TransformConfig {
 
         this.transformConfig = {
             mode: this.mode || "none",
+            cache: false,
             stats: "errors-only",
             entry: resolvedEntry,
             output: {
@@ -91,7 +93,8 @@ export default class TransformConfig {
                 ]
             },
             externals: this.buildConfig.externals || [],
-            target: this.buildConfig.target || 'web',
+            // 声明 es2020 让 webpack 自动把内部 TerserPlugin ecma 升到 2020，支持可选链等现代语法
+            target: this.buildConfig.target === 'node' ? 'node' : ['web', 'es2020'],
             resolve: this.transformResolve(),
             module: {
                 rules: [
@@ -128,10 +131,10 @@ export default class TransformConfig {
         };
     }
 
-    /** TS/JS 编译规则，按 framework 注入 jsx 选项 */
     private transformScriptRules() {
         const framework = (this.buildConfig as any).framework as string;
-        const tsCompilerOptions: Record<string, any> = { module: 'esnext' };
+        // module: esnext 让 webpack 处理 ES 模块；target: ES5 保证输出 ES5 语法，Terser 默认配置可直接压缩
+        const tsCompilerOptions: Record<string, any> = { module: 'esnext', target: 'ES5' };
         if (framework === 'react') {
             tsCompilerOptions.jsx = 'react-jsx';
             tsCompilerOptions.jsxImportSource = 'react';
@@ -235,6 +238,15 @@ export default class TransformConfig {
             config.optimization = {
                 ...config.optimization,
                 minimize: this.buildConfig.js.minify,
+                minimizer: this.buildConfig.js.minify ? [
+                    new TerserPlugin({
+                        terserOptions: {
+                            parse: { ecma: 2020 },
+                            compress: { ecma: 2020, drop_console: true },
+                            output: { ecma: 2020 },
+                        } as any,
+                    }),
+                ] : undefined,
                 splitChunks: this.buildConfig.js.splitChunks ? {
                     chunks: 'all',
                     cacheGroups: {

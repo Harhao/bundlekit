@@ -1,0 +1,68 @@
+@import "@/styles/variables.less";
+
+.page { display: flex; flex-direction: column; gap: @space-lg; }
+
+.userCard {
+  display: flex;
+  align-items: center;
+  gap: @space-lg;
+  background: @bg-card;
+  border-radius: @radius-lg;
+  padding: @space-lg;
+  box-shadow: @shadow-card;
+
+  img {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .meta {
+    h2 { margin: 0 0 @space-xs; font-size: 20px; color: @text-primary; }
+    p { margin: 0; color: @text-secondary; font-size: 13px; }
+  }
+}
+
+.section {
+  h3 { margin: 0 0 @space-md; color: @text-primary; font-size: 16px; }
+}
+
+.postList {
+  display: flex;
+  flex-direction: column;
+  gap: @space-sm;
+}
+
+.postItem {
+  background: @bg-card;
+  border-radius: @radius-md;
+  padding: @space-md @space-lg;
+  box-shadow: @shadow-card;
+  border-left: 3px solid @primary;
+
+  h4 { margin: 0 0 @space-xs; color: @text-primary; font-size: 14px; }
+  p { margin: 0; color: @text-secondary; font-size: 13px; }
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: @space-xs;
+  color: @text-secondary;
+  font-size: 13px;
+  cursor: pointer;
+  margin-bottom: @space-sm;
+  background: none;
+  padding: 0;
+
+  &:hover { color: @primary; }
+}
+
+.empty {
+  padding: @space-xl;
+  text-align: center;
+  color: @text-secondary;
+  background: @bg-card;
+  border-radius: @radius-md;
+}

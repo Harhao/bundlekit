@@ -1,0 +1,24 @@
+@import "@/styles/variables.less";
+
+.wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: @space-xl 0;
+  color: @text-secondary;
+  font-size: 14px;
+  gap: @space-sm;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid @border;
+  border-top-color: @primary;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

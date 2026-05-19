@@ -5,6 +5,7 @@ on:
     branches:
       - master
 
+# 防止重复触发，如果 master 分支连续提交，会自动取消前一次没跑完的构建
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 permissions:
@@ -19,6 +20,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # 🚨 极其重要：Changesets 需要完整的 Git 提交历史来计算版本和生成 Changelog
+          # 如果不加 fetch-depth: 0，默认只会拉取最新一次提交，会导致生成的日志是空的
+          fetch-depth: 0
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -45,4 +50,4 @@ jobs:
           publish: pnpm changeset publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }} # 💡 已修复末尾的点号

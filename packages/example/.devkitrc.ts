@@ -9,172 +9,71 @@ const pages = [
   },
 ];
 
+const baseEnvConfig = {
+  target: "web" as const,
+  entry: "src/index.tsx",
+  pages,
+  alias: { "@": "src" },
+  externals: [] as string[],
+  output: {
+    dir: "dist",
+    filename: "[name].js",
+    formats: "umd" as const,
+  },
+};
+
 const config: IBuildConfig = {
   bundler: "webpack",
   mode: "development",
   plugins: ["@devkit/plugin-react", "@devkit/plugin-mock"],
   changeConfigure: (webpackConfig, mode) => {
     if (mode === "production") {
-      return {
-        ...webpackConfig,
-        devtool: false,
-      } as any;
+      return { ...webpackConfig, devtool: false } as any;
     }
     return webpackConfig;
   },
   config: {
     development: {
-      target: "web",
-      publicPath: "/abv",
-      entry: "src/index.tsx",
-      pages,
-      output: {
-        dir: "dist",
-        filename: "[name].js",
-        formats: "umd",
-      },
-      alias: {
-        "@": "src",
-      },
-      externals: [],
-      js: {
-        sourcemap: true,
-        minify: false,
-        splitChunks: true,
-      },
-      css: {
-        sourcemap: true,
-        modules: true,
-        extract: true,
-        loaders: ["css", "less"],
-      },
+      ...baseEnvConfig,
+      publicPath: "/",
+      js: { sourcemap: true, minify: false, splitChunks: true },
+      css: { sourcemap: true, modules: true, extract: true, loaders: ["css", "less"] },
       devServer: {
         host: "0.0.0.0",
         port: 3000,
         https: false,
         open: true,
         proxy: {
-          "/api": {
-            target: "http://localhost:4000",
-            changeOrigin: true,
-            secure: false,
-          },
+          "/api": { target: "http://localhost:4000", changeOrigin: true, secure: false },
         },
       },
-      inject: {
-        position: "head",
-        js: [
-          {
-            src: "https://cdn.example.com/init.js",
-            defer: true,
-          },
-        ],
-      },
-      copy: [
-        {
-          from: "public/favicon.ico",
-          to: "dist",
-          ignore: "*.map",
-          flatten: true,
-        },
-      ],
+      inject: { position: "head", js: [{ src: "https://cdn.example.com/init.js", defer: true }] },
     },
     production: {
-      target: "web",
-      publicPath: "/abc",
-      entry: "src/index.tsx",
-      pages,
-      output: {
-        dir: "dist",
-        filename: "[name].[contenthash:8].js",
-        formats: "umd",
-      },
-      alias: {
-        "@": "src",
-      },
-      externals: [],
-      js: {
-        sourcemap: false,
-        minify: true,
-        splitChunks: true,
-      },
-      css: {
-        sourcemap: false,
-        modules: true,
-        extract: true,
-        loaders: ["css", "less"],
-      },
+      ...baseEnvConfig,
+      publicPath: "/",
+      output: { ...baseEnvConfig.output, filename: "[name].[contenthash:8].js" },
+      js: { sourcemap: false, minify: true, splitChunks: true },
+      css: { sourcemap: false, modules: true, extract: true, loaders: ["css", "less"] },
       analyzer: true,
-      devServer: {
-        host: "0.0.0.0",
-        port: 3000,
-        https: false,
-        open: false,
-        proxy: {},
-      },
-      inject: {
-        position: "body",
-      },
+      devServer: { host: "0.0.0.0", port: 3000, https: false, open: false, proxy: {} },
     },
     test: {
-      target: "web",
+      ...baseEnvConfig,
       publicPath: "/",
-      entry: "src/index.tsx",
-      pages,
-      output: {
-        dir: "dist",
-        filename: "[name].js",
-        formats: "umd",
-      },
-      alias: {
-        "@": "src",
-      },
-      externals: [],
-      js: {
-        sourcemap: true,
-        minify: false,
-        splitChunks: false,
-      },
+      js: { sourcemap: true, minify: false, splitChunks: false },
     },
     staging: {
-      target: "web",
+      ...baseEnvConfig,
       publicPath: "/",
-      entry: "src/index.tsx",
-      pages,
-      output: {
-        dir: "dist",
-        filename: "[name].[contenthash:8].js",
-        formats: "umd",
-      },
-      alias: {
-        "@": "src",
-      },
-      externals: [],
-      js: {
-        sourcemap: false,
-        minify: true,
-        splitChunks: true,
-      },
+      output: { ...baseEnvConfig.output, filename: "[name].[contenthash:8].js" },
+      js: { sourcemap: false, minify: true, splitChunks: true },
     },
     gray: {
-      target: "web",
+      ...baseEnvConfig,
       publicPath: "/",
-      entry: "src/index.tsx",
-      pages,
-      output: {
-        dir: "dist",
-        filename: "[name].[contenthash:8].js",
-        formats: "umd",
-      },
-      alias: {
-        "@": "src",
-      },
-      externals: [],
-      js: {
-        sourcemap: false,
-        minify: true,
-        splitChunks: true,
-      },
+      output: { ...baseEnvConfig.output, filename: "[name].[contenthash:8].js" },
+      js: { sourcemap: false, minify: true, splitChunks: true },
     },
   },
 };

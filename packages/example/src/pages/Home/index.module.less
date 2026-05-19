@@ -1,0 +1,89 @@
+@import "@/styles/variables.less";
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: @space-xl;
+}
+
+.hero {
+  background: @bg-card;
+  border-radius: @radius-lg;
+  padding: @space-xl * 1.5;
+  box-shadow: @shadow-card;
+  text-align: center;
+
+  h1 {
+    font-size: 32px;
+    color: @primary;
+    margin: 0 0 @space-sm;
+  }
+
+  p {
+    color: @text-secondary;
+    margin: 0 0 @space-xl;
+  }
+}
+
+.counter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: @space-md;
+
+  .value {
+    font-size: 48px;
+    font-weight: 700;
+    color: @primary;
+    min-width: 80px;
+    text-align: center;
+  }
+}
+
+.btn {
+  padding: @space-sm @space-lg;
+  border-radius: @radius-md;
+  font-size: 20px;
+  font-weight: 600;
+  background: @primary;
+  color: #fff;
+  transition: background 0.2s;
+
+  &:hover { background: @primary-hover; }
+  &.danger { background: @danger; }
+  &.reset { background: @text-secondary; font-size: 14px; padding: @space-xs @space-md; }
+}
+
+.nav {
+  display: flex;
+  justify-content: center;
+  gap: @space-md;
+
+  a {
+    padding: @space-sm @space-xl;
+    background: @primary;
+    color: #fff;
+    border-radius: @radius-md;
+    font-size: 14px;
+    transition: background 0.2s;
+
+    &:hover { background: @primary-hover; }
+  }
+}
+
+.info {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: @space-lg;
+
+  .card {
+    background: @bg-card;
+    border-radius: @radius-md;
+    padding: @space-lg;
+    box-shadow: @shadow-card;
+    text-align: center;
+
+    h3 { color: @primary; margin: 0 0 @space-xs; font-size: 16px; }
+    p { color: @text-secondary; margin: 0; font-size: 13px; }
+  }
+}

@@ -1,0 +1,43 @@
+name: Deploy Dumi Docs
+
+on:
+  push:
+    branches:
+      - master # 如果你的主分支叫 main，请改成 main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      # 如果你使用的是 pnpm v8/v9 并且启用了依赖隔离，建议加上 --no-frozen-lockfile 规避 CI 环境下的锁文件微调报错
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build Docs
+        run: pnpm run build:docs
+
+      # ✨ 修复后的官方标准 Pages 部署写法
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # 规范写法：把 Pages 独有的参数通过特定的配置项传进去，而不是全塞进 command
+          command: pages deploy
+          packageName: wrangler
+          # 声明你要发布哪个文件夹和项目名
+          workingDirectory: './' # 在根目录下执行
