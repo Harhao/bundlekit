@@ -240,6 +240,7 @@ export default class TransformConfig {
                 minimize: this.buildConfig.js.minify,
                 minimizer: this.buildConfig.js.minify ? [
                     new TerserPlugin({
+                        parallel: false,
                         terserOptions: {
                             parse: { ecma: 2020 },
                             compress: { ecma: 2020, drop_console: true },

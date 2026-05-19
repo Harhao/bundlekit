@@ -2,6 +2,7 @@
   "name": "devkit-cli-docs",
   "version": "0.0.1",
   "description": "a docs description about bundle-devkit",
+  "private": true,
   "scripts": {
     "start": "npm run dev",
     "dev": "dumi dev",
