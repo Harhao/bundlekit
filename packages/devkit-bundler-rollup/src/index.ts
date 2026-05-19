@@ -40,14 +40,33 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
 
         const cssConfig = rawEnvConfig.css || {};
 
+        // rollup 不支持 webpack 模板变量（如 [contenthash:8]），遇到时回退为 index.js
+        const rawFilename = rawEnvConfig.output?.filename || "index.js";
+        const filename = /\[.+?\]/.test(rawFilename) ? "index.js" : rawFilename;
+
+        const resolvedOutDir = path.resolve(this.context, outDir);
+
+        const fmt = rawEnvConfig.output?.formats;
+        const primaryFormat = Array.isArray(fmt) ? fmt[0] : (fmt || "es");
+        const rollupFormat = primaryFormat === "commonjs" ? "cjs"
+            : primaryFormat === "esm" ? "es"
+            : (primaryFormat as any) || "es";
+
         return {
             input: path.resolve(this.context, String(entry)),
             output: {
-                file: path.resolve(this.context, outDir, "index.js"),
-                format: "es",
+                file: path.resolve(resolvedOutDir, filename),
+                format: rollupFormat,
                 sourcemap: rawEnvConfig.js?.sourcemap || false,
             },
             plugins: [
+                // TODO: 需要安装 @rollup/plugin-alias 后启用 alias 配置
+                // aliasPlugin({
+                //     entries: Object.entries(rawEnvConfig.alias || {}).map(([find, replacement]) => ({
+                //         find,
+                //         replacement: path.resolve(this.context, String(replacement)),
+                //     })),
+                // }),
                 nodeResolve({ extensions, preferBuiltins: false }),
                 commonjs(),
                 image(),
@@ -62,6 +81,10 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
                 }),
                 typescript({
                     tsconfig: path.resolve(this.context, "tsconfig.json"),
+                    // 显式指定 outDir 避免与 rollup output 路径冲突
+                    outDir: resolvedOutDir,
+                    declaration: false,
+                    noEmit: false,
                 }),
                 babel({
                     babelHelpers: "bundled",
@@ -72,7 +95,7 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
                     ],
                 }),
             ],
-            external: [],
+            external: rawEnvConfig.externals || [],
         };
     }
 

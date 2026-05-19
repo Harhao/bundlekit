@@ -40,6 +40,10 @@ export default class ViteBundler implements IBuildToolAdapter<InlineConfig> {
             || (Array.isArray(envConfig.output) ? envConfig.output[0]?.dir : undefined)
             || "dist";
 
+        const rawFormats = envConfig.output && !Array.isArray(envConfig.output) ? envConfig.output.formats : undefined;
+        const formatMap: Record<string, string> = { umd: 'umd', commonjs: 'cjs', esm: 'es', es: 'es', iife: 'iife' };
+        const outputFormat = formatMap[(Array.isArray(rawFormats) ? rawFormats[0] : rawFormats) as string] || 'es';
+
         const devServer = envConfig.devServer || {};
         const alias = envConfig.alias || {};
         const jsConfig = envConfig.js || {};
@@ -89,6 +93,11 @@ export default class ViteBundler implements IBuildToolAdapter<InlineConfig> {
                 open: devServer.open !== undefined ? devServer.open : true,
                 host: devServer.host || '0.0.0.0',
                 port: devServer.port || 3000,
+                https: devServer.https || false,
+                proxy: Object.entries(devServer.proxy || {}).reduce((acc, [key, val]: [string, any]) => {
+                    acc[key] = { target: val.target, changeOrigin: val.changeOrigin ?? true, secure: val.secure ?? false };
+                    return acc;
+                }, {} as Record<string, any>),
                 allowedHosts: ['*'],
                 strictPort: true,
                 hmr: true,
@@ -123,9 +132,11 @@ export default class ViteBundler implements IBuildToolAdapter<InlineConfig> {
                     }
                 }),
                 rollupOptions: {
-                    input: rollupInput,
+                    input: pages.length > 0 ? rollupInput : entry,
                     output: {
-                        manualChunks: jsConfig.splitChunks ? {
+                        // umd/iife 不支持代码分割，不设置 format 和 manualChunks，由 vite 自行处理
+                        ...(['umd', 'iife'].includes(outputFormat) ? {} : { format: outputFormat }),
+                        manualChunks: (jsConfig.splitChunks && !['umd', 'iife'].includes(outputFormat)) ? {
                             'react-vendor': ['react', 'react-dom'],
                         } : undefined,
                         chunkFileNames: 'assets/js/[name]-[hash].js',

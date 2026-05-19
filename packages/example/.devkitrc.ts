@@ -25,7 +25,7 @@ const config: IBuildConfig = {
   config: {
     development: {
       target: "web",
-      publicPath: "/",
+      publicPath: "/abv",
       entry: "src/index.tsx",
       pages,
       output: {
@@ -81,7 +81,7 @@ const config: IBuildConfig = {
     },
     production: {
       target: "web",
-      publicPath: "/",
+      publicPath: "/abc",
       entry: "src/index.tsx",
       pages,
       output: {

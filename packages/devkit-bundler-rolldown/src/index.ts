@@ -39,13 +39,19 @@ export default class RolldownBundler implements IBuildToolAdapter {
 
         this.logger.info(`开始转换rolldown配置`);
 
+        const fmt = rawEnvConfig.output?.formats;
+        const primaryFormat = Array.isArray(fmt) ? fmt[0] : (fmt || "es");
+        const rolldownFormat = primaryFormat === "commonjs" ? "cjs"
+            : primaryFormat === "esm" ? "es"
+            : (["es", "cjs", "umd", "iife"].includes(primaryFormat) ? primaryFormat : "es") as any;
+
         return {
             input: resolvedInput,
             output: {
                 dir: path.resolve(this.context, outDir),
-                format: (Array.isArray(rawEnvConfig.output?.formats) ? rawEnvConfig.output?.formats[0] : rawEnvConfig.output?.formats) === "iife" ? "iife" : "es",
+                format: rolldownFormat,
                 sourcemap: jsConfig.sourcemap || false,
-                entryFileNames: "[name].js",
+                entryFileNames: rawEnvConfig.output?.filename || "[name].js",
             },
             resolve: {
                 extensions: [".ts", ".tsx", ".js", ".jsx", ".json", ".css", ".less"],
@@ -55,6 +61,8 @@ export default class RolldownBundler implements IBuildToolAdapter {
                 }, {} as Record<string, string>),
             },
             platform: rawEnvConfig.target === "node" ? "node" : "browser",
+            external: rawEnvConfig.externals || [],
+            treeshake: rawEnvConfig.js?.splitChunks !== false,
             experimental: {
                 enableComposingJsPlugins: true,
             },

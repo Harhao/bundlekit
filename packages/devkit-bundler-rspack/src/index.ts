@@ -76,9 +76,14 @@ export default class RspackBundler implements IBuildToolAdapter<RspackOptions> {
         return {
             mode: this.mode === "development" ? "development" : "production",
             entry: resolvedEntry,
+            devtool: rawEnvConfig.js?.sourcemap ? "source-map" : false,
             output: {
                 path: path.resolve(this.context, outDir),
-                filename: "[name].js",
+                filename: rawEnvConfig.output?.filename || "[name].js",
+                publicPath: rawEnvConfig.publicPath || "/",
+                library: rawEnvConfig.output?.formats ? {
+                    type: Array.isArray(rawEnvConfig.output.formats) ? rawEnvConfig.output.formats[0] : rawEnvConfig.output.formats,
+                } : undefined,
             },
             resolve: {
                 extensions,
@@ -107,17 +112,17 @@ export default class RspackBundler implements IBuildToolAdapter<RspackOptions> {
                     },
                     {
                         test: /\.css$/,
-                        use: ["style-loader", "css-loader"],
+                        use: ["style-loader", { loader: "css-loader", options: { modules: rawEnvConfig.css?.modules || false, sourceMap: rawEnvConfig.css?.sourcemap || false } }],
                         type: "javascript/auto",
                     },
                     ...(rawEnvConfig.css?.loaders?.includes("less") ? [{
                         test: /\.less$/,
-                        use: ["style-loader", "css-loader", "less-loader"],
+                        use: ["style-loader", { loader: "css-loader", options: { modules: rawEnvConfig.css?.modules || false, sourceMap: rawEnvConfig.css?.sourcemap || false } }, "less-loader"],
                         type: "javascript/auto",
                     }] : []),
                     ...(rawEnvConfig.css?.loaders?.includes("sass") || rawEnvConfig.css?.loaders?.includes("scss") ? [{
                         test: /\.(scss|sass)$/,
-                        use: ["style-loader", "css-loader", "sass-loader"],
+                        use: ["style-loader", { loader: "css-loader", options: { modules: rawEnvConfig.css?.modules || false, sourceMap: rawEnvConfig.css?.sourcemap || false } }, "sass-loader"],
                         type: "javascript/auto",
                     }] : []),
                 ],
@@ -129,8 +134,15 @@ export default class RspackBundler implements IBuildToolAdapter<RspackOptions> {
                 ...frameworkPlugins,
                 ...htmlPlugins,
             ],
+            optimization: {
+                minimize: rawEnvConfig.js?.minify || false,
+                splitChunks: rawEnvConfig.js?.splitChunks ? { chunks: "all" } : false,
+            },
+            externals: rawEnvConfig.externals || [],
+            target: rawEnvConfig.target || "web",
             devServer: {
                 hot: true,
+                https: devServerCfg.https || false,
                 historyApiFallback: true,
                 open: devServerCfg.open !== undefined ? devServerCfg.open : true,
                 host: devServerCfg.host || "0.0.0.0",

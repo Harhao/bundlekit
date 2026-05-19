@@ -1,6 +1,7 @@
 import path from "path";
 import PluginAPI from "./PluginAPI";
 import ConfigLoader from "./ConfigLoader";
+import { createJiti } from "jiti";
 
 import { createRequire } from "module";
 import { 
@@ -71,7 +72,7 @@ export default class Service {
         this.buildConfig = config;
     }
 
-    // 获取插件列表
+    // 获取内置插件列表
     public async resolvePlugins() {
 
         const sortedPlugins: IRegisterPlugin[] = [];
@@ -91,6 +92,13 @@ export default class Service {
             });
         }
 
+        return sortedPlugins;
+    }
+
+    // 获取用户配置的插件列表（需在 buildConfig 加载后调用）
+    private async resolveUserPlugins(): Promise<IRegisterPlugin[]> {
+        const userPlugins: IRegisterPlugin[] = [];
+
         if (this.buildConfig?.plugins && Array.isArray(this.buildConfig.plugins)) {
             for (const pluginName of this.buildConfig.plugins) {
                 try {
@@ -98,12 +106,15 @@ export default class Service {
                     const pluginPath = require.resolve(pluginName, {
                         paths: [path.join(this.context, "node_modules")]
                     });
-                    const pluginModule = (await import(pluginPath)).default || (await import(pluginPath));
-                    if (pluginModule.apply) {
-                        sortedPlugins.push({
+                    // 使用 jiti 加载，支持 .ts 源文件形式的插件包
+                    const jiti = createJiti(import.meta.url);
+                    const pluginModule = jiti(pluginPath) as any;
+                    const resolved = pluginModule?.default || pluginModule;
+                    if (resolved?.apply) {
+                        userPlugins.push({
                             id: `project:${pluginName}`,
-                            apply: pluginModule.apply,
-                            defaultModes: pluginModule.defaultModes || {},
+                            apply: resolved.apply,
+                            defaultModes: resolved.defaultModes || {},
                         });
                     }
                 } catch (e) {
@@ -112,7 +123,7 @@ export default class Service {
             }
         }
 
-        return sortedPlugins;
+        return userPlugins;
     }
 
     /**
@@ -126,7 +137,11 @@ export default class Service {
         // 要重新定义projectOptions类型
         const buildConfig = await this.configLoader.resolveAllConfig();
         // 设置构建配置
-        this.setBuildConfig({ ...buildConfig, bundler: args.bundler as IBuildTools });
+        this.setBuildConfig({ ...buildConfig, ...(args.bundler ? { bundler: args.bundler as IBuildTools } : {}) });
+
+        // buildConfig 加载完成后，追加用户配置的插件
+        const userPlugins = await this.resolveUserPlugins();
+        this.plugins = [...this.plugins, ...userPlugins];
 
         for (let plugin of this.plugins) {
             // 如果不是需要跳过的插件, 则执行apply函数
@@ -251,7 +266,7 @@ export default class Service {
             let builder = new bundlerPlugin(this, this.mode);
 
             // 转换成相对应构建工具的配置
-            const builderConifg = builder.transformConfig(this.buildConfig);
+            const builderConifg = await builder.transformConfig(this.buildConfig);
             // 处理构建工具的原生配置(暴露出去的配置项)
             const finalConfig = await this.configureConfig(builderConifg);
             // 开始运行构建任务

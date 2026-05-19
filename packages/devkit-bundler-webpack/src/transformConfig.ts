@@ -3,6 +3,7 @@ import os from "os";
 import path from "path";
 import Webpack from "webpack";
 import HtmlWebpackPlugin from "html-webpack-plugin";
+import MiniCssExtractPlugin from "mini-css-extract-plugin";
 
 import { fileURLToPath } from "url";
 import { Logger } from "@devkit/shared-utils";
@@ -77,7 +78,8 @@ export default class TransformConfig {
             entry: resolvedEntry,
             output: {
                 path: path.resolve(this.context, outDir),
-                filename: '[name].js',
+                filename: buildOutput?.filename || '[name].js',
+                publicPath: this.buildConfig.publicPath || '/',
                 library: {
                     type: primaryFormat
                 }
@@ -88,6 +90,8 @@ export default class TransformConfig {
                     'node_modules'
                 ]
             },
+            externals: this.buildConfig.externals || [],
+            target: this.buildConfig.target || 'web',
             resolve: this.transformResolve(),
             module: {
                 rules: [
@@ -98,7 +102,12 @@ export default class TransformConfig {
                 ]
             },
             ...this.transformPerformance(),
-            plugins: [...defaultPlugins, ...this.transformPlugins(), ...this.transformFrameworkPlugins()]
+            plugins: [
+                ...defaultPlugins,
+                ...(this.buildConfig.css?.extract ? [new MiniCssExtractPlugin({ filename: buildOutput?.filename || '[name].css' })] : []),
+                ...this.transformPlugins(),
+                ...this.transformFrameworkPlugins()
+            ]
         };
 
         if (this.mode === "development") {
@@ -195,6 +204,7 @@ export default class TransformConfig {
             host: this.buildConfig.devServer?.host || '0.0.0.0',
             port: this.buildConfig.devServer?.port || 3000,
             open: this.buildConfig.devServer?.open ?? true,
+            server: this.buildConfig.devServer?.https ? 'https' : 'http',
             compress: true,
             proxy: proxyArray,
             client: {
@@ -275,6 +285,8 @@ export default class TransformConfig {
         }
 
         if (this.buildConfig.css.extract) {
+            cssLoaders.unshift({ loader: MiniCssExtractPlugin.loader });
+        } else {
             cssLoaders.unshift({ loader: 'style-loader' });
         }
 

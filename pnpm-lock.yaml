@@ -518,12 +518,18 @@ importers:
         specifier: ^18.2.0
         version: 18.3.1(react@18.3.1)
     devDependencies:
+      '@devkit/bundler-rolldown':
+        specifier: workspace:*
+        version: link:../devkit-bundler-rolldown
       '@devkit/bundler-rollup':
         specifier: workspace:*
         version: link:../devkit-bundler-rollup
       '@devkit/bundler-rspack':
         specifier: workspace:*
         version: link:../devkit-bundler-rspack
+      '@devkit/bundler-vite':
+        specifier: workspace:*
+        version: link:../devkit-bundler-vite
       '@devkit/plugin-mock':
         specifier: workspace:*
         version: link:../devkit-plugin-mock

@@ -13,7 +13,9 @@
     "rspack:dev": "npm run clean && devkit-service serve --bundler rspack --mode development",
     "rspack:prod": "npm run clean && devkit-service build --bundler rspack --mode production",
     "rollup:dev": "npm run clean && devkit-service serve --bundler rollup --mode development",
-    "rollup:prod": "npm run clean && devkit-service build --bundler rollup --mode production"
+    "rollup:prod": "npm run clean && devkit-service build --bundler rollup --mode production",
+    "rolldown:dev": "npm run clean && devkit-service serve --bundler rolldown --mode development",
+    "rolldown:prod": "npm run clean && devkit-service build --bundler rolldown --mode production"
   },
   "keywords": [],
   "author": "",
@@ -22,6 +24,8 @@
     "@devkit/service": "workspace:*",
     "@devkit/bundler-rollup": "workspace:*",
     "@devkit/bundler-rspack": "workspace:*",
+    "@devkit/bundler-vite": "workspace:*",
+    "@devkit/bundler-rolldown": "workspace:*",
     "@devkit/plugin-react": "workspace:*",
     "@devkit/plugin-mock": "workspace:*",
     "@types/react": "^18.2.0",
