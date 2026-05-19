@@ -102,7 +102,7 @@ export class Creator {
         // 方案2：相对 import.meta.url 向上找 monorepo packages 目录（开发环境兜底）
         const __dir = path.dirname(fileURLToPath(import.meta.url));
         const pluginDirName = pluginPkgName.replace("@devkit/", "devkit-");
-        const monorepoDir = path.resolve(__dir, "../../../../..", pluginDirName, "templates", `template-${normalized}`);
+        const monorepoDir = path.resolve(__dir, "../..", pluginDirName, "templates", `template-${normalized}`);
         if (fs.existsSync(monorepoDir)) return monorepoDir;
 
         const available = ["react-ts", "react-js", "vue3-ts", "vue3-js"];
