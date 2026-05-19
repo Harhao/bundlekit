@@ -37,7 +37,7 @@
   "author": "harhao@163.com",
   "license": "ISC",
   "publishConfig": {
-    "registry": "https://registry.npmmirror.com/"
+    "registry": "https://registry.npmjs.org/"
   },
   "engines": {
     "node": ">= 18.0.0"

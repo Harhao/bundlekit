@@ -7,14 +7,20 @@
   "scripts": {
     "request:build": "echo 'request built successfully'"
   },
-  "keywords": ["request", "http", "axios", "fetch", "devkit"],
+  "keywords": [
+    "request",
+    "http",
+    "axios",
+    "fetch",
+    "devkit"
+  ],
   "author": "harhao@163.com",
   "license": "ISC",
   "dependencies": {
     "axios": "^1.6.0"
   },
   "publishConfig": {
-    "registry": "https://npm.test.mail.163.com/"
+    "registry": "https://registry.npmjs.org/"
   },
   "engines": {
     "node": ">= 18.0.0"

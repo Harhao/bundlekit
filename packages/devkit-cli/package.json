@@ -33,6 +33,9 @@
   ],
   "author": "harhao@163.com",
   "license": "ISC",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  },
   "dependencies": {
     "@devkit/plugin-react": "workspace:*",
     "@devkit/plugin-vue": "workspace:*",

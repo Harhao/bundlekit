@@ -80,6 +80,22 @@
       "outputs": [
         "packages/devkit-plugin-react/dist/**"
       ]
+    },
+    "plugin:vue:build": {
+      "dependsOn": [
+        "shared:build"
+      ],
+      "outputs": [
+        "packages/devkit-plugin-vue/dist/**"
+      ]
+    },
+    "rolldown:build": {
+      "dependsOn": [
+        "shared:build"
+      ],
+      "outputs": [
+        "packages/devkit-bundler-rolldown/dist/**"
+      ]
     }
   }
 }

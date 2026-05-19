@@ -7,7 +7,12 @@
   "scripts": {
     "plugin:vue:build": "echo 'plugin:vue built successfully'"
   },
-  "keywords": ["vue", "vue3", "devkit-plugin", "devkit"],
+  "keywords": [
+    "vue",
+    "vue3",
+    "devkit-plugin",
+    "devkit"
+  ],
   "author": "harhao@163.com",
   "license": "ISC",
   "dependencies": {
@@ -20,7 +25,7 @@
     "typescript": "^5.8.2"
   },
   "publishConfig": {
-    "registry": "https://registry.npmmirror.com/"
+    "registry": "https://registry.npmjs.org/"
   },
   "engines": {
     "node": ">= 18.0.0"

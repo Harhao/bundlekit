@@ -32,6 +32,9 @@
   ],
   "author": "harhao@163.com",
   "license": "ISC",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  },
   "dependencies": {
     "chalk": "^5.4.1",
     "cli-progress": "^3.12.0",
