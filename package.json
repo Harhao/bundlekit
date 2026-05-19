@@ -14,6 +14,7 @@
     "build:rollup": "turbo run rollup:build",
     "build:service": "turbo run service:build",
     "build:rspack": "turbo run rspack:build",
+    "build:docs": "turbo run docs:build",
     "build:all": "turbo run service:build cli:build plugin:mock:build plugin:react:build plugin:vue:build request:build rolldown:build",
     "test": "vitest run"
   },

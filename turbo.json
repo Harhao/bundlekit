@@ -96,6 +96,12 @@
       "outputs": [
         "packages/devkit-bundler-rolldown/dist/**"
       ]
+    },
+    "docs:build": {
+      "dependsOn": [],
+      "outputs": [
+        "packages/devkit-docs/dist/**"
+      ]
     }
   }
 }
