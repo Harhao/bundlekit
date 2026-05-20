@@ -11,10 +11,10 @@ export interface RequestConfig {
 }
 
 export interface RequestInstance {
-    get<T = any>(url: string, config?: Record<string, any>): Promise<{ data: T }>;
-    post<T = any>(url: string, data?: any, config?: Record<string, any>): Promise<{ data: T }>;
-    put<T = any>(url: string, data?: any, config?: Record<string, any>): Promise<{ data: T }>;
-    delete<T = any>(url: string, config?: Record<string, any>): Promise<{ data: T }>;
+    get<T = any>(url: string, config?: Record<string, any>): Promise<T>;
+    post<T = any>(url: string, data?: any, config?: Record<string, any>): Promise<T>;
+    put<T = any>(url: string, data?: any, config?: Record<string, any>): Promise<T>;
+    delete<T = any>(url: string, config?: Record<string, any>): Promise<T>;
 }
 
 /** 安全拼接 baseURL + url，避免 double-slash */
@@ -38,10 +38,10 @@ function createAxiosInstance(config: RequestConfig = {}): RequestInstance {
     }
 
     return {
-        get: (url, cfg) => instance.get(url, cfg),
-        post: (url, data, cfg) => instance.post(url, data, cfg),
-        put: (url, data, cfg) => instance.put(url, data, cfg),
-        delete: (url, cfg) => instance.delete(url, cfg),
+        get:    (url, cfg)       => instance.get(url, cfg)             .then((r: any) => r.data),
+        post:   (url, data, cfg) => instance.post(url, data, cfg)      .then((r: any) => r.data),
+        put:    (url, data, cfg) => instance.put(url, data, cfg)       .then((r: any) => r.data),
+        delete: (url, cfg)       => instance.delete(url, cfg)          .then((r: any) => r.data),
     };
 }
 
@@ -64,7 +64,7 @@ function createFetchInstance(config: RequestConfig = {}): RequestInstance {
     async function request<T>(
         url: string,
         opts: RequestInit,
-    ): Promise<{ data: T }> {
+    ): Promise<T> {
         // request 拦截器：可追加 headers
         let finalOpts = { ...opts };
         if (reqInterceptor) {
@@ -78,14 +78,15 @@ function createFetchInstance(config: RequestConfig = {}): RequestInstance {
             throw new Error(`HTTP ${res.status}: ${res.statusText}`);
         }
 
-        let data: T = await res.json();
+        const body = await res.json();
 
-        // response 拦截器：可转换返回值
+        // response 拦截器：模拟 AxiosResponse 结构（{ data: body }），
+        // 保持与 axios 拦截器 API 一致（axios 版本接收 AxiosResponse，res.data 是响应体）
         if (resInterceptor) {
-            data = resInterceptor(data) ?? data;
+            return (resInterceptor({ data: body }) ?? body) as T;
         }
 
-        return { data };
+        return body as T;
     }
 
     return {

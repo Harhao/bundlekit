@@ -119,6 +119,14 @@ export interface IEnvBuildConfig {
     pages?: IBuildPageConfig[];
     /** 前端框架，由构建插件写入（plugin-react / plugin-vue） */
     framework?: IBuildFramework;
+    /**
+     * 类库打包模式（rollup / rolldown 专用）
+     * - true：启用多格式输出（cjs/esm/umd），仅监听构建，不启动 dev server
+     * - false / 未设置：应用模式，开发时启动 dev server + livereload
+     */
+    library?: boolean;
+    /** 类库全局导出名称（UMD/IIFE 格式必填，如 "MyLib"） */
+    libraryName?: string;
 }
 
 export interface IBuildConfig {

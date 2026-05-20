@@ -36,8 +36,8 @@ const config: IBuildConfig = {
     development: {
       ...baseEnvConfig,
       publicPath: "/",
-      js: { sourcemap: true, minify: false, splitChunks: true },
-      css: { sourcemap: true, modules: true, extract: true, loaders: ["css", "less"] },
+      js: { sourcemap: false, minify: false, splitChunks: true },
+      css: { sourcemap: false, modules: true, extract: true, loaders: ["css", "less"] },
       devServer: {
         host: "0.0.0.0",
         port: 3000,
@@ -61,7 +61,7 @@ const config: IBuildConfig = {
     test: {
       ...baseEnvConfig,
       publicPath: "/",
-      js: { sourcemap: true, minify: false, splitChunks: false },
+      js: { sourcemap: false, minify: false, splitChunks: false },
     },
     staging: {
       ...baseEnvConfig,

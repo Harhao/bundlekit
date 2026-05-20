@@ -61,9 +61,15 @@ importers:
       '@devkit/shared-utils':
         specifier: workspace:*
         version: link:../devkit-shared-utils
+      less:
+        specifier: ^4.2.2
+        version: 4.6.4
       rolldown:
         specifier: ^1.0.1
         version: 1.0.1
+      rollup-plugin-postcss:
+        specifier: ^4.0.2
+        version: 4.0.2(postcss@8.5.14)
     devDependencies:
       '@rollup/plugin-json':
         specifier: ^6.1.0
@@ -104,9 +110,15 @@ importers:
       '@rollup/plugin-image':
         specifier: ^3.0.3
         version: 3.0.3(rollup@4.60.4)
+      '@rollup/plugin-json':
+        specifier: ^6.1.0
+        version: 6.1.0(rollup@4.60.4)
       '@rollup/plugin-node-resolve':
         specifier: ^15.2.3
         version: 15.3.1(rollup@4.60.4)
+      '@rollup/plugin-replace':
+        specifier: ^6.0.0
+        version: 6.0.3(rollup@4.60.4)
       '@rollup/plugin-typescript':
         specifier: ^12.1.2
         version: 12.3.0(rollup@4.60.4)(tslib@2.8.1)(typescript@5.9.3)
@@ -120,9 +132,6 @@ importers:
         specifier: ^4.3.0
         version: 4.3.3
     devDependencies:
-      '@rollup/plugin-json':
-        specifier: ^6.1.0
-        version: 6.1.0(rollup@4.60.4)
       '@rollup/plugin-terser':
         specifier: ^0.4.4
         version: 0.4.4(rollup@4.60.4)
@@ -539,6 +548,9 @@ importers:
       '@devkit/bundler-vite':
         specifier: workspace:*
         version: link:../devkit-bundler-vite
+      '@devkit/bundler-webpack':
+        specifier: workspace:*
+        version: link:../devkit-bundler-webpack
       '@devkit/plugin-mock':
         specifier: workspace:*
         version: link:../devkit-plugin-mock
@@ -5172,7 +5184,6 @@ packages:
     dependencies:
       '@rollup/pluginutils': 5.3.0(rollup@4.60.4)
       rollup: 4.60.4
-    dev: true
 
   /@rollup/plugin-node-resolve@15.3.1(rollup@4.60.4):
     resolution: {integrity: sha512-tgg6b91pAybXHJQMAAwW9VuWBO6Thi+q7BCNARLwSqlmsHz0XYURtGvh/AuwSADXSI4h/2uHbs7s4FzlZDGSGA==}
