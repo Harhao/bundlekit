@@ -392,6 +392,9 @@ importers:
 
   packages/devkit-service:
     dependencies:
+      '@devkit/bundler-rolldown':
+        specifier: workspace:*
+        version: link:../devkit-bundler-rolldown
       '@devkit/bundler-rollup':
         specifier: workspace:*
         version: link:../devkit-bundler-rollup
