@@ -19,7 +19,9 @@
   },
   "dependencies": {
     "@devkit/shared-utils": "workspace:*",
-    "rolldown": "^1.0.1"
+    "less": "^4.2.2",
+    "rolldown": "^1.0.1",
+    "rollup-plugin-postcss": "^4.0.2"
   },
   "devDependencies": {
     "@rollup/plugin-json": "^6.1.0",

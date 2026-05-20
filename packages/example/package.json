@@ -22,6 +22,7 @@
   "license": "ISC",
   "devDependencies": {
     "@devkit/service": "workspace:*",
+    "@devkit/bundler-webpack": "workspace:*",
     "@devkit/bundler-rollup": "workspace:*",
     "@devkit/bundler-rspack": "workspace:*",
     "@devkit/bundler-vite": "workspace:*",

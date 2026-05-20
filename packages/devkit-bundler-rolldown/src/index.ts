@@ -1,5 +1,6 @@
 import path from "path";
-import { rolldown, build, watch } from "rolldown";
+import { build, watch } from "rolldown";
+import postcss from "rollup-plugin-postcss";
 
 import { Logger, validateBuildConfig } from "@devkit/shared-utils";
 import type { IBuildConfig, IBuildToolAdapter, IService, IBuildEnv } from "@devkit/shared-utils";
@@ -36,6 +37,7 @@ export default class RolldownBundler implements IBuildToolAdapter {
 
         const alias = rawEnvConfig.alias || {};
         const jsConfig = rawEnvConfig.js || {};
+        const cssConfig = rawEnvConfig.css || {};
 
         this.logger.info(`开始转换rolldown配置`);
 
@@ -53,8 +55,20 @@ export default class RolldownBundler implements IBuildToolAdapter {
                 sourcemap: jsConfig.sourcemap || false,
                 entryFileNames: rawEnvConfig.output?.filename || "[name].js",
             },
+            plugins: [
+                // rolldown 原生支持 CJS 和 node resolve，只需 postcss 处理样式文件
+                postcss({
+                    extract: cssConfig.extract || false,
+                    modules: cssConfig.modules || false,
+                    sourceMap: cssConfig.sourcemap || false,
+                    use: [
+                        ...(cssConfig.loaders?.includes("less") ? ["less"] : []),
+                        ...(cssConfig.loaders?.includes("sass") || cssConfig.loaders?.includes("scss") ? ["sass"] : []),
+                    ],
+                }) as any,
+            ],
             resolve: {
-                extensions: [".ts", ".tsx", ".js", ".jsx", ".json", ".css", ".less"],
+                extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
                 alias: Object.entries(alias).reduce((acc, [key, val]) => {
                     acc[key] = path.resolve(this.context, String(val));
                     return acc;

@@ -69,6 +69,36 @@ export default class ViteBundler implements IBuildToolAdapter<InlineConfig> {
             rollupInput[name] = path.resolve(this.context, page.template);
         }
 
+        /**
+         * vite-plugin-html 的 isMpa() 仅在 rollupOptions.input 条目 >1 时返回 true。
+         * 单页面时走 SPA 分支，必须使用顶层 template/entry，不能用 pages 数组。
+         * entry 需要是根路径相对路径（如 "/src/index.tsx"），不能用绝对路径，
+         * 否则浏览器收到的 script.src 会是文件系统路径，导致页面空白。
+         */
+        const buildHtmlPlugin = () => {
+            if (pages.length === 1) {
+                // SPA：使用顶层 template + entry
+                return createHtmlPlugin({
+                    minify: false,
+                    template: pages[0].template,
+                    entry: `/${pages[0].entry}`,
+                });
+            }
+            if (pages.length > 1) {
+                // MPA：使用 pages 数组，entry 必须根路径相对
+                return createHtmlPlugin({
+                    minify: false,
+                    pages: pages.map((page: any) => ({
+                        filename: page.filename,
+                        template: page.template,
+                        entry: `/${page.entry}`,
+                    })),
+                });
+            }
+            // 无 pages 配置：退回默认
+            return createHtmlPlugin({ minify: false });
+        };
+
         const viteConfig = {
             base: envConfig.publicPath || "/",
             publicDir: false,
@@ -109,14 +139,7 @@ export default class ViteBundler implements IBuildToolAdapter<InlineConfig> {
             },
             plugins: [
                 ...frameworkPlugins,
-                createHtmlPlugin({
-                    minify: true,
-                    pages: pages.map((page: any) => ({
-                        entry: path.resolve(this.context, page.entry),
-                        filename: page.filename,
-                        template: page.template,
-                    })),
-                }),
+                buildHtmlPlugin(),
             ],
             build: {
                 outDir: outDir,
