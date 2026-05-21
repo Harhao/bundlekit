@@ -7,7 +7,6 @@ import path from 'node:path';
 import minimist from 'minimist';
 import stripAnsi from 'strip-ansi';
 
-import { request } from 'node:http';
 import { LRUCache as LRU } from 'lru-cache';
 import { FileManager } from './fileManager';
 import { createRequire } from 'node:module';
@@ -390,7 +389,11 @@ export class PackageManager {
 
         const url = `${registry.replace(/\/$/g, '')}/${packageName}`
         try {
-            metadata = request(url, { headers, method: 'GET' }) as any;
+            const res = await fetch(url, { method: 'GET', headers });
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status}: ${url}`)
+            }
+            metadata = await res.json();
             if (metadata?.error) {
                 throw new Error(metadata.error)
             }
@@ -430,17 +433,15 @@ export class PackageManager {
 
             const command = bin === EPackageMangerTool.NPM ? 'npm' : bin;
 
-            const spawnOptions = {
-                cwd,
-                stdio: "inherit",
-                shell: true
-            };
-
             this.logger.log(`${command} ${args.join(' ')}`, "安装命令");
 
+            // stdin 用 'ignore' 而非 'inherit'：
+            // 在 ink raw-mode 环境下，继承 stdin 会导致 pnpm 等待 EOF 而永久阻塞。
+            // 包管理器 install/add 命令完全不需要 stdin。
             await this.execa(command, args, {
-                ...spawnOptions,
-                stdio: ['inherit', 'pipe', 'pipe'] as const
+                cwd,
+                shell: true,
+                stdio: ['ignore', 'pipe', 'pipe'] as const,
             });
 
             return true;

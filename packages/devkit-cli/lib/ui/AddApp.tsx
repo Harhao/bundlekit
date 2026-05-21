@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Box, Text, useApp } from "ink";
-import { Logger } from "@devkit/shared-utils";
 import { Banner } from "./Banner";
 import { TaskList, ITaskItem } from "./TaskList";
 import { ErrorView } from "./ErrorView";
