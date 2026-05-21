@@ -38,6 +38,7 @@ cli 会引导你完成以下步骤（TTY 终端使用 ink 渲染 banner + 步骤
 1. 选择模板：`react-ts` / `react-js` / `vue3-ts` / `vue3-js`
 2. 选择默认 bundler：`vite` / `webpack` / `rspack` / `rollup` / `rolldown`
 3. 输入项目描述（可选）
+4. 选择包管理器：`pnpm`（推荐）/ `yarn` / `npm`
 
 cli 会自动：
 

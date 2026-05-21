@@ -98,7 +98,7 @@ devkit-service build --bundler rollup     # 适合库打包
 - HtmlWebpackPlugin 多页面支持（读取 `pages[]` 配置）
 - webpack-dev-server 5 HMR，proxy 自动转换为数组格式
 - 代码分割、sourcemap、bundle 分析器
-- **SSR**：build 双 pass（client + server），dev 用 webpack-dev-middleware + webpack-hot-middleware，server compiler 独立 watch 编译到磁盘
+- **SSR**：build 双 pass（client + server），dev 通过 `createSSRMiddleware` 提供 HTTP SSR 渲染（webpack-dev-middleware + webpack-hot-middleware），server compiler 独立 watch 编译到磁盘
 
 ### Vite
 
@@ -118,7 +118,7 @@ devkit-service build --bundler rollup     # 适合库打包
   - `vue3` → `tsx: true` + vue-loader（实验性）
 - HtmlRspackPlugin 多页面支持
 - RspackDevServer HMR 热更新
-- **SSR**：行为镜像 webpack；server compiler 独立 watch 编译，build SSR 全功能，dev SSR HTTP 已支持但 HMR Fast Refresh 集成待跟进
+- **SSR**：行为镜像 webpack；`createSSRMiddleware` 提供 HTTP dev SSR，server compiler 独立 watch 编译，build SSR 全功能，dev SSR HMR 以 React Fast Refresh（client 侧）为主
 
 ### Rollup
 
@@ -157,9 +157,9 @@ devkit-service build --bundler rollup     # 适合库打包
 | Bundler | build SSR | dev SSR | client HMR | server HMR |
 |---|---|---|---|---|
 | vite | ✅ | ✅ | ✅ | ✅ |
-| webpack | ✅ | ⏳ | ✅ | ⚠️ 进程级 |
-| rspack | ✅ | ⏳ | ✅ | ⚠️ 进程级 |
-| rollup | ✅ | ⏳ | ❌ | ❌ |
-| rolldown | ✅ | ⏳ | ❌ | ❌ |
+| webpack | ✅ | ✅ | ✅ | ⚠️ 进程级 |
+| rspack | ✅ | ✅ | ✅ | ⚠️ 进程级 |
+| rollup | ✅ | ✅ | ❌ | ❌ |
+| rolldown | ✅ | ✅ | ❌ | ❌ |
 
-> ⏳ = dev SSR middleware 在后续 release 补齐。详见 [SSR 指南](/guide/ssr)。
+> dev SSR = 开发模式下通过 `createSSRMiddleware` 提供 HTTP SSR 渲染能力。Vite 提供全双工 HMR；webpack/rspack 支持 client HMR（React Fast Refresh），server 侧进程级更新；rollup/rolldown 无原生 HMR，修改后需重启进程。详见 [SSR 指南](/guide/ssr)。

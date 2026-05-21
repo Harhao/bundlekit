@@ -97,6 +97,8 @@ devkit-cli create <name> [options]
 | `-t, --template` | `string` | 模板类型，不传则交互选择 |
 | `-b, --bundler` | `string` | 默认构建工具，不传则交互选择 |
 | `-d, --description` | `string` | 项目描述 |
+| `--pm` | `string` | 包管理器（`pnpm` / `yarn` / `npm`），不传则交互选择 |
+| `--ssr` | `boolean` | 生成 SSR 骨架（含 `entry-client` / `entry-server` + `<!--ssr-outlet-->` 占位） |
 
 **支持模板：**
 
@@ -114,7 +116,27 @@ devkit-cli create my-app
 # 非交互模式
 devkit-cli create my-app -t react-ts -b vite
 devkit-cli create my-app -t vue3-ts -b vite
+
+# 指定包管理器
+devkit-cli create my-app -t react-ts -b vite --pm pnpm
+
+# 生成 SSR 骨架
+devkit-cli create my-app -t react-ts -b vite --ssr
 ```
+
+#### 环境变量
+
+| 变量 | 值 | 说明 |
+|------|-----|------|
+| `DEVKIT_NO_INK` | `1` | 强制回退到 enquirer + 行式输出（非 TTY 自动启用） |
+| `DEVKIT_NO_PROMPT` | `1` | 跳过所有 generator 交互提示（CI 自动注入，或在 `dc create` 非 TTY 路径下自动生效） |
+| `DEVKIT_SKIP_INSTALL` | `1` | 跳过依赖安装步骤（生成文件后直接退出，适合调试模板） |
+| `DEVKIT_PM` | `pnpm\|yarn\|npm` | 强制使用指定包管理器（等价 `--pm`，优先级低于 CLI 参数） |
+| `DEVKIT_DEP_MODE` | `link\|npm` | 强制依赖模式：`link` 写本地 `link:` 路径，`npm` 写 `^cliVersion` |
+| `DEVKIT_MONOREPO_ROOT` | 路径 | 手动指定 monorepo 根目录（覆盖自动检测） |
+| `DEVKIT_AUTO_INSTALL` | `1` | 非 TTY / CI 环境自动安装缺失 bundler（等价 `dc add` 后自动 install） |
+| `DEVKIT_QUIET` | `1` | Logger 静默（只输出 WARN/ERROR 及以上） |
+| `DEVKIT_DEBUG` | `1` | 输出 DEBUG 级日志（二进制镜像探测、workspace 检测等噪音级信息） |
 
 ---
 
@@ -165,6 +187,8 @@ devkit-cli add react
               y → pnpm add @devkit/request
               N → 跳过
 ```
+
+> **TTY 检测**：generator 内的 `api.prompt()` 只在真实 TTY 下展示，当检测到 `!process.stdout.isTTY`、`DEVKIT_NO_PROMPT=1` 或 `CI=true|1` 时自动跳过（使用默认值 `false`）。`dc create` 命令在 ink 渲染路径下会自动注入 `DEVKIT_NO_PROMPT=1`，确保创建流程不会因 generator prompt 阻塞。`dc add` 命令保留交互（面向已有项目主动追加场景）。
 
 **`IGeneratorAPI` 接口：** generator 通过此接口与 CLI 交互，不依赖任何具体提示库：
 
@@ -253,4 +277,19 @@ pnpm update @devkit/service
 
 # 锁版本
 pnpm install @devkit/service@0.1.5
+```
+
+### Q: `dc create` 时 generator 追问是否安装额外包的提示没有出现
+
+这是正常行为。`dc create`（ink 渲染路径）在调用框架 generator 前会自动注入 `DEVKIT_NO_PROMPT=1`，跳过所有交互式提问，使用默认值（不安装）。如果你想手动触发 generator 提问，切换到 `dc add` 命令：
+
+```bash
+# dc add 保留交互
+dc add react    # 会弹出"是否安装 @devkit/request？"
+```
+
+或者直接手工安装：
+
+```bash
+cd my-app && pnpm add @devkit/request
 ```

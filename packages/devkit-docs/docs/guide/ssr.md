@@ -133,13 +133,13 @@ devkit-service build --bundler vite --mode production
 
 | Bundler | client HMR | server HMR | dev SSR middleware | 备注 |
 |---|---|---|---|---|
-| vite | ✅ | ✅ | ✅ | `ssrLoadModule` 原生支持 |
-| webpack | ✅ | ⚠️ 进程级 | 待补充 | dev middleware 后续 release |
-| rspack | ✅ | ⚠️ 进程级 | 待补充 | dev middleware 后续 release |
-| rollup | ❌ | ❌ | 待补充 | watch + 进程重启 |
-| rolldown | ❌ | ❌ | 待补充 | watch + 进程重启 |
+| vite | ✅ | ✅ | ✅ | `ssrLoadModule` 原生支持，全双工 HMR |
+| webpack | ✅ | ⚠️ 进程级 | ✅ | webpack-dev-middleware + HMR，server 侧 watch 重编译 |
+| rspack | ✅ | ⚠️ 进程级 | ✅ | 行为镜像 webpack，client Fast Refresh 可用 |
+| rollup | ❌ | ❌ | ✅ | watch 模式 + 进程级重启 |
+| rolldown | ❌ | ❌ | ✅ | watch 模式 + 进程级重启 |
 
-> **当前 release**：5 个 bundler 的 build SSR 已全部就绪。Vite 还提供 dev SSR middleware (`createSSRMiddleware`)。其他 4 个 bundler 的 dev SSR middleware 在后续 release 中补齐 — 目前 dev 模式仅 vite 可走 SSR 流水线。
+> **当前 release**：5 个 bundler 的 build SSR 与 dev SSR (`createSSRMiddleware`) 均已就绪。Vite 提供全双工 HMR；webpack / rspack 提供 client HMR + server 进程级更新；rollup / rolldown 的 watch 模式下修改 server bundle 需手动重启进程。
 
 ## 互斥规则
 

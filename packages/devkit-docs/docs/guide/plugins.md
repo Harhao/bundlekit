@@ -239,6 +239,10 @@ export default async function generate(
   addPluginToConfig(context, "my-plugin");
 
   // 2. 通过 api.prompt() 向用户询问（底层由 CLI 的 Enquirer 驱动）
+  //    注意：在以下情况下 prompt 会被自动跳过（使用默认值）：
+  //    - 非 TTY 环境（如 CI pipelines）
+  //    - 设置了 DEVKIT_NO_PROMPT=1（dc create 会自动注入）
+  //    - CI=true 或 CI=1
   const { installRequest } = await api.prompt<{ installRequest: boolean }>([
     {
       type: "confirm",
@@ -250,7 +254,9 @@ export default async function generate(
 
   if (installRequest) {
     // 3. 声明依赖，CLI 统一安装（推荐方式）
-    api.addDependency("@devkit/request", "^1.0.0", false);
+    //    monorepo 内部插件用 "workspace:^"（cli normalizeDeps 会转换为 link: 或 ^cliVersion）
+    //    独立发布的插件用具体版本 "^x.y.z"
+    api.addDependency("@devkit/request", "workspace:^", false);
     api.log("@devkit/request 已加入安装队列");
   }
 }
