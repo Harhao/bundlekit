@@ -4,33 +4,12 @@ import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import {
     BUNDLER_PACKAGE_MAP,
-    DEP_MODE_ENV_KEYS,
     type IBundlerName,
     type IDepMode,
 } from "@devkit/shared-utils";
 
 /**
- * 双重判定 monorepo 根：
- *   - 存在 pnpm-workspace.yaml
- *   - 存在 packages/devkit-service 子目录
- *
- * 双判避免误判其他 pnpm monorepo 含相同名字 packages 目录
- */
-export function findMonorepoRoot(startDir: string): string | null {
-    let dir = path.resolve(startDir);
-    while (dir !== path.dirname(dir)) {
-        const wsFile = path.join(dir, "pnpm-workspace.yaml");
-        const sentinelDir = path.join(dir, "packages", "devkit-service");
-        if (fs.existsSync(wsFile) && fs.existsSync(sentinelDir)) {
-            return dir;
-        }
-        dir = path.dirname(dir);
-    }
-    return null;
-}
-
-/**
- * 读取 @devkit/cli 自身的版本号（用于 npm 模式的 ^${cliVersion}）
+ * 读取 @devkit/cli 自身的版本号（用于 ^${cliVersion}）
  *
  * 实现策略：
  *   1) require.resolve 解析（已发版 / monorepo 都适用）
@@ -64,44 +43,18 @@ export function readCliVersion(): string {
 }
 
 /**
- * 决定依赖模式：env > monorepo 检测 > npm 兜底
+ * 决定依赖模式：始终使用 npm registry
  */
-export function resolveDepMode(cwd: string, cliVersion?: string): IDepMode {
+export function resolveDepMode(_cwd: string, cliVersion?: string): IDepMode {
     const version = cliVersion ?? readCliVersion();
-
-    // 1. 环境变量
-    const envMode = process.env[DEP_MODE_ENV_KEYS.MODE];
-    if (envMode === "link") {
-        const explicitRoot = process.env[DEP_MODE_ENV_KEYS.MONOREPO_ROOT];
-        if (explicitRoot && fs.existsSync(explicitRoot)) {
-            return { kind: "link", monorepoRoot: path.resolve(explicitRoot), cliVersion: version };
-        }
-    }
-    if (envMode === "npm") {
-        return { kind: "npm", cliVersion: version };
-    }
-
-    // 2. 自动检测
-    const detected = findMonorepoRoot(cwd);
-    if (detected) {
-        return { kind: "link", monorepoRoot: detected, cliVersion: version };
-    }
-
-    // 3. 默认
     return { kind: "npm", cliVersion: version };
 }
 
 /**
  * 给定 @devkit/* 短包名（如 "service" / "plugin-react" / "bundler-vite"），
- * 按 depMode 返回相应的依赖版本字符串：
- *   - link 模式 → "link:/abs/path/to/packages/devkit-{name}"
- *   - npm 模式  → "^{cliVersion}"
+ * 返回依赖版本字符串 "^{cliVersion}"
  */
 export function resolveDevkitDepValue(shortPkg: string, mode: IDepMode): string {
-    if (mode.kind === "link") {
-        const target = path.join(mode.monorepoRoot!, "packages", `devkit-${shortPkg}`);
-        return `link:${target}`;
-    }
     return `^${mode.cliVersion}`;
 }
 

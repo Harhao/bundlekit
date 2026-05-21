@@ -38,39 +38,6 @@ interface PackageManagerOptions {
     forcePackageManager?: EPackageMangerTool;
 }
 
-/**
- * 向上查找最近的 pnpm-workspace.yaml 所在目录。
- * 返回 workspace 根目录，找不到返回 null。
- * @internal 供 PackageManager 内部与单测使用
- */
-export function findPnpmWorkspaceRoot(startDir: string): string | null {
-    let dir = path.resolve(startDir);
-    while (dir !== path.dirname(dir)) {
-        if (fs.existsSync(path.join(dir, 'pnpm-workspace.yaml'))) return dir;
-        dir = path.dirname(dir);
-    }
-    return null;
-}
-
-/**
- * 判断 cwd 是否是 pnpm workspace 的 member。
- * 保守实现：只要 cwd 在 workspaceRoot 下 ≤2 层路径视为成员（如 packages/devkit-cli）；
- * 3+ 层（如 packages/devkit-cli/test-app）视为非成员。
- * @internal 供 PackageManager 内部与单测使用
- */
-export function isPnpmWorkspaceMember(workspaceRoot: string, cwd: string): boolean {
-    const rel = path.relative(workspaceRoot, path.resolve(cwd));
-    // 相对路径以 '..' 开头 → cwd 不在 workspaceRoot 下
-    if (rel.startsWith('..')) return false;
-    // 相对路径为空 → cwd 就是 workspaceRoot 本身
-    if (rel === '') return true;
-    // 相对路径包含路径分隔符 → 是嵌套子目录（非直接 member），视为非成员
-    // pnpm workspace members 通常在 workspaceRoot/packages/* 或 workspaceRoot/* 一层
-    const segments = rel.split(path.sep).filter(Boolean);
-    // 1 或 2 层（如 packages/devkit-cli）视为可能的 member；3+ 层肯定不是
-    return segments.length <= 2;
-}
-
 export class PackageManager {
 
     private fse: FileManager;
@@ -687,15 +654,6 @@ export class PackageManager {
 
             if (this.needsPeerDepsFix) {
                 commandArgs.push('--legacy-peer-deps');
-            }
-
-            // pnpm 专属：cwd 在 monorepo 内但不是 workspace member 时追加 --ignore-workspace
-            // 避免 pnpm 把生成的用户项目当 workspace member 解析，导致 hang 或版本冲突
-            if (this.bin === EPackageMangerTool.PNPM) {
-                const wsRoot = findPnpmWorkspaceRoot(this.context);
-                if (wsRoot && !isPnpmWorkspaceMember(wsRoot, this.context)) {
-                    commandArgs.push('--ignore-workspace');
-                }
             }
 
             return await this.executeCommand(this.bin!, commandArgs, this.context);

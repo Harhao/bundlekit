@@ -57,26 +57,16 @@ export function resolveBundlerPackage(input: string): string | null {
 }
 
 /**
- * cli 创建项目时的依赖处理模式
- *
- * - link：在 monorepo 内开发，写绝对路径 link: 协议
- * - npm：默认模式，写 ^cliVersion，假设 monorepo lockstep 发版
- *
- * 旁路：
- *   - DEVKIT_DEP_MODE=link|npm
- *   - DEVKIT_MONOREPO_ROOT=/path（link 模式必填，npm 模式忽略）
+ * cli 创建项目时的依赖处理模式（仅 npm registry）
  */
-export type IDepModeKind = "link" | "npm";
+export type IDepModeKind = "npm";
 
 export interface IDepMode {
     kind: IDepModeKind;
-    /** kind === 'link' 时是 monorepo 根目录绝对路径 */
-    monorepoRoot?: string;
-    /** cli 自身版本号，npm 模式下用作 ^${cliVersion} */
+    /** cli 自身版本号，用作 ^${cliVersion} */
     cliVersion: string;
 }
 
 export const DEP_MODE_ENV_KEYS = {
     MODE: "DEVKIT_DEP_MODE",
-    MONOREPO_ROOT: "DEVKIT_MONOREPO_ROOT",
 } as const;

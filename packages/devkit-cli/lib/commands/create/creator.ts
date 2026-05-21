@@ -53,12 +53,9 @@ export class Creator {
             ssr: !!options.ssr,
         });
 
-        // 2. 规范化依赖版本（替换 workspace:^ 为 link / ^cliVersion）
+        // 2. 规范化依赖版本（替换 workspace:^ 为 ^cliVersion）
         normalizeProjectDeps(targetDir, depMode);
-        const modeDetail = depMode.kind === "link"
-            ? `link 模式（monorepoRoot=${depMode.monorepoRoot}）`
-            : `npm 模式（^${depMode.cliVersion}）`;
-        this.logger.info(`依赖模式：${modeDetail}`);
+        this.logger.info(`依赖模式：npm 模式（^${depMode.cliVersion}）`);
 
         // 3. 把所选 bundler 写入新项目的 devDependencies
         const written = injectBundlerToDeps(targetDir, bundler, depMode);

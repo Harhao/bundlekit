@@ -176,9 +176,7 @@ export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) =>
             try {
                 updateTask("normalize", { status: "running" });
                 normalizeProjectDeps(targetDir, depMode);
-                const detail = depMode.kind === "link"
-                    ? `link 模式 → ${depMode.monorepoRoot}`
-                    : `npm 模式 → ^${depMode.cliVersion}`;
+                const detail = `npm 模式 → ^${depMode.cliVersion}`;
                 updateTask("normalize", { status: "done", detail });
             } catch (err) {
                 const e = err as Error;
@@ -354,7 +352,7 @@ export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) =>
             )}
 
             {currentStep === "done" && (
-                <Done name={params.name} bundler={bundler!} template={template} pm={pm} depMode={detectedDepMode.kind} />
+                <Done name={params.name} bundler={bundler!} template={template} pm={pm} />
             )}
 
             {currentStep === "error" && error && (

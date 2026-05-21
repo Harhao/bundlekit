@@ -7,9 +7,8 @@ import { spawnSync } from "node:child_process";
 /**
  * cli-create 集成测试
  *
- * 验证 cli 在 monorepo 内 / 外 创建项目时生成的 package.json 是否正确：
- *   - monorepo 内：含 link:/abs/path，不含 workspace:^
- *   - monorepo 外（DEVKIT_DEP_MODE=npm）：含 ^cliVersion，不含 workspace:^
+ * 验证 cli 创建项目时生成的 package.json 是否正确：
+ *   - 始终使用 npm registry 模式（^cliVersion），不含 workspace:^
  */
 
 const REPO_ROOT = path.resolve(__dirname, "../../..");
@@ -62,39 +61,7 @@ describe("cli-create dep normalization", () => {
         for (const c of cleanups) await c();
     });
 
-    it("monorepo mode writes link: URIs and zero workspace: literal", async () => {
-        // 在 monorepo 内运行 cli（cwd = monorepo 内某临时子目录）
-        const { cwd, cleanup } = await makeTmpCwd("link");
-        cleanups.push(cleanup);
-
-        const r = runCreate({
-            cwd,
-            name: "demo-link",
-            template: "react-ts",
-            bundler: "vite",
-        });
-        if (r.code !== 0) {
-            // DEVKIT_SKIP_INSTALL=1 时 cli 会在 install 阶段警告但仍写完文件
-            // 只要 package.json 能产出就视为成功
-            const pkgPath = path.join(cwd, "demo-link/package.json");
-            const exists = await fs.stat(pkgPath).catch(() => null);
-            if (!exists) {
-                throw new Error(
-                    `cli-create failed (code=${r.code}):\nstdout: ${r.stdout}\nstderr: ${r.stderr}`,
-                );
-            }
-        }
-
-        const pkg = JSON.parse(await fs.readFile(path.join(cwd, "demo-link/package.json"), "utf-8"));
-        const text = JSON.stringify(pkg);
-
-        expect(text).not.toContain("workspace:");
-        expect(pkg.devDependencies["@devkit/service"]).toMatch(/^link:.*packages\/devkit-service$/);
-        expect(pkg.devDependencies["@devkit/plugin-react"]).toMatch(/^link:.*packages\/devkit-plugin-react$/);
-        expect(pkg.devDependencies["@devkit/bundler-vite"]).toMatch(/^link:.*packages\/devkit-bundler-vite$/);
-    });
-
-    it("npm mode writes ^cliVersion and zero workspace: literal", async () => {
+    it("writes ^cliVersion and zero workspace: literal", async () => {
         const { cwd, cleanup } = await makeTmpCwd("npm");
         cleanups.push(cleanup);
 
@@ -103,9 +70,6 @@ describe("cli-create dep normalization", () => {
             name: "demo-npm",
             template: "vue3-ts",
             bundler: "webpack",
-            env: {
-                DEVKIT_DEP_MODE: "npm",
-            },
         });
         if (r.code !== 0) {
             const pkgPath = path.join(cwd, "demo-npm/package.json");
@@ -157,7 +121,6 @@ describe("cli-create generator prompt silenced", () => {
     it("DEVKIT_NO_PROMPT=1 skips @devkit/request prompt, no ^1.0.0 literal", async () => {
         const pkg = await createAndReadPkg("no-prompt", {
             DEVKIT_NO_PROMPT: "1",
-            DEVKIT_DEP_MODE: "npm",
         });
         const text = JSON.stringify(pkg);
         // generator 跳过 → request 不会被写入
@@ -171,7 +134,6 @@ describe("cli-create generator prompt silenced", () => {
     it("CI=true skips prompt, no hardcoded version literal", async () => {
         const pkg = await createAndReadPkg("ci-prompt", {
             CI: "true",
-            DEVKIT_DEP_MODE: "npm",
         });
         const text = JSON.stringify(pkg);
         expect(pkg.dependencies?.["@devkit/request"]).toBeUndefined();
