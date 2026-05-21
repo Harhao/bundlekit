@@ -1,13 +1,22 @@
 import React from "react";
 import { Box, Text } from "ink";
 
+export type PMName = "pnpm" | "yarn" | "npm";
+
 interface IDoneProps {
     name: string;
     bundler: string;
     template?: string;
+    pm?: PMName;
 }
 
-export const Done: React.FC<IDoneProps> = ({ name, bundler, template }) => {
+function pmRunCmd(pm: PMName, script: string): string {
+    return pm === "npm" ? `npm run ${script}` : `${pm} ${script}`;
+}
+
+export const Done: React.FC<IDoneProps> = ({ name, bundler, template, pm = "pnpm" }) => {
+    const devCmd = pmRunCmd(pm, "dev");
+    const buildCmd = pmRunCmd(pm, "build");
     return (
         <Box flexDirection="column" marginTop={1}>
             {/* 顶部成功条幅 */}
@@ -27,16 +36,20 @@ export const Done: React.FC<IDoneProps> = ({ name, bundler, template }) => {
             >
                 {template && (
                     <Box>
-                        <Text dimColor>{"模板    "}</Text>
+                        <Text dimColor>{"模板      "}</Text>
                         <Text color="cyan">{template}</Text>
                     </Box>
                 )}
                 <Box>
-                    <Text dimColor>{"打包器  "}</Text>
+                    <Text dimColor>{"打包器    "}</Text>
                     <Text color="cyan">{bundler}</Text>
                 </Box>
                 <Box>
-                    <Text dimColor>{"位置    "}</Text>
+                    <Text dimColor>{"包管理器  "}</Text>
+                    <Text color="cyan">{pm}</Text>
+                </Box>
+                <Box>
+                    <Text dimColor>{"位置      "}</Text>
                     <Text color="cyan">{`./${name}`}</Text>
                 </Box>
             </Box>
@@ -51,12 +64,12 @@ export const Done: React.FC<IDoneProps> = ({ name, bundler, template }) => {
                     </Box>
                     <Box>
                         <Text color="gray">{"$ "}</Text>
-                        <Text color="cyan">{"pnpm dev"}</Text>
+                        <Text color="cyan">{devCmd}</Text>
                         <Text dimColor>{`    使用 ${bundler} 启动开发服务`}</Text>
                     </Box>
                     <Box>
                         <Text color="gray">{"$ "}</Text>
-                        <Text color="cyan">{"pnpm build"}</Text>
+                        <Text color="cyan">{buildCmd}</Text>
                         <Text dimColor>{`  生产构建`}</Text>
                     </Box>
                 </Box>

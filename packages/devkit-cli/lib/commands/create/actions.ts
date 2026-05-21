@@ -1,11 +1,14 @@
 import path from "path";
 import fs from "fs";
+import { spawnSync } from "child_process";
 import { createRequire } from "module";
 import { fileURLToPath } from "url";
-import { FileManager, Logger, PackageManager } from "@devkit/shared-utils";
+import { FileManager, Logger, PackageManager, EPackageMangerTool } from "@devkit/shared-utils";
 import Generator from "../../generator";
 import { buildGeneratorAPI, invokeGenerator } from "../../utils/generatorRunner";
 import { addBundlerToDevDeps } from "../../utils/projectMutation";
+
+export type PMName = "pnpm" | "yarn" | "npm";
 
 export interface ICreateOptions {
     name: string;
@@ -13,6 +16,8 @@ export interface ICreateOptions {
     bundler: string;
     description?: string;
     cwd?: string;
+    pm?: PMName;
+    ssr?: boolean;
 }
 
 /** 项目名 + 路径校验，失败时抛错 */
@@ -76,6 +81,7 @@ export async function renderTemplates(opts: {
     projectName: string;
     description?: string;
     bundler: string;
+    ssr?: boolean;
 }): Promise<void> {
     const generator = new Generator({
         templateDir: opts.templateDir,
@@ -84,6 +90,7 @@ export async function renderTemplates(opts: {
             projectName: opts.projectName,
             description: opts.description || "",
             bundler: opts.bundler,
+            ssr: !!opts.ssr,
         },
     });
     await generator.generate();
@@ -95,9 +102,38 @@ export function injectBundlerToDeps(targetDir: string, bundler: string): [string
 }
 
 /** 安装 targetDir 下的所有 deps */
-export async function installDeps(targetDir: string): Promise<void> {
-    const pm = new PackageManager({ context: targetDir });
+export async function installDeps(
+    targetDir: string,
+    opts?: { pm?: PMName },
+): Promise<void> {
+    const forced = opts?.pm
+        ? (opts.pm as unknown as EPackageMangerTool)
+        : undefined;
+    const pm = new PackageManager({
+        context: targetDir,
+        forcePackageManager: forced,
+    });
     await pm.install();
+}
+
+/** 同步检测系统 PATH 上可用的包管理器 */
+export function detectAvailablePMs(): Record<PMName, boolean> {
+    const check = (bin: string): boolean => {
+        try {
+            const result = spawnSync(bin, ["--version"], {
+                stdio: "ignore",
+                shell: process.platform === "win32",
+            });
+            return result.status === 0;
+        } catch {
+            return false;
+        }
+    };
+    return {
+        pnpm: check("pnpm"),
+        yarn: check("yarn"),
+        npm: check("npm"),
+    };
 }
 
 /**

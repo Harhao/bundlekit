@@ -3,8 +3,21 @@ import { fileURLToPath } from "url";
 import Rspack, { type RspackOptions } from "@rspack/core";
 import { RspackDevServer } from "@rspack/dev-server";
 
-import { FileManager, Logger, validateBuildConfig } from "@devkit/shared-utils";
-import type { IBuildConfig, IBuildToolAdapter, IService, IBuildEnv } from "@devkit/shared-utils";
+import {
+    FileManager,
+    Logger,
+    validateBuildConfig,
+    createSSRRequestHandler,
+    buildSSRView,
+} from "@devkit/shared-utils";
+import type {
+    IBuildConfig,
+    IBuildToolAdapter,
+    IService,
+    IBuildEnv,
+    IRequestHandler,
+    ISSRMiddlewareCtx,
+} from "@devkit/shared-utils";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
@@ -263,5 +276,80 @@ export default class RspackBundler implements IBuildToolAdapter<RspackOptions> {
             this.logger.error(`打包失败, 错误信息: ${e}`);
             throw e;
         }
+    }
+
+    /**
+     * Rspack dev SSR middleware
+     *
+     * 行为镜像 webpack：dev-server 中间件模式 + ssrHandler
+     *
+     *   1. 用 RspackDevServer 自身 middleware mode 处理 client 编译 + HMR
+     *   2. 单独 watch 一个 server compiler 编译 server bundle 到磁盘
+     *   3. ssrHandler 每次请求都清 require cache 并 require 最新 server bundle 调 render
+     */
+    public async createSSRMiddleware(
+        buildConfig: IBuildConfig,
+        ctx: ISSRMiddlewareCtx,
+    ): Promise<IRequestHandler[]> {
+        const envConfig = buildConfig.config?.[this.mode] || buildConfig.config?.development;
+        const ssrConfig = (envConfig as any)?.ssr;
+        if (!ssrConfig) throw new Error("ssr config not found in envConfig");
+
+        // 1) client config + middleware mode dev server
+        const clientConfig = this.transformConfig(buildConfig);
+        // rspack dev-server middleware mode + 不绑定端口
+        (clientConfig as any).devServer = {
+            ...(clientConfig.devServer || {}),
+            hot: true,
+            historyApiFallback: true,
+        };
+        const clientCompiler = Rspack(clientConfig as any);
+        const devServer = new RspackDevServer(
+            {
+                ...((clientConfig as any).devServer),
+                // middleware-only：rspack-dev-server 没有 middlewareMode，但通过不调 start() 仅取 middleware
+            } as any,
+            clientCompiler as any,
+        );
+        // RspackDevServer 暴露的 middleware 链
+        // @ts-expect-error - rspack-dev-server middleware API 内部
+        const devMiddleware = devServer.app?.callback?.()
+            || ((req: any, res: any, next: any) => next());
+
+        // 2) server compiler watch
+        const serverBuildConfig = buildSSRView(buildConfig, this.mode);
+        const serverConfig = this.transformConfig(serverBuildConfig);
+        const serverOutDir = path.resolve(this.context, ssrConfig.output.dir);
+        const serverFilename = ssrConfig.output.filename || "server.cjs";
+        const serverBundlePath = path.resolve(serverOutDir, serverFilename);
+
+        const serverCompiler = Rspack(serverConfig as any);
+        let serverReady = false;
+        let pending: Array<() => void> = [];
+        const waitUntilReady = () =>
+            serverReady ? Promise.resolve() : new Promise<void>((r) => pending.push(r));
+
+        serverCompiler.watch({}, (err: any, stats: any) => {
+            if (err) {
+                this.logger.error(`server compiler 错误: ${err}`);
+                return;
+            }
+            if (stats?.hasErrors()) {
+                this.logger.error(stats.toString({ colors: true, errors: true }));
+                return;
+            }
+            serverReady = true;
+            const r = pending; pending = []; r.forEach((f) => f());
+        });
+
+        const ssrHandler = createSSRRequestHandler({
+            context: this.context,
+            ssrConfig,
+            serverBundlePath: () => serverBundlePath,
+            waitUntilReady,
+            onError: (e) => this.logger.error(`SSR 渲染失败: ${e?.message ?? e}`),
+        });
+
+        return [devMiddleware as IRequestHandler, ssrHandler];
     }
 }

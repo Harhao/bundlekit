@@ -98,6 +98,7 @@ devkit-service build --bundler rollup     # 适合库打包
 - HtmlWebpackPlugin 多页面支持（读取 `pages[]` 配置）
 - webpack-dev-server 5 HMR，proxy 自动转换为数组格式
 - 代码分割、sourcemap、bundle 分析器
+- **SSR**：build 双 pass（client + server），dev 用 webpack-dev-middleware + webpack-hot-middleware，server compiler 独立 watch 编译到磁盘
 
 ### Vite
 
@@ -107,6 +108,7 @@ devkit-service build --bundler rollup     # 适合库打包
   - `vue3` → 动态 `import @vitejs/plugin-vue`
 - vite-plugin-html 多页面支持
 - terser 生产压缩
+- **SSR**：原生支持，dev 用 `createServer({ middlewareMode: true })` + `ssrLoadModule` + `transformIndexHtml`，client + server HMR 全双工
 
 ### Rspack
 
@@ -116,6 +118,7 @@ devkit-service build --bundler rollup     # 适合库打包
   - `vue3` → `tsx: true` + vue-loader（实验性）
 - HtmlRspackPlugin 多页面支持
 - RspackDevServer HMR 热更新
+- **SSR**：行为镜像 webpack；server compiler 独立 watch 编译，build SSR 全功能，dev SSR HTTP 已支持但 HMR Fast Refresh 集成待跟进
 
 ### Rollup
 

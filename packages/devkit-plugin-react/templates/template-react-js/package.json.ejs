@@ -4,10 +4,8 @@
   "description": "<%= description %>",
   "scripts": {
     "clean": "rimraf dist",
-    "dev": "devkit-service serve --bundler webpack --mode development",
-    "build": "devkit-service build --bundler webpack --mode production",
-    "vite:dev": "npm run clean && devkit-service serve --bundler vite --mode development",
-    "webpack:dev": "npm run clean && devkit-service serve --bundler webpack --mode development"
+    "dev": "devkit-service serve --bundler <%= bundler %> --mode development",
+    "build": "devkit-service build --bundler <%= bundler %> --mode production"
   },
   "dependencies": {
     "react": "^18.2.0",

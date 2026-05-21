@@ -1,0 +1,41 @@
+export default {
+    mode: "production" as const,
+    bundler: "rollup" as const,
+    plugins: ["@devkit/plugin-react"],
+    config: {
+        production: {
+            target: "web" as const,
+            publicPath: "/",
+            entry: "shared/src/entry-client.tsx",
+            output: { dir: "dist/client", filename: "[name].js", formats: "umd" as const },
+            alias: {},
+            externals: [],
+            js: { sourcemap: false, minify: false, splitChunks: false },
+            ssr: {
+                entry: "shared/src/entry-server.tsx",
+                output: { dir: "dist/server", filename: "server.cjs", formats: "commonjs" as const },
+                externals: "auto" as const,
+                template: "shared/public/index.html",
+                placeholder: "<!--ssr-outlet-->",
+            },
+        },
+        development: {
+            target: "web" as const,
+            publicPath: "/",
+            entry: "shared/src/entry-client.tsx",
+            output: { dir: "dist/client", filename: "[name].js", formats: "umd" as const },
+            alias: {},
+            externals: [],
+            js: { sourcemap: false, minify: false, splitChunks: false },
+            devServer: { open: false, proxy: {}, https: false, host: "127.0.0.1", port: 0 },
+            ssr: {
+                entry: "shared/src/entry-server.tsx",
+                output: { dir: "dist/server", filename: "server.cjs", formats: "commonjs" as const },
+                externals: "auto" as const,
+                template: "shared/public/index.html",
+                placeholder: "<!--ssr-outlet-->",
+                dev: true,
+            },
+        },
+    } as any,
+};

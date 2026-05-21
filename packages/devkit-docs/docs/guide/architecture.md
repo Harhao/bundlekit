@@ -156,9 +156,12 @@ devkit-bundler-webpack
 devkit-bundler-vite        （并行构建）
 devkit-bundler-rollup
 devkit-bundler-rspack
+devkit-bundler-rolldown
     ↓
-devkit-service             （依赖所有 bundler 适配器）
+devkit-service             （仅依赖 shared-utils；bundler-* 在 peerDependenciesMeta.optional）
 ```
+
+**`turbo.json` 中 `service:build` 不再 dependsOn 任何 bundler-*** —— 因为 service 在运行时通过 `require.resolve` 动态加载 bundler，编译期无需 bundler dist。原本 `dependsOn: ["bundler-webpack:build", ...]` 已删除。
 
 `devkit-cli` 和 `devkit-request` 独立构建，不在此链路中。
 

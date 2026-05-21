@@ -5,12 +5,20 @@ export default {
     development: {
       target: "web",
       publicPath: "/",
-      entry: "src/index.jsx",
+      entry: <% if (ssr) { %>"src/entry-client.jsx"<% } else { %>"src/index.jsx"<% } %>,
       output: { dir: "dist", filename: "[name].js", formats: "umd" },
       alias: { "@": "src" },
       externals: [],
       js: { sourcemap: true, minify: false, splitChunks: true },
-      devServer: { open: true, proxy: {}, https: false, host: "0.0.0.0", port: 3000 },
+      devServer: { open: true, proxy: {}, https: false, host: "0.0.0.0", port: 3000 },<% if (ssr) { %>
+      ssr: {
+        entry: "src/entry-server.jsx",
+        output: { dir: "dist/server", filename: "server.cjs", formats: "commonjs" },
+        externals: "auto",
+        template: "public/index.html",
+        placeholder: "<!--ssr-outlet-->",
+        dev: true,
+      },<% } %>
     },
   },
 };

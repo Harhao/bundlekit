@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Box, Text, useApp } from "ink";
 import { Logger } from "@devkit/shared-utils";
 import { Banner } from "./Banner";
@@ -6,7 +6,7 @@ import { StepFrame } from "./StepFrame";
 import { Select, ISelectItem } from "./Select";
 import { TextInput } from "./TextInput";
 import { TaskList, ITaskItem } from "./TaskList";
-import { Done } from "./Done";
+import { Done, PMName } from "./Done";
 import { ErrorView } from "./ErrorView";
 import {
     validateProject,
@@ -16,6 +16,7 @@ import {
     injectBundlerToDeps,
     installDeps,
     runGenerator,
+    detectAvailablePMs,
 } from "../commands/create/actions";
 
 const TEMPLATES: ISelectItem[] = [
@@ -25,22 +26,37 @@ const TEMPLATES: ISelectItem[] = [
     { label: "Vue 3 + JavaScript", value: "vue3-js" },
 ];
 
-const BUNDLERS: ISelectItem[] = [
+const BUNDLERS_PRIMARY: ISelectItem[] = [
     { label: "Vite      —— 开发体感最佳",     value: "vite" },
     { label: "Webpack   —— 生态最完整",       value: "webpack" },
     { label: "Rspack    —— Rust 实现，极速",  value: "rspack" },
-    { label: "Rollup    —— 适合库构建",       value: "rollup" },
-    { label: "Rolldown  —— 实验性",          value: "rolldown" },
+    { label: "更多打包器 →",                  value: "__more__" },
 ];
 
-type Step = "template" | "bundler" | "description" | "tasks" | "done" | "error";
+const BUNDLERS_SECONDARY: ISelectItem[] = [
+    { label: "Rollup    —— 适合库构建",       value: "rollup" },
+    { label: "Rolldown  —— 实验性",           value: "rolldown" },
+    { label: "← 返回",                        value: "__back__" },
+];
+
+const PM_ORDER: PMName[] = ["pnpm", "yarn", "npm"];
+
+const PM_LABEL: Record<PMName, string> = {
+    pnpm: "pnpm  —— 推荐，磁盘占用最小",
+    yarn: "yarn  —— 兼容性好",
+    npm:  "npm   —— Node 内置",
+};
+
+type Step = "template" | "bundler" | "pm" | "description" | "tasks" | "done" | "error";
 
 export interface ICreateAppParams {
     name: string;
     template?: string;
     bundler?: string;
+    pm?: PMName;
     description?: string;
     cwd?: string;
+    ssr?: boolean;
 }
 
 interface IErrorState {
@@ -49,11 +65,38 @@ interface IErrorState {
     stack?: string;
 }
 
+function readEnvPM(): PMName | undefined {
+    const v = process.env.DEVKIT_PM;
+    if (v === "pnpm" || v === "yarn" || v === "npm") return v;
+    return undefined;
+}
+
+function pickInitialPM(
+    explicit: PMName | undefined,
+    envPM: PMName | undefined,
+    available: Record<PMName, boolean>,
+): PMName | undefined {
+    if (explicit && available[explicit]) return explicit;
+    if (envPM && available[envPM]) return envPM;
+    return undefined;
+}
+
 export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) => {
     const { exit } = useApp();
     const [template, setTemplate] = useState<string | undefined>(params.template);
     const [bundler, setBundler] = useState<string | undefined>(params.bundler);
+    const [bundlerLevel, setBundlerLevel] = useState<"primary" | "secondary">("primary");
+
+    const availablePMs = useMemo(() => detectAvailablePMs(), []);
+    const envPM = useMemo(() => readEnvPM(), []);
+    const [pm, setPm] = useState<PMName | undefined>(
+        pickInitialPM(params.pm, envPM, availablePMs),
+    );
+
     const [description, setDescription] = useState<string>(params.description || "");
+    const [descriptionSubmitted, setDescriptionSubmitted] = useState<boolean>(
+        params.description !== undefined,
+    );
     const [tasks, setTasks] = useState<ITaskItem[]>([]);
     const [error, setError] = useState<IErrorState | null>(null);
 
@@ -68,7 +111,9 @@ export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) =>
         currentStep = "template";
     } else if (!bundler) {
         currentStep = "bundler";
-    } else if (params.description === undefined && description === "") {
+    } else if (!pm) {
+        currentStep = "pm";
+    } else if (!descriptionSubmitted) {
         currentStep = "description";
     } else {
         currentStep = "tasks";
@@ -111,6 +156,7 @@ export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) =>
                     projectName: params.name,
                     description,
                     bundler: bundler!,
+                    ssr: !!params.ssr,
                 });
                 updateTask("render", { status: "done" });
             } catch (err) {
@@ -138,7 +184,7 @@ export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) =>
 
             try {
                 updateTask("install", { status: "running" });
-                await installDeps(targetDir);
+                await installDeps(targetDir, { pm });
                 updateTask("install", { status: "done" });
             } catch (err) {
                 const e = err as Error;
@@ -152,7 +198,7 @@ export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) =>
                 const pluginPkgName = resolvePluginPkgName(template!);
                 const hasPendingDeps = await runGenerator(pluginPkgName, targetDir, logger);
                 if (hasPendingDeps) {
-                    await installDeps(targetDir);
+                    await installDeps(targetDir, { pm });
                 }
                 updateTask("generator", { status: "done" });
             } catch (err) {
@@ -162,7 +208,7 @@ export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) =>
                 return;
             }
         })();
-    }, [currentStep, tasks.length, template, bundler, description, params, updateTask]);
+    }, [currentStep, tasks.length, template, bundler, pm, description, params, updateTask]);
 
     useEffect(() => {
         if (currentStep === "done") {
@@ -179,12 +225,23 @@ export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) =>
         return undefined;
     }, [currentStep, exit]);
 
+    const pmItems: ISelectItem<PMName>[] = useMemo(
+        () =>
+            PM_ORDER.map((name) => ({
+                label: PM_LABEL[name],
+                value: name,
+                disabled: !availablePMs[name],
+                disabledReason: !availablePMs[name] ? "(未安装)" : undefined,
+            })),
+        [availablePMs],
+    );
+
     return (
         <Box flexDirection="column">
             <Banner />
 
             {currentStep === "template" && (
-                <StepFrame title="模板" step={1} total={3}>
+                <StepFrame title="模板" step={1} total={4}>
                     <Select
                         items={TEMPLATES}
                         initialValue={template}
@@ -194,26 +251,58 @@ export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) =>
             )}
 
             {currentStep === "bundler" && (
-                <StepFrame title="打包器" step={2} total={3}>
+                <StepFrame title="打包器" step={2} total={4}>
                     <Box marginBottom={1}>
                         <Text dimColor>已选模板：</Text>
                         <Text color="cyan"> {template}</Text>
                     </Box>
-                    <Select
-                        items={BUNDLERS}
-                        initialValue={bundler}
-                        onSelect={(v) => setBundler(v)}
-                    />
+                    {bundlerLevel === "primary" ? (
+                        <Select
+                            items={BUNDLERS_PRIMARY}
+                            initialValue={bundler}
+                            onSelect={(v) => {
+                                if (v === "__more__") {
+                                    setBundlerLevel("secondary");
+                                } else {
+                                    setBundler(v);
+                                }
+                            }}
+                        />
+                    ) : (
+                        <Select
+                            items={BUNDLERS_SECONDARY}
+                            onSelect={(v) => {
+                                if (v === "__back__") {
+                                    setBundlerLevel("primary");
+                                } else {
+                                    setBundler(v);
+                                }
+                            }}
+                            onBack={() => setBundlerLevel("primary")}
+                        />
+                    )}
+                </StepFrame>
+            )}
+
+            {currentStep === "pm" && (
+                <StepFrame title="包管理器" step={3} total={4}>
+                    <Box marginBottom={1}>
+                        <Text dimColor>用于安装项目依赖：</Text>
+                    </Box>
+                    <Select<PMName> items={pmItems} onSelect={(v) => setPm(v)} />
                 </StepFrame>
             )}
 
             {currentStep === "description" && (
-                <StepFrame title="项目描述（可选，按回车跳过）" step={3} total={3}>
+                <StepFrame title="项目描述（可选，按回车跳过）" step={4} total={4}>
                     <TextInput
                         value={description}
                         placeholder="A demo app"
                         onChange={setDescription}
-                        onSubmit={(v) => setDescription(v || " ")}
+                        onSubmit={(v) => {
+                            setDescription(v || " ");
+                            setDescriptionSubmitted(true);
+                        }}
                     />
                 </StepFrame>
             )}
@@ -223,13 +312,15 @@ export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) =>
                     <Box marginBottom={1}>
                         <Text bold color="cyan">{"创建项目 "}</Text>
                         <Text bold>{params.name}</Text>
-                        <Text dimColor>{`  ${template} · ${bundler}`}</Text>
+                        <Text dimColor>{`  ${template} · ${bundler} · ${pm}`}</Text>
                     </Box>
                     <TaskList tasks={tasks} />
                 </Box>
             )}
 
-            {currentStep === "done" && <Done name={params.name} bundler={bundler!} template={template} />}
+            {currentStep === "done" && (
+                <Done name={params.name} bundler={bundler!} template={template} pm={pm} />
+            )}
 
             {currentStep === "error" && error && (
                 <ErrorView step={error.step} message={error.message} stack={error.stack} />

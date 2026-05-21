@@ -1,0 +1,15 @@
+{
+    "name": "devkit-fixture-webpack",
+    "version": "0.0.0",
+    "private": true,
+    "dependencies": {
+        "react": "^18.3.0",
+        "react-dom": "^18.3.0"
+    },
+    "devDependencies": {
+        "@devkit/service": "link:../../../../packages/devkit-service",
+        "@devkit/bundler-webpack": "link:../../../../packages/devkit-bundler-webpack",
+        "@devkit/shared-utils": "link:../../../../packages/devkit-shared-utils",
+        "@devkit/plugin-react": "link:../../../../packages/devkit-plugin-react"
+    }
+}

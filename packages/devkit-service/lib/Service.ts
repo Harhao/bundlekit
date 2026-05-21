@@ -3,6 +3,7 @@ import PluginAPI from "./PluginAPI";
 import ConfigLoader from "./ConfigLoader";
 import { applyTools } from "./utils/applyTools";
 import { buildSSRView } from "./utils/ssr";
+import { startSSRDevServer, resolveDevServerBinding } from "./utils/ssrDevServer";
 import { createJiti } from "jiti";
 
 import { createRequire } from "module";
@@ -347,7 +348,44 @@ export default class Service {
             return;
         }
 
-        // SSR 双 pass：先 client，再 server
+        // dev SSR 路径：service 起 HTTP server，adapter 提供 middleware 链
+        // 当且仅当 (currentCommand === 'serve') 且 envConfig.ssr.dev !== false 时启用 dev SSR
+        const ssrDev = !!envConfig?.ssr?.dev;
+        if (this.currentCommand === "serve" && ssrDev) {
+            const builder = new bundlerPlugin(this, this.mode);
+            if (typeof builder.createSSRMiddleware !== "function") {
+                this.logger.error(
+                    `bundler "${finalBundler}" 未实现 createSSRMiddleware，无法启动 dev SSR`,
+                    "构建工具",
+                );
+                process.exit(1);
+            }
+            try {
+                const middleware = await builder.createSSRMiddleware(this.buildConfig!, {
+                    env: "client",
+                    isProduction: false,
+                });
+                const { host, port } = resolveDevServerBinding(this.buildConfig!, this.mode);
+                const handle = await startSSRDevServer({
+                    middleware,
+                    host,
+                    port,
+                    onError: (err) => {
+                        this.logger.error(`SSR middleware 异常: ${err?.message ?? err}`, "构建工具");
+                    },
+                });
+                this.logger.done(
+                    `SSR dev server 就绪：http://${host === "0.0.0.0" ? "localhost" : host}:${handle.port}`,
+                    "构建工具",
+                );
+            } catch (err: any) {
+                this.logger.error(`启动 SSR dev server 失败: ${err?.message ?? err}`, "构建工具");
+                process.exit(1);
+            }
+            return;
+        }
+
+        // build SSR 双 pass：先 client，再 server
         this.logger.log(`SSR 模式启用：将依次执行 client + server 两次构建`, "构建工具");
 
         // Pass 1: client

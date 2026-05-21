@@ -5,9 +5,7 @@
   "scripts": {
     "clean": "rimraf dist",
     "dev": "devkit-service serve --bundler <%= bundler %> --mode development",
-    "build": "devkit-service build --bundler <%= bundler %> --mode production"<% if (bundler === 'vite') { %>,
-    "vite:dev": "npm run clean && devkit-service serve --bundler vite --mode development"<% } %><% if (bundler === 'webpack') { %>,
-    "webpack:dev": "npm run clean && devkit-service serve --bundler webpack --mode development"<% } %>
+    "build": "devkit-service build --bundler <%= bundler %> --mode production"
   },
   "dependencies": {
     "vue": "^3.5.0"

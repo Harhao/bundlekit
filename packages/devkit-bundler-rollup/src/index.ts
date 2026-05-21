@@ -10,8 +10,8 @@ import json from "@rollup/plugin-json";
 import replace from "@rollup/plugin-replace";
 import postcss from "rollup-plugin-postcss";
 
-import { Logger, validateBuildConfig, FileManager } from "@devkit/shared-utils";
-import type { IBuildConfig, IBuildToolAdapter, IService, IBuildEnv } from "@devkit/shared-utils";
+import { Logger, validateBuildConfig, FileManager, createSSRRequestHandler, buildSSRView } from "@devkit/shared-utils";
+import type { IBuildConfig, IBuildToolAdapter, IService, IBuildEnv, IRequestHandler, ISSRMiddlewareCtx } from "@devkit/shared-utils";
 import { DevServer } from "./DevServer";
 
 // ─── 格式后缀映射（library 模式多格式输出） ────────────────────────────────────────
@@ -469,5 +469,60 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
         }
         this.logger.done("rollup 生产构建完成", "rollup");
         await bundle.close();
+    }
+
+    /**
+     * Rollup dev SSR middleware（无 HMR 注入）
+     *
+     * 实现思路：
+     *   1. server bundle 用 rollup.watch 持续监听并写到磁盘
+     *   2. ssrHandler 每次请求等编译就绪 → 清 require cache → require → render
+     *   3. client 部分由用户自行处理（rollup dev 通常用 livereload，无原生 HMR）
+     */
+    public async createSSRMiddleware(
+        buildConfig: IBuildConfig,
+        ctx: ISSRMiddlewareCtx,
+    ): Promise<IRequestHandler[]> {
+        const envConfig = buildConfig.config?.[this.mode] || buildConfig.config?.development;
+        const ssrConfig = (envConfig as any)?.ssr;
+        if (!ssrConfig) throw new Error("ssr config not found in envConfig");
+
+        const serverBuildConfig = buildSSRView(buildConfig, this.mode);
+        const serverConfig = sanitizeRollupOptions(this.transformConfig(serverBuildConfig));
+
+        const serverOutDir = path.resolve(this.context, ssrConfig.output.dir);
+        const serverFilename = ssrConfig.output.filename || "server.cjs";
+        const serverBundlePath = path.resolve(serverOutDir, serverFilename);
+
+        let serverReady = false;
+        let pending: Array<() => void> = [];
+        const waitUntilReady = () =>
+            serverReady ? Promise.resolve() : new Promise<void>((r) => pending.push(r));
+
+        const watcher = watch({
+            ...serverConfig,
+            watch: { clearScreen: false, exclude: "node_modules/**" },
+        } as any);
+
+        watcher.on("event", (event: any) => {
+            if (event.code === "END") {
+                serverReady = true;
+                const r = pending; pending = []; r.forEach((f) => f());
+            }
+            if (event.code === "ERROR") {
+                this.logger.error(`rollup server compiler 错误: ${event.error}`, "rollup");
+            }
+            if (event.result) event.result.close();
+        });
+
+        const ssrHandler = createSSRRequestHandler({
+            context: this.context,
+            ssrConfig,
+            serverBundlePath: () => serverBundlePath,
+            waitUntilReady,
+            onError: (e) => this.logger.error(`SSR 渲染失败: ${e?.message ?? e}`, "rollup"),
+        });
+
+        return [ssrHandler];
     }
 }

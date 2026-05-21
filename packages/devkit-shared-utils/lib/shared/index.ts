@@ -6,3 +6,5 @@ export * from "./fetch";
 export * from "./validate";
 export * from "./addPluginToConfig";
 export * from "./confirm";
+export * from "./ssrRender";
+export * from "./ssrView";

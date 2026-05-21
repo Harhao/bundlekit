@@ -5,6 +5,7 @@ import { render } from "ink";
 import { Creator } from "./lib/commands/create/creator";
 import { AddCommand } from "./lib/commands/add";
 import { App } from "./lib/ui/App";
+import { detectAvailablePMs, PMName } from "./lib/commands/create/actions";
 
 const program = new Command();
 
@@ -30,6 +31,16 @@ function isInkEnabled(): boolean {
     return true;
 }
 
+function readEnvPM(): PMName | undefined {
+    const v = process.env.DEVKIT_PM;
+    if (v === "pnpm" || v === "yarn" || v === "npm") return v;
+    return undefined;
+}
+
+function isValidPM(s: unknown): s is PMName {
+    return s === "pnpm" || s === "yarn" || s === "npm";
+}
+
 async function legacyCreate(name: string, options: Record<string, any>) {
     const enquirer = new Enquirer();
 
@@ -53,6 +64,31 @@ async function legacyCreate(name: string, options: Record<string, any>) {
         options.bundler = answer.bundler;
     }
 
+    // PM 选择：优先级 --pm > DEVKIT_PM > 交互
+    let pm: PMName | undefined = isValidPM(options.pm) ? options.pm : undefined;
+    if (!pm) pm = readEnvPM();
+    if (!pm) {
+        const available = detectAvailablePMs();
+        const choices = (["pnpm", "yarn", "npm"] as PMName[])
+            .filter((n) => available[n])
+            .map((n) => ({ name: n, message: n }));
+        if (choices.length === 0) {
+            // 极端情况：全部不可用，回退 npm
+            pm = "npm";
+        } else if (choices.length === 1) {
+            pm = choices[0].name as PMName;
+        } else {
+            const answer = (await enquirer.prompt({
+                type: "select",
+                name: "pm",
+                message: "请选择包管理器:",
+                choices,
+            })) as { pm: string };
+            pm = answer.pm as PMName;
+        }
+    }
+    options.pm = pm;
+
     const creator = new Creator();
     await creator.create(name, options);
 }
@@ -63,6 +99,8 @@ program
     .option("-t, --template <template>", "模板类型 (react-ts, react-js, vue3-ts, vue3-js)")
     .option("-b, --bundler <bundler>", "默认构建工具 (vite, webpack, rspack, rollup, rolldown)")
     .option("-d, --description <desc>", "项目描述")
+    .option("--pm <pm>", "包管理器 (pnpm, yarn, npm)")
+    .option("--ssr", "启用 SSR：模板生成 entry-client/entry-server + .devkitrc.ts 加 ssr 配置块", false)
     .action(async (name: string, options: Record<string, any>) => {
         if (!isInkEnabled()) {
             // Non-TTY / DEVKIT_NO_INK fallback
@@ -71,6 +109,7 @@ program
         }
         // TTY: ink-rendered UI — 静默 Logger，避免与 ink frame 互打
         process.env.DEVKIT_QUIET = "1";
+        const inputPM = isValidPM(options.pm) ? (options.pm as PMName) : undefined;
         const { waitUntilExit } = render(
             React.createElement(App, {
                 command: "create",
@@ -78,7 +117,9 @@ program
                     name,
                     template: options.template,
                     bundler: options.bundler,
+                    pm: inputPM,
                     description: options.description,
+                    ssr: !!options.ssr,
                 },
             } as any),
         );

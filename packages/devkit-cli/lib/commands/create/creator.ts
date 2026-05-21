@@ -7,6 +7,7 @@ import {
     injectBundlerToDeps,
     installDeps,
     runGenerator,
+    PMName,
 } from "./actions";
 
 /**
@@ -27,6 +28,7 @@ export class Creator {
         const cwd = options.cwd || process.cwd();
         const template = options.template || "react-ts";
         const bundler = options.bundler || "webpack";
+        const pm = (options.pm as PMName | undefined) || undefined;
 
         let targetDir: string;
         try {
@@ -45,6 +47,7 @@ export class Creator {
             projectName: name,
             description: options.description,
             bundler,
+            ssr: !!options.ssr,
         });
 
         // 2. 把所选 bundler 写入新项目的 devDependencies
@@ -58,7 +61,7 @@ export class Creator {
 
         // 3. 安装基础依赖
         spinner.logWithSpinner("📦", "正在安装依赖...");
-        await installDeps(targetDir);
+        await installDeps(targetDir, { pm });
         spinner.stopSpinner(false);
 
         this.logger.done(`项目 ${name} 创建成功！`);
@@ -70,10 +73,11 @@ export class Creator {
         // 5. 若 generator 追加了新依赖，重新安装
         if (hasPendingDeps) {
             this.logger.info("正在安装追加的依赖...");
-            await installDeps(targetDir);
+            await installDeps(targetDir, { pm });
         }
 
+        const runDev = pm === "npm" ? "npm run dev" : `${pm || "pnpm"} dev`;
         this.logger.log(`\n  cd ${name}`);
-        this.logger.log(`  pnpm dev\n`);
+        this.logger.log(`  ${runDev}\n`);
     }
 }

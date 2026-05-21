@@ -3,8 +3,8 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync } from 
 import { build, watch } from "rolldown";
 import postcss from "rollup-plugin-postcss";
 
-import { Logger, validateBuildConfig } from "@devkit/shared-utils";
-import type { IBuildConfig, IBuildToolAdapter, IService, IBuildEnv } from "@devkit/shared-utils";
+import { Logger, validateBuildConfig, createSSRRequestHandler, buildSSRView } from "@devkit/shared-utils";
+import type { IBuildConfig, IBuildToolAdapter, IService, IBuildEnv, IRequestHandler, ISSRMiddlewareCtx } from "@devkit/shared-utils";
 import { DevServer } from "./DevServer";
 
 // ─── 格式后缀映射（library 模式多格式输出） ────────────────────────────────────────
@@ -476,5 +476,56 @@ export default class RolldownBundler implements IBuildToolAdapter {
 
         const stats = builtFiles.join("\n");
         this.logger.done(`rolldown 生产构建完成\n${stats}`, "rolldown");
+    }
+
+    /**
+     * Rolldown dev SSR middleware（无 HMR 注入）
+     *
+     * 实现思路：与 rollup 镜像
+     *   1. server bundle 用 rolldown.watch 持续监听并写到磁盘
+     *   2. ssrHandler 每次请求等编译就绪 → 清 require cache → require → render
+     */
+    public async createSSRMiddleware(
+        buildConfig: IBuildConfig,
+        ctx: ISSRMiddlewareCtx,
+    ): Promise<IRequestHandler[]> {
+        const envConfig = buildConfig.config?.[this.mode] || buildConfig.config?.development;
+        const ssrConfig = (envConfig as any)?.ssr;
+        if (!ssrConfig) throw new Error("ssr config not found in envConfig");
+
+        const serverBuildConfig = buildSSRView(buildConfig, this.mode);
+        const serverConfig = this.transformConfig(serverBuildConfig);
+
+        const serverOutDir = path.resolve(this.context, ssrConfig.output.dir);
+        const serverFilename = ssrConfig.output.filename || "server.cjs";
+        const serverBundlePath = path.resolve(serverOutDir, serverFilename);
+
+        let serverReady = false;
+        let pending: Array<() => void> = [];
+        const waitUntilReady = () =>
+            serverReady ? Promise.resolve() : new Promise<void>((r) => pending.push(r));
+
+        const watcher = await watch(serverConfig as any);
+
+        watcher.on("event", (event: any) => {
+            const code = event?.code;
+            if (code === "BUNDLE_END" || code === "END") {
+                serverReady = true;
+                const r = pending; pending = []; r.forEach((f) => f());
+            }
+            if (code === "ERROR") {
+                this.logger.error(`rolldown server compiler 错误: ${event.error}`, "rolldown");
+            }
+        });
+
+        const ssrHandler = createSSRRequestHandler({
+            context: this.context,
+            ssrConfig,
+            serverBundlePath: () => serverBundlePath,
+            waitUntilReady,
+            onError: (e) => this.logger.error(`SSR 渲染失败: ${e?.message ?? e}`, "rolldown"),
+        });
+
+        return [ssrHandler];
     }
 }

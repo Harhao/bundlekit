@@ -22,3 +22,4 @@ dist
 package-lock.json
 ssl_config.js
 .turbo
+__tests__/integration/.tmp/

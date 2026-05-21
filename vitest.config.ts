@@ -1,15 +1,17 @@
 import { defineConfig } from "vitest/config";
-import path from "path";
 
+/**
+ * 默认（单元）vitest 配置
+ *
+ * 排除 __tests__/integration/ 子树（由 vitest.integration.config.ts 单独管理）。
+ */
 export default defineConfig({
     test: {
-        globals: true,
-        environment: "node",
         include: ["__tests__/**/*.test.ts"],
-    },
-    resolve: {
-        alias: {
-            "@devkit/shared-utils": path.resolve(__dirname, "packages/devkit-shared-utils/index.ts"),
-        },
+        exclude: [
+            "**/node_modules/**",
+            "**/dist/**",
+            "__tests__/integration/**",
+        ],
     },
 });

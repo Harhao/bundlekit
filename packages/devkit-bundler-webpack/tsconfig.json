@@ -14,8 +14,11 @@
         "resolveJsonModule": true,
         "noImplicitReturns": false,
         "paths": {
-            "@devkit/shared-utils": ["../devkit-shared-utils/lib/index.ts"]
-        }
+            "@devkit/shared-utils": [
+                "../devkit-shared-utils/lib/index.ts"
+            ]
+        },
+        "skipLibCheck": true
     },
     "include": [
         "src/**/*.ts"
