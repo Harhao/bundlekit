@@ -1,6 +1,6 @@
 {
   "name": "@devkit/service",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "cjs": "./dist/index.cjs",
@@ -40,11 +40,21 @@
     "@devkit/bundler-rolldown": "workspace:*"
   },
   "peerDependenciesMeta": {
-    "@devkit/bundler-webpack": { "optional": true },
-    "@devkit/bundler-vite": { "optional": true },
-    "@devkit/bundler-rspack": { "optional": true },
-    "@devkit/bundler-rollup": { "optional": true },
-    "@devkit/bundler-rolldown": { "optional": true }
+    "@devkit/bundler-webpack": {
+      "optional": true
+    },
+    "@devkit/bundler-vite": {
+      "optional": true
+    },
+    "@devkit/bundler-rspack": {
+      "optional": true
+    },
+    "@devkit/bundler-rollup": {
+      "optional": true
+    },
+    "@devkit/bundler-rolldown": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.7",

@@ -1,6 +1,6 @@
 {
   "name": "@devkit/shared-utils",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "devkit shared utils is common tools for devkit",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
@@ -70,9 +70,17 @@
     "webpack": "*"
   },
   "peerDependenciesMeta": {
-    "@rspack/core": { "optional": true },
-    "rollup": { "optional": true },
-    "vite": { "optional": true },
-    "webpack": { "optional": true }
+    "@rspack/core": {
+      "optional": true
+    },
+    "rollup": {
+      "optional": true
+    },
+    "vite": {
+      "optional": true
+    },
+    "webpack": {
+      "optional": true
+    }
   }
 }

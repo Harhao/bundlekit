@@ -1,6 +1,6 @@
 {
   "name": "@devkit/bundler-rollup",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "A rollup bundler for @devkit/service",
   "types": "./dist/index.d.ts",
   "main": "./dist/index.cjs",

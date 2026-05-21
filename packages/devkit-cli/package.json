@@ -1,6 +1,6 @@
 {
   "name": "@devkit/cli",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "a cli tool serve for generate frontend project",
   "type": "module",
   "main": "./dist/index.mjs",

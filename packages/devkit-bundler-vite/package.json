@@ -1,6 +1,6 @@
 {
   "name": "@devkit/bundler-vite",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "A vite bundler for @devkit/service",
   "types": "./dist/index.d.ts",
   "main": "./dist/index.cjs",

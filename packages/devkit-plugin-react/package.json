@@ -1,6 +1,6 @@
 {
   "name": "@devkit/plugin-react",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "React plugin for devkit - provides React build support and project templates",
   "main": "./index.ts",
   "type": "module",
