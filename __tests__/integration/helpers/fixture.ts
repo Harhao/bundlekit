@@ -89,7 +89,7 @@ async function copyDir(src: string, dest: string): Promise<void> {
  * （仅 react/react-dom 等真实 npm 包需下载，已有 monorepo store 缓存）。
  */
 export function installInFixture(dir: string): void {
-    const result = spawnSync("pnpm", ["install", "--prefer-offline", "--no-frozen-lockfile", "--ignore-workspace"], {
+    const result = spawnSync("pnpm", ["install", "--prefer-offline", "--no-frozen-lockfile"], {
         cwd: dir,
         stdio: ["ignore", "pipe", "pipe"],
         env: { ...process.env, CI: "1" },

@@ -531,6 +531,10 @@ export class PackageManager {
         if (this._registerToolsProjects.has(context)) {
             return this.checkPnpm(this._registerToolsProjects.get(context));
         }
+        const lockFile = this.fse.getAbsolutePath("pnpm-lock.yaml");
+        const result = this.fse.isFilePathExist(lockFile);
+        this._registerToolsProjects.set(context, result);
+        return this.checkPnpm(result);
     }
 
     /**
