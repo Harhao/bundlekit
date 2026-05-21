@@ -7,7 +7,7 @@ export const Banner: React.FC<{ version?: string }> = ({ version = "" }) => {
     return (
         <Box flexDirection="column" marginBottom={1}>
             <Gradient name="atlas">
-                <BigText text="DEVKIT" font="tiny" />
+                <BigText text="DEVKIT-CLI" font="block" />
             </Gradient>
             <Box marginLeft={1}>
                 <Text dimColor>{`bundle-devkit${version ? ` v${version}` : ""} · 多打包器构建工具`}</Text>

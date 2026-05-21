@@ -14,9 +14,11 @@ import {
     resolvePluginPkgName,
     renderTemplates,
     injectBundlerToDeps,
+    normalizeProjectDeps,
     installDeps,
     runGenerator,
     detectAvailablePMs,
+    resolveDepMode,
 } from "../commands/create/actions";
 
 const TEMPLATES: ISelectItem[] = [
@@ -93,6 +95,9 @@ export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) =>
         pickInitialPM(params.pm, envPM, availablePMs),
     );
 
+    // 依赖模式（link / npm）：仅 task 阶段需要展示，提前算好供 Done 视图用
+    const detectedDepMode = useMemo(() => resolveDepMode(params.cwd || process.cwd()), [params.cwd]);
+
     const [description, setDescription] = useState<string>(params.description || "");
     const [descriptionSubmitted, setDescriptionSubmitted] = useState<boolean>(
         params.description !== undefined,
@@ -129,6 +134,7 @@ export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) =>
 
         const initialTasks: ITaskItem[] = [
             { id: "render",    label: "渲染模板",                       status: "pending" },
+            { id: "normalize", label: "规范化依赖版本",                  status: "pending" },
             { id: "deps",      label: "写入 bundler 到 devDependencies", status: "pending" },
             { id: "install",   label: "安装依赖",                       status: "pending" },
             { id: "generator", label: "调用框架插件 generator",          status: "pending" },
@@ -146,6 +152,7 @@ export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) =>
             }
 
             const logger = new Logger();
+            const depMode = resolveDepMode(cwd);
 
             try {
                 updateTask("render", { status: "running" });
@@ -167,8 +174,22 @@ export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) =>
             }
 
             try {
+                updateTask("normalize", { status: "running" });
+                normalizeProjectDeps(targetDir, depMode);
+                const detail = depMode.kind === "link"
+                    ? `link 模式 → ${depMode.monorepoRoot}`
+                    : `npm 模式 → ^${depMode.cliVersion}`;
+                updateTask("normalize", { status: "done", detail });
+            } catch (err) {
+                const e = err as Error;
+                updateTask("normalize", { status: "error" });
+                setError({ step: "规范化依赖版本", message: e.message, stack: e.stack });
+                return;
+            }
+
+            try {
                 updateTask("deps", { status: "running" });
-                const written = injectBundlerToDeps(targetDir, bundler!);
+                const written = injectBundlerToDeps(targetDir, bundler!, depMode);
                 if (written) {
                     const [pkgName, version] = written;
                     updateTask("deps", { status: "done", detail: `${pkgName}@${version}` });
@@ -196,8 +217,22 @@ export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) =>
             try {
                 updateTask("generator", { status: "running" });
                 const pluginPkgName = resolvePluginPkgName(template!);
-                const hasPendingDeps = await runGenerator(pluginPkgName, targetDir, logger);
+                // ink 路径下 generator 不应另起 enquirer prompt 抢 stdin
+                const prevNoPrompt = process.env.DEVKIT_NO_PROMPT;
+                process.env.DEVKIT_NO_PROMPT = "1";
+                let hasPendingDeps = false;
+                try {
+                    hasPendingDeps = await runGenerator(pluginPkgName, targetDir, logger);
+                } finally {
+                    if (prevNoPrompt === undefined) {
+                        delete process.env.DEVKIT_NO_PROMPT;
+                    } else {
+                        process.env.DEVKIT_NO_PROMPT = prevNoPrompt;
+                    }
+                }
                 if (hasPendingDeps) {
+                    // generator 可能追加了 workspace:^ 依赖，再 normalize 一次
+                    normalizeProjectDeps(targetDir, depMode);
                     await installDeps(targetDir, { pm });
                 }
                 updateTask("generator", { status: "done" });
@@ -319,7 +354,7 @@ export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) =>
             )}
 
             {currentStep === "done" && (
-                <Done name={params.name} bundler={bundler!} template={template} pm={pm} />
+                <Done name={params.name} bundler={bundler!} template={template} pm={pm} depMode={detectedDepMode.kind} />
             )}
 
             {currentStep === "error" && error && (

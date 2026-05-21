@@ -13,10 +13,24 @@ bundle-devkit 是前端多打包器构建工具集，让你用一套配置驱动
 - pnpm 8+（推荐） / npm / yarn 任选
 - 现代终端（Windows 用户推荐 Windows Terminal / iTerm2）
 
+## 路径选择
+
+```
+你想做什么？
+├─ 创建新项目用 devkit              → 方式一：脚手架创建（用户路径）
+├─ 给已有项目接入 devkit            → 方式二：现有项目接入
+└─ 想给 devkit 本身贡献代码          → 方式三：本地 monorepo dev（贡献者路径）
+```
+
 ## 方式一：脚手架创建（推荐）
 
+> ⚠️ **`@devkit/*` 包目前正处于发版准备阶段，npm registry 上尚不可用**。在公开发布之前，请使用方式三在本地 monorepo 内创建项目。
+
+发版后：
+
 ```bash
-npx @devkit/cli create my-app
+npm install -g @devkit/cli
+dc create my-app
 ```
 
 cli 会引导你完成以下步骤（TTY 终端使用 ink 渲染 banner + 步骤选择）：
@@ -65,6 +79,28 @@ dc add bundler-vite # → @devkit/bundler-vite
 pnpm add -g @devkit/cli
 dc create my-app
 ```
+
+## 方式三：本地 monorepo dev（贡献者路径）
+
+如果你正在给 bundle-devkit 本身贡献代码，cli 会自动检测 monorepo 环境并用 `link:` 协议指向本地 `packages/`：
+
+```bash
+git clone https://github.com/Harhao/bundle-devkit.git
+cd bundle-devkit
+pnpm install
+pnpm build:all
+
+# 在 monorepo 内创建项目（自动 link 模式）
+pnpm exec dc create my-demo -t react-ts -b vite --pm pnpm
+
+# 生成的 my-demo/package.json 含：
+#   "@devkit/service": "link:/abs/path/to/packages/devkit-service"
+cd my-demo
+pnpm install --ignore-workspace   # 秒级（仅装真实 npm 包）
+pnpm dev                           # 立刻起 dev server
+```
+
+> 💡 详见 [贡献指南 → 环境搭建](/contributing/setup) 与 [贡献指南 → 发版流程](/contributing/release)。
 
 ## 项目结构
 
@@ -149,3 +185,4 @@ dc --help
 - [打包器适配器](/guide/bundlers) — 5 个 bundler 的特性差异 + SSR 支持矩阵
 - [SSR 指南](/guide/ssr) — 双产物构建 + dev SSR middleware
 - [架构设计](/guide/architecture) — 模块依赖、设计原则
+- [贡献指南](/contributing) — 环境搭建、运行测试、新增 bundler / plugin、发版流程

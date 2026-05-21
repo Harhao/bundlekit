@@ -1,9 +1,14 @@
 {
   "name": "@devkit/plugin-react",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "React plugin for devkit - provides React build support and project templates",
   "main": "./index.ts",
   "type": "module",
+  "files": [
+    "index.ts",
+    "templates",
+    "package.json"
+  ],
   "scripts": {
     "plugin:react:build": "echo 'plugin:react built successfully'"
   },

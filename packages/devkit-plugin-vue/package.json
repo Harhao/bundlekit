@@ -1,9 +1,14 @@
 {
   "name": "@devkit/plugin-vue",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Vue 3 plugin for devkit - provides Vue 3 build support and project templates",
   "main": "./index.ts",
   "type": "module",
+  "files": [
+    "index.ts",
+    "templates",
+    "package.json"
+  ],
   "scripts": {
     "plugin:vue:build": "echo 'plugin:vue built successfully'"
   },

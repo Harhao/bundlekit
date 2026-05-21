@@ -4,11 +4,15 @@ import { spawnSync } from "child_process";
 import { createRequire } from "module";
 import { fileURLToPath } from "url";
 import { FileManager, Logger, PackageManager, EPackageMangerTool } from "@devkit/shared-utils";
+import type { IDepMode } from "@devkit/shared-utils";
 import Generator from "../../generator";
 import { buildGeneratorAPI, invokeGenerator } from "../../utils/generatorRunner";
-import { addBundlerToDevDeps } from "../../utils/projectMutation";
+import { normalizeDeps, writeBundlerDevDep, resolveDepMode } from "../../utils/depMode";
+import { resolveBundlerName } from "@devkit/shared-utils";
 
 export type PMName = "pnpm" | "yarn" | "npm";
+
+export { resolveDepMode } from "../../utils/depMode";
 
 export interface ICreateOptions {
     name: string;
@@ -96,9 +100,20 @@ export async function renderTemplates(opts: {
     await generator.generate();
 }
 
-/** 把所选 bundler 写入 targetDir/package.json 的 devDependencies */
-export function injectBundlerToDeps(targetDir: string, bundler: string): [string, string] | null {
-    return addBundlerToDevDeps(targetDir, bundler);
+/** 把所选 bundler 写入 targetDir/package.json 的 devDependencies（按 depMode） */
+export function injectBundlerToDeps(
+    targetDir: string,
+    bundler: string,
+    depMode: IDepMode,
+): [string, string] | null {
+    const bundlerName = resolveBundlerName(bundler);
+    if (!bundlerName) return null;
+    return writeBundlerDevDep(targetDir, bundlerName, depMode);
+}
+
+/** 规范化生成项目 package.json 中的 @devkit/* 依赖（替换 workspace:^） */
+export function normalizeProjectDeps(targetDir: string, depMode: IDepMode): void {
+    normalizeDeps(targetDir, depMode);
 }
 
 /** 安装 targetDir 下的所有 deps */

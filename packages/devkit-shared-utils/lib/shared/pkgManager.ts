@@ -1,6 +1,7 @@
 import ora from 'ora';
 import ini from 'ini';
 import os from 'node:os';
+import fs from 'node:fs';
 import semver from 'semver';
 import path from 'node:path';
 import minimist from 'minimist';
@@ -36,6 +37,39 @@ type PackageManagerConfig = Record<PackageManagerCommand, string[]>;
 interface PackageManagerOptions {
     context?: string;
     forcePackageManager?: EPackageMangerTool;
+}
+
+/**
+ * 向上查找最近的 pnpm-workspace.yaml 所在目录。
+ * 返回 workspace 根目录，找不到返回 null。
+ * @internal 供 PackageManager 内部与单测使用
+ */
+export function findPnpmWorkspaceRoot(startDir: string): string | null {
+    let dir = path.resolve(startDir);
+    while (dir !== path.dirname(dir)) {
+        if (fs.existsSync(path.join(dir, 'pnpm-workspace.yaml'))) return dir;
+        dir = path.dirname(dir);
+    }
+    return null;
+}
+
+/**
+ * 判断 cwd 是否是 pnpm workspace 的 member。
+ * 保守实现：只要 cwd 在 workspaceRoot 下 ≤2 层路径视为成员（如 packages/devkit-cli）；
+ * 3+ 层（如 packages/devkit-cli/test-app）视为非成员。
+ * @internal 供 PackageManager 内部与单测使用
+ */
+export function isPnpmWorkspaceMember(workspaceRoot: string, cwd: string): boolean {
+    const rel = path.relative(workspaceRoot, path.resolve(cwd));
+    // 相对路径以 '..' 开头 → cwd 不在 workspaceRoot 下
+    if (rel.startsWith('..')) return false;
+    // 相对路径为空 → cwd 就是 workspaceRoot 本身
+    if (rel === '') return true;
+    // 相对路径包含路径分隔符 → 是嵌套子目录（非直接 member），视为非成员
+    // pnpm workspace members 通常在 workspaceRoot/packages/* 或 workspaceRoot/* 一层
+    const segments = rel.split(path.sep).filter(Boolean);
+    // 1 或 2 层（如 packages/devkit-cli）视为可能的 member；3+ 层肯定不是
+    return segments.length <= 2;
 }
 
 export class PackageManager {
@@ -212,7 +246,7 @@ export class PackageManager {
                     const parsedConfig = ini.parse(content);
                     npmConfig = Object.assign({}, parsedConfig, npmConfig);
                 } catch (e) {
-                    console.error(e);
+                    this.logger.debug(`读取 .npmrc 失败（已忽略）: ${(e as any)?.message ?? e}`);
                 }
             }
         }
@@ -254,7 +288,8 @@ export class PackageManager {
     }
 
     /**
-     * 设置镜像
+     * 设置镜像（仅对淘宝镜像生效）。
+     * 探测 binary-mirror-config 失败时静默忽略，不向 stderr 输出。
      */
     async setBinaryMirrors() {
 
@@ -290,7 +325,8 @@ export class PackageManager {
                 }
             }
         } catch (e) {
-            console.error(e);
+            // 静默：binary-mirror 探测失败不影响主安装流程，仅 debug 级别记录
+            this.logger.debug(`binary-mirror 探测失败（已忽略）: ${(e as any)?.message ?? e}`);
         }
     }
 
@@ -361,7 +397,7 @@ export class PackageManager {
             this.metadataCache.set(metadataKey, metadata)
             return metadata
         } catch (e) {
-            console.error(`Failed to get response from ${url}`)
+            this.logger.debug(`Failed to get response from ${url}: ${(e as any)?.message ?? e}`);
             throw e
         }
     }
@@ -650,6 +686,15 @@ export class PackageManager {
 
             if (this.needsPeerDepsFix) {
                 commandArgs.push('--legacy-peer-deps');
+            }
+
+            // pnpm 专属：cwd 在 monorepo 内但不是 workspace member 时追加 --ignore-workspace
+            // 避免 pnpm 把生成的用户项目当 workspace member 解析，导致 hang 或版本冲突
+            if (this.bin === EPackageMangerTool.PNPM) {
+                const wsRoot = findPnpmWorkspaceRoot(this.context);
+                if (wsRoot && !isPnpmWorkspaceMember(wsRoot, this.context)) {
+                    commandArgs.push('--ignore-workspace');
+                }
             }
 
             return await this.executeCommand(this.bin!, commandArgs, this.context);

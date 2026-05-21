@@ -194,3 +194,63 @@ devkit-cli add request    # 追加 @devkit/request 运行时库
 devkit-cli version
 devkit-cli -v
 ```
+
+---
+
+## FAQ
+
+### Q: 为什么生成的 `package.json` 含 `link:/abs/path` 形式的依赖？
+
+cli 检测到当前 cwd 在 bundle-devkit 的 monorepo 内（contributors 调试场景），会自动把模板里的 `workspace:^` 协议替换为 `link:` 绝对路径，让 `pnpm install --ignore-workspace` 秒级跑通。
+
+如果你不在 monorepo 内（外部用户）：
+
+```json
+"@devkit/service": "^0.1.0"   // 自动从 cli 自身版本推导
+```
+
+强制走 npm 模式（用于测试）：
+
+```bash
+DEVKIT_DEP_MODE=npm dc create my-app -t react-ts
+```
+
+### Q: `link:` 模式生成的项目能复制到别的机器吗？
+
+**不能**。`link:` 是绝对路径，只在生成时所在的机器上有效。复制到别的机器后 `pnpm install` 会报路径不存在。
+
+如果要分享给同事，让他们也 clone monorepo 后跑 `dc create`，或等 `@devkit/*` 发到 npm 后用全局 cli 创建。
+
+### Q: 我把生成的项目作为 git 仓库提交，`link:` 路径会泄露吗？
+
+会。绝对路径包含 `/Users/<你的用户名>/...`。两个解法：
+
+1. 等 npm 发版后切回 npm 模式（删 `link:` 改 `^x.y.z`）
+2. 在 monorepo 外创建项目：`cd /tmp && pnpm exec /path/to/cli/bin create demo`，但仍然会有 `^cliVersion` 但包未发布
+
+### Q: cli 创建项目时卡在 install
+
+最常见原因：`@devkit/*` 还未发布到 npm registry，且你不在 monorepo 内。
+
+```bash
+# 临时绕过：跳过 install
+DEVKIT_SKIP_INSTALL=1 dc create my-app
+# 之后等发版了再 cd my-app && pnpm install
+
+# 或者：在 monorepo 内跑（自动 link 模式）
+cd /path/to/bundle-devkit
+pnpm exec dc create my-app
+```
+
+### Q: 如何修改生成项目的依赖范围
+
+cli 创建后你拿到一个普通 npm 项目，依赖完全可改：
+
+```bash
+cd my-app
+# 升级
+pnpm update @devkit/service
+
+# 锁版本
+pnpm install @devkit/service@0.1.5
+```

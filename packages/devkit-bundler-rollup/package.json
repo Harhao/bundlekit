@@ -13,6 +13,10 @@
       "types": "./dist/index.d.ts"
     }
   },
+  "files": [
+    "dist",
+    "package.json"
+  ],
   "scripts": {
     "clean": "rimraf ./dist",
     "rollup:build": "pnpm run clean && rollup -c ./scripts/rollup.config.js"

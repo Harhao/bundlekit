@@ -21,8 +21,7 @@
     "cli:build": "pnpm run clean && rollup -c ./scripts/rollup.config.js"
   },
   "files": [
-    "dist",
-    "bin"
+    "dist"
   ],
   "keywords": [
     "devkit",

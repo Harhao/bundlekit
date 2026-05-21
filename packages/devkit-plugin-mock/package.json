@@ -1,9 +1,13 @@
 {
   "name": "@devkit/plugin-mock",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Mock plugin for devkit - provides mock API server with proxy config",
   "main": "./index.ts",
   "type": "module",
+  "files": [
+    "index.ts",
+    "package.json"
+  ],
   "scripts": {
     "plugin:mock:build": "echo 'plugin:mock built successfully'"
   },

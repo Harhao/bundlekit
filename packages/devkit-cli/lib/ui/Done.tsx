@@ -2,19 +2,21 @@ import React from "react";
 import { Box, Text } from "ink";
 
 export type PMName = "pnpm" | "yarn" | "npm";
+export type DepModeKind = "link" | "npm";
 
 interface IDoneProps {
     name: string;
     bundler: string;
     template?: string;
     pm?: PMName;
+    depMode?: DepModeKind;
 }
 
 function pmRunCmd(pm: PMName, script: string): string {
     return pm === "npm" ? `npm run ${script}` : `${pm} ${script}`;
 }
 
-export const Done: React.FC<IDoneProps> = ({ name, bundler, template, pm = "pnpm" }) => {
+export const Done: React.FC<IDoneProps> = ({ name, bundler, template, pm = "pnpm", depMode }) => {
     const devCmd = pmRunCmd(pm, "dev");
     const buildCmd = pmRunCmd(pm, "build");
     return (
@@ -48,6 +50,12 @@ export const Done: React.FC<IDoneProps> = ({ name, bundler, template, pm = "pnpm
                     <Text dimColor>{"包管理器  "}</Text>
                     <Text color="cyan">{pm}</Text>
                 </Box>
+                {depMode && (
+                    <Box>
+                        <Text dimColor>{"依赖模式  "}</Text>
+                        <Text color="cyan">{depMode === "link" ? "monorepo link" : "npm registry"}</Text>
+                    </Box>
+                )}
                 <Box>
                     <Text dimColor>{"位置      "}</Text>
                     <Text color="cyan">{`./${name}`}</Text>

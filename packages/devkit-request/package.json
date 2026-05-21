@@ -1,9 +1,13 @@
 {
   "name": "@devkit/request",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "HTTP client runtime library for devkit projects - axios/fetch dual engine",
   "main": "./index.ts",
   "type": "module",
+  "files": [
+    "index.ts",
+    "package.json"
+  ],
   "scripts": {
     "request:build": "echo 'request built successfully'"
   },

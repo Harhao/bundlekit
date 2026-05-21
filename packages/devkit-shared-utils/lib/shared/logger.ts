@@ -63,7 +63,13 @@ export class Logger {
         if (isQuiet()) return;
         this?.spinner?.stopSpinner?.(null);
         console.log(this.format(chalk.bgGreen.black(" DONE ") + (tag? this.chalkTag(tag) : ""), chalk.green(msg)));
-    }  
+    }
+
+    /** 仅在 DEVKIT_DEBUG=1 时输出，用于内部诊断 */
+    public debug(msg: string = "", tag?: string | null) {
+        if (process.env.DEVKIT_DEBUG !== "1") return;
+        console.log(this.format(chalk.bgGray.white(" DEBUG ") + (tag ? this.chalkTag(tag) : ""), chalk.gray(msg)));
+    }
 
 
     public clearConsole(title: string) {

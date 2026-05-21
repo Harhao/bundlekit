@@ -1,8 +1,27 @@
 import { addPluginToConfig } from "@devkit/shared-utils";
 import type { IGeneratorAPI } from "@devkit/shared-utils";
 
+/**
+ * 在 cli create 流程（ink）/ CI / 非 TTY 场景下默认跳过交互式 prompt。
+ *
+ * 仅当用户在真 TTY 下手动调 `dc add vue` 时才会弹 prompt。
+ */
+function shouldSkipPrompt(): boolean {
+    if (!process.stdout.isTTY) return true;
+    if (process.env.DEVKIT_NO_PROMPT === "1") return true;
+    if (process.env.CI === "true" || process.env.CI === "1") return true;
+    return false;
+}
+
 export default async function generate(context: string, api: IGeneratorAPI): Promise<void> {
     addPluginToConfig(context, "@devkit/plugin-vue");
+
+    if (shouldSkipPrompt()) {
+        return;
+    }
+
+    process.stdout.write("\n");
+    process.stdout.write("\x1b[36m──── 框架插件配置 ────\x1b[0m\n");
 
     const { installRequest } = await api.prompt<{ installRequest: boolean }>([
         {
@@ -14,7 +33,7 @@ export default async function generate(context: string, api: IGeneratorAPI): Pro
     ]);
 
     if (installRequest) {
-        api.addDependency("@devkit/request", "^1.0.0");
+        api.addDependency("@devkit/request", "workspace:^");
         api.log("@devkit/request 已写入 dependencies，将随依赖安装一起生效");
     }
 }
