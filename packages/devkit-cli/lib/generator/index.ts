@@ -26,6 +26,7 @@ export default class Generator {
 
     async generate() {
         await this.processDir(this.templateDir, this.targetDir);
+        this.logger.info(`模板渲染完成: ${this.targetDir}`);
     }
 
     private async processDir(srcDir: string, destDir: string) {
@@ -49,7 +50,5 @@ export default class Generator {
                 }
             }
         }
-
-        this.logger.info(`模板渲染完成: ${this.targetDir}`);
     }
 }

@@ -72,8 +72,83 @@ export default config;
 | `mode` | `IBuildEnv` | `"development"` | 默认构建环境 |
 | `bundler` | `IBuildTools` | `"webpack"` | 默认打包器 |
 | `plugins` | `string[]` | `[]` | 构建插件包名列表，由 devkit-service 在构建时加载 |
-| `changeConfigure` | `Function` | `(c) => c` | 运行时修改打包器原生配置的回调 |
+| `tools` | `IToolsHooks` | `undefined` | 按 bundler 分块的逃生舱钩子（详见下文） |
+| `changeConfigure` | `Function` | `(c) => c` | 运行时修改打包器原生配置的全局兜底回调 |
 | `config` | `Record<IBuildEnv, EnvConfig>` | 必填 | 各环境的构建配置 |
+
+## 逃生舱（tools）
+
+当 bundle-devkit 抽象出来的字段不够覆盖某个 bundler 的能力时，可以用 `tools.<bundler>` 直接拿到该 bundler 的原生 config 进行扩展。
+
+**调用顺序**：
+
+```
+plugins.apply()  →  transformConfig()  →  tools[bundler]?(config, ctx)  →  changeConfigure()  →  run()
+                                                  ▲
+                                            按 bundler 精准匹配
+```
+
+**返回值约定**：
+
+- 返回 `undefined` / `void` → 用 mutate 后的 config
+- 返回新对象 → 替换原 config
+
+**`ToolsCtx`**：
+
+```ts
+interface IToolsCtx {
+  mode: IBuildEnv;            // 当前构建模式
+  command: 'serve' | 'build'; // 当前命令
+  env: 'client' | 'server';   // SSR 双 pass 区分（默认 'client'）
+  bundler: IBuildTools;       // 当前激活的 bundler 名
+}
+```
+
+**5 个 bundler 的最小用例**：
+
+```ts
+import type { IBuildConfig } from "@devkit/shared-utils";
+
+const config: IBuildConfig = {
+  bundler: "webpack",
+  // ...
+  tools: {
+    webpack(config, { mode, env }) {
+      if (mode === "production") config.devtool = false;
+      // 注入自定义 plugin
+      // config.plugins?.push(new MyWebpackPlugin());
+    },
+
+    vite(config, ctx) {
+      // 在 vite 配置中追加 optimizeDeps
+      config.optimizeDeps ??= {};
+      (config.optimizeDeps.include ??= []).push("lodash-es");
+    },
+
+    rspack(config, ctx) {
+      // 修改 rspack experiments
+      (config as any).experiments = { ...(config as any).experiments, css: false };
+    },
+
+    rollup(config, ctx) {
+      // 添加 rollup plugin
+      // const arr = Array.isArray(config.plugins) ? config.plugins : [];
+      // config.plugins = [...arr, myRollupPlugin()];
+    },
+
+    rolldown(config, ctx) {
+      // rolldown 类型为 unknown，按需断言后修改
+      const cfg = config as any;
+      cfg.experimental = { ...cfg.experimental, enableComposingJsPlugins: true };
+    },
+  },
+  // ...
+};
+```
+
+> **若 bundler 未安装**：对应 `tools.<name>` 函数永远不会被调用（runtime 检测不到对应 bundler，service 会先走 [bundler 安装提示流程](/guide/bundlers)）；类型层因 `peerDependenciesMeta.optional` 与 `skipLibCheck` 也不会报错。
+
+
 
 ## 环境配置字段
 
@@ -210,3 +285,23 @@ analyzer: true   // 生产构建后启动 bundle 分析器（webpack）
 ```ts
 externals: ["react", "react-dom"]   // 不打入 bundle 的外部依赖
 ```
+
+### SSR 配置
+
+```ts
+ssr: {
+  entry: "src/entry-server.tsx",                    // 服务端入口（export render(url) => string | Promise<string>）
+  output: {
+    dir: "dist/server",                             // server bundle 输出目录
+    filename: "server.cjs",                         // server bundle 文件名
+    formats: "commonjs",                            // "commonjs" | "esm"
+  },
+  externals: "auto",                                // 'auto' | (string | RegExp)[]
+  template: "public/index.html",                    // HTML 模板（dev SSR 用）
+  placeholder: "<!--ssr-outlet-->",                 // HTML 中占位符（默认 "<!--ssr-outlet-->")
+}
+```
+
+启用 SSR 后，`devkit-service build` 会**串行执行两次** — 客户端 + 服务端 bundle 各产一份。详见 [SSR 指南](/guide/ssr)。
+
+> ⚠️ `ssr` 与 `pages[]` 互斥（第一版仅支持 SPA SSR），`ssr` 与 `target: 'node'` 互斥（server pass 自动切换 target）。

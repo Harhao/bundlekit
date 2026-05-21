@@ -12,7 +12,7 @@ import nodeResolve from '@rollup/plugin-node-resolve';
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 const commonConfig = {
-    input: resolve(__dirname, '../index.ts'),
+    input: resolve(__dirname, '../index.tsx'),
     onwarn(warning, warn) {
         if (warning.code === 'CIRCULAR_DEPENDENCY') return;
         warn(warning);
@@ -20,17 +20,19 @@ const commonConfig = {
     plugins: [
         nodeResolve({
             preferBuiltins: true,
-            extensions: ['.ts', '.js', '.json']
+            extensions: ['.ts', '.tsx', '.js', '.jsx', '.json']
         }),
         commonjs({
-            extensions: ['.js', '.ts'],
+            extensions: ['.js', '.ts', '.tsx'],
             ignoreDynamicRequires: true
         }),
         json(),
         typescript({
             tsconfig: './tsconfig.json',
             sourceMap: false,
-            importHelpers: true
+            importHelpers: true,
+            jsx: 'react-jsx',
+            jsxImportSource: 'react',
         }),
         terser(),
         header({
@@ -48,10 +50,20 @@ const commonConfig = {
         '@devkit/bundler-vite',
         '@devkit/bundler-rollup',
         '@devkit/bundler-rspack',
-        '@devkit/bundler-rolldown'
+        '@devkit/bundler-rolldown',
+        // ink + react: ESM-only，runtime 由 npm 安装
+        'react',
+        'react/jsx-runtime',
+        'ink',
+        'ink-select-input',
+        'ink-text-input',
+        'ink-spinner',
+        'ink-gradient',
+        'ink-big-text',
     ]
 }
 
+// ESM only output (cjs 已移除，遵循 change improve-cli-ux)
 export default [
     {
         ...commonConfig,
@@ -63,14 +75,4 @@ export default [
             chunkFileNames: 'chunks/[name]-[hash].mjs'
         },
     },
-    {
-        ...commonConfig,
-        output: {
-            dir: "dist",
-            format: "cjs",
-            sourcemap: false,
-            entryFileNames: '[name].cjs',
-            chunkFileNames: 'chunks/[name]-[hash].cjs'
-        },
-    }
 ];

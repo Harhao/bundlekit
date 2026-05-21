@@ -99,6 +99,10 @@ export default class ViteBundler implements IBuildToolAdapter<InlineConfig> {
             return createHtmlPlugin({ minify: false });
         };
 
+        // SSR server pass：target='node' 时使用 vite 原生 build.ssr
+        const isServerPass = envConfig.target === 'node';
+        const ssrConfig = envConfig.ssr;
+
         const viteConfig = {
             base: envConfig.publicPath || "/",
             publicDir: false,
@@ -119,34 +123,35 @@ export default class ViteBundler implements IBuildToolAdapter<InlineConfig> {
                     scss: {},
                 },
             },
-            server: {
-                open: devServer.open !== undefined ? devServer.open : true,
-                host: devServer.host || '0.0.0.0',
-                port: devServer.port || 3000,
-                https: devServer.https || false,
-                proxy: Object.entries(devServer.proxy || {}).reduce((acc, [key, val]: [string, any]) => {
-                    acc[key] = { target: val.target, changeOrigin: val.changeOrigin ?? true, secure: val.secure ?? false };
-                    return acc;
-                }, {} as Record<string, any>),
-                allowedHosts: ['*'],
-                strictPort: true,
-                hmr: true,
-                cors: true,
-                watch: {
-                    usePolling: true,
-                    interval: 100
-                }
-            },
-            plugins: [
-                ...frameworkPlugins,
-                buildHtmlPlugin(),
-            ],
+            ...(isServerPass ? {} : {
+                server: {
+                    open: devServer.open !== undefined ? devServer.open : true,
+                    host: devServer.host || '0.0.0.0',
+                    port: devServer.port || 3000,
+                    https: devServer.https || false,
+                    proxy: Object.entries(devServer.proxy || {}).reduce((acc, [key, val]: [string, any]) => {
+                        acc[key] = { target: val.target, changeOrigin: val.changeOrigin ?? true, secure: val.secure ?? false };
+                        return acc;
+                    }, {} as Record<string, any>),
+                    allowedHosts: ['*'],
+                    strictPort: true,
+                    hmr: true,
+                    cors: true,
+                    watch: {
+                        usePolling: true,
+                        interval: 100
+                    }
+                },
+            }),
+            plugins: isServerPass
+                ? [...frameworkPlugins]   // server pass 不需要 HTML plugin
+                : [...frameworkPlugins, buildHtmlPlugin()],
             build: {
                 outDir: outDir,
                 assetsDir: 'assets',
                 sourcemap: jsConfig.sourcemap || false,
-                minify: jsConfig.minify ? 'terser' : false,
-                ...(jsConfig.minify && {
+                minify: isServerPass ? false : (jsConfig.minify ? 'terser' : false),
+                ...(jsConfig.minify && !isServerPass && {
                     terserOptions: {
                         compress: {
                             drop_console: true,
@@ -154,27 +159,40 @@ export default class ViteBundler implements IBuildToolAdapter<InlineConfig> {
                         }
                     }
                 }),
-                rollupOptions: {
-                    input: pages.length > 0 ? rollupInput : entry,
-                    output: {
-                        // umd/iife 不支持代码分割，不设置 format 和 manualChunks，由 vite 自行处理
-                        ...(['umd', 'iife'].includes(outputFormat) ? {} : { format: outputFormat }),
-                        manualChunks: (jsConfig.splitChunks && !['umd', 'iife'].includes(outputFormat)) ? {
-                            'react-vendor': ['react', 'react-dom'],
-                        } : undefined,
-                        chunkFileNames: 'assets/js/[name]-[hash].js',
-                        entryFileNames: 'assets/js/[name]-[hash].js',
-                        assetFileNames: 'assets/[ext]/[name]-[hash].[ext]'
+                ...(isServerPass ? {
+                    // vite 原生 SSR 模式
+                    ssr: typeof envConfig.entry === "string"
+                        ? path.resolve(this.context, envConfig.entry)
+                        : path.resolve(this.context, ssrConfig?.entry || "src/entry-server.tsx"),
+                    rollupOptions: {
+                        output: {
+                            format: ssrConfig?.output?.formats === "esm" ? "es" : "cjs",
+                            entryFileNames: ssrConfig?.output?.filename || "server.cjs",
+                        },
                     },
-                    onwarn: (warning, warn) => {
-                        if (warning.code === 'ERROR') {
-                            this.logger.error(`构建过程中出现错误: ${warning.message}`);
+                } : {
+                    rollupOptions: {
+                        input: pages.length > 0 ? rollupInput : entry,
+                        output: {
+                            // umd/iife 不支持代码分割，不设置 format 和 manualChunks，由 vite 自行处理
+                            ...(['umd', 'iife'].includes(outputFormat) ? {} : { format: outputFormat }),
+                            manualChunks: (jsConfig.splitChunks && !['umd', 'iife'].includes(outputFormat)) ? {
+                                'react-vendor': ['react', 'react-dom'],
+                            } : undefined,
+                            chunkFileNames: 'assets/js/[name]-[hash].js',
+                            entryFileNames: 'assets/js/[name]-[hash].js',
+                            assetFileNames: 'assets/[ext]/[name]-[hash].[ext]'
+                        },
+                        onwarn: (warning, warn) => {
+                            if (warning.code === 'ERROR') {
+                                this.logger.error(`构建过程中出现错误: ${warning.message}`);
+                            }
+                            if (warning.code === 'CIRCULAR_DEPENDENCY') return;
+                            warn(warning);
                         }
-                        if (warning.code === 'CIRCULAR_DEPENDENCY') return;
-                        warn(warning);
                     }
-                }
-            }
+                }),
+            },
         };
         return viteConfig;
     }
@@ -216,5 +234,69 @@ export default class ViteBundler implements IBuildToolAdapter<InlineConfig> {
                 this.logger.error(`Invalid mode: ${this.mode}`);
                 break;
         }
+    }
+
+    /**
+     * Vite 原生 dev SSR middleware
+     *
+     * 启用条件：用户在 envConfig.ssr 上设 dev=true，service 调用此方法获取 middleware 链
+     * 然后由 service 启动 HTTP server 把这些 middleware 串起来。
+     *
+     * 实现原理：
+     *   - createServer({ middlewareMode: true }) 拿到 vite 实例（不绑定端口）
+     *   - 返回 [vite.middlewares, ssrHandler] middleware 链
+     *   - ssrHandler 用 transformIndexHtml + ssrLoadModule 渲染并注入 HMR client script
+     */
+    public async createSSRMiddleware(buildConfig: IBuildConfig): Promise<any[]> {
+        const path = await import("node:path");
+        const fs = await import("node:fs");
+        const envConfig = (buildConfig.config?.[this.mode] || buildConfig.config?.development) as any;
+        const ssrConfig = envConfig?.ssr;
+        if (!ssrConfig) throw new Error("ssr config not found in envConfig");
+
+        const inlineConfig = (await this.transformConfig(buildConfig)) as InlineConfig;
+
+        const vite = await createServer({
+            ...inlineConfig,
+            server: { ...((inlineConfig as any).server || {}), middlewareMode: true },
+            appType: "custom",
+        } as any);
+
+        const placeholder = ssrConfig.placeholder || "<!--ssr-outlet-->";
+        const templatePath = ssrConfig.template
+            ? path.resolve(this.context, ssrConfig.template)
+            : path.resolve(this.context, "public/index.html");
+
+        const ssrHandler = async (req: any, res: any, next: any) => {
+            try {
+                const url = req.url || "/";
+                let template = fs.readFileSync(templatePath, "utf-8");
+                template = await vite.transformIndexHtml(url, template);
+
+                const serverEntryPath = path.resolve(this.context, ssrConfig.entry);
+                const mod = await vite.ssrLoadModule(serverEntryPath);
+                const render = (mod as any).render || (mod as any).default?.render;
+                if (typeof render !== "function") {
+                    throw new Error(`${ssrConfig.entry} 必须 export 一个 \`render(url): string | Promise<string>\` 函数`);
+                }
+                const appHtml = await render(url);
+                const html = template.includes(placeholder)
+                    ? template.replace(placeholder, appHtml)
+                    : template.replace(/<\/body>/i, `${appHtml}</body>`);
+
+                res.statusCode = 200;
+                res.setHeader("Content-Type", "text/html");
+                res.end(html);
+            } catch (err: any) {
+                vite.ssrFixStacktrace(err);
+                this.logger.error(`SSR 渲染失败: ${err?.message ?? err}`);
+                res.statusCode = 500;
+                res.setHeader("Content-Type", "text/html; charset=utf-8");
+                res.end(`<pre>${(err?.stack || err?.message || String(err))
+                    .replace(/&/g, "&amp;").replace(/</g, "&lt;")}</pre>`);
+            }
+        };
+
+        return [vite.middlewares, ssrHandler];
     }
 }

@@ -21,7 +21,8 @@
         "webpack:build",
         "vite:build",
         "rollup:build",
-        "rspack:build"
+        "rspack:build",
+        "rolldown:build"
       ],
       "outputs": [
         "packages/devkit-service/dist/**"

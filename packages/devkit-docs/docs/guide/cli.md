@@ -35,6 +35,22 @@ devkit-service serve --bundler vite --port 8080
 devkit-service serve --bundler rspack --skip-plugin @devkit/plugin-mock
 ```
 
+#### 运行时缺失 bundler 行为
+
+当 `--bundler` 指向的适配器（`@devkit/bundler-{name}`）未安装时：
+
+- **TTY 交互环境**：弹出 `未安装 @devkit/bundler-X，是否现在安装? (Y/n)`
+  - 选 `y` → 装入 `devDependencies` 并继续
+  - 选 `n` → 报错退出，提示运行 `devkit-cli add bundler-X`
+- **CI / 非 TTY 环境**：默认不 prompt，直接报错退出
+
+环境变量旁路：
+
+| 变量 | 含义 |
+|---|---|
+| `DEVKIT_NO_PROMPT=1` | 即使在 TTY 也不弹 prompt |
+| `DEVKIT_AUTO_INSTALL=1` | 非 TTY 自动装入 `devDependencies` |
+
 ### build — 生产构建
 
 ```bash
@@ -64,6 +80,11 @@ devkit-service build --bundler rollup --watch
 ## devkit-cli
 
 > 缩写命令：`dc`（等同于 `devkit-cli`）
+
+> **CLI 视觉**：在 TTY 终端中，cli 使用 [ink](https://github.com/vadimdemedes/ink) 渲染步骤式交互界面（gradient banner、SelectInput、TaskList、Done view）。
+> 在 CI / 非 TTY 环境，或设置 `DEVKIT_NO_INK=1` 时自动回退到 enquirer + Logger 行式输出，**功能等价**。
+>
+> Windows 用户推荐使用 Windows Terminal / iTerm2 等现代终端获得最佳体验。
 
 ### create — 创建项目
 
@@ -97,15 +118,15 @@ devkit-cli create my-app -t vue3-ts -b vite
 
 ---
 
-### add — 追加插件
+### add — 追加插件 / 适配器
 
-向**已有项目**追加插件，遵循业界"安装 + 调用 generator"两步规范。
+向**已有项目**追加插件或 bundler 适配器，遵循"安装 + 调用 generator"两步规范。
 
 ```bash
-devkit-cli add <plugin>
+devkit-cli add <name>
 ```
 
-**支持短名和全名：**
+**支持短名和全名（构建插件）：**
 
 | 输入 | 解析为 | 类型 |
 |------|--------|------|
@@ -114,6 +135,20 @@ devkit-cli add <plugin>
 | `vue` | `@devkit/plugin-vue` | 构建插件 |
 | `request` | `@devkit/request` | 运行时库 |
 | `@devkit/plugin-mock` | `@devkit/plugin-mock` | 构建插件 |
+
+**支持短名和全名（bundler 适配器）：**
+
+| 输入 | 解析为 | 类型 |
+|------|--------|------|
+| `vite` | `@devkit/bundler-vite` | 构建工具适配器 |
+| `webpack` | `@devkit/bundler-webpack` | 构建工具适配器 |
+| `rspack` | `@devkit/bundler-rspack` | 构建工具适配器 |
+| `rollup` | `@devkit/bundler-rollup` | 构建工具适配器 |
+| `rolldown` | `@devkit/bundler-rolldown` | 构建工具适配器 |
+| `bundler-vite` | `@devkit/bundler-vite` | 构建工具适配器 |
+| `@devkit/bundler-vite` | `@devkit/bundler-vite` | 构建工具适配器 |
+
+> bundler 适配器统一安装为 `devDependency`，**不**触发 generator 流程。
 
 **执行流程：**
 

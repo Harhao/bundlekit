@@ -78,4 +78,52 @@ describe("validateBuildConfig", () => {
         expect(result.valid).toBe(false);
         expect(result.errors.some((e) => e.includes("pages[1]"))).toBe(true);
     });
+
+    describe("SSR mutex", () => {
+        const baseSsr = {
+            entry: "src/entry-server.tsx",
+            output: { dir: "dist/server", filename: "server.cjs", formats: "commonjs" as const },
+        };
+
+        it("ssr + target=node → invalid", () => {
+            const result = validateBuildConfig(makeConfig({ target: "node", ssr: baseSsr }), "development");
+            expect(result.valid).toBe(false);
+            expect(result.errors.some((e) => e.includes("target='node'"))).toBe(true);
+        });
+
+        it("ssr + pages → invalid", () => {
+            const result = validateBuildConfig(
+                makeConfig({
+                    pages: [{ filename: "index.html", template: "public/index.html" }],
+                    ssr: baseSsr,
+                }),
+                "development",
+            );
+            expect(result.valid).toBe(false);
+            expect(result.errors.some((e) => e.includes("pages"))).toBe(true);
+        });
+
+        it("ssr without entry → invalid", () => {
+            const result = validateBuildConfig(
+                makeConfig({ ssr: { ...baseSsr, entry: "" } as any }),
+                "development",
+            );
+            expect(result.valid).toBe(false);
+            expect(result.errors.some((e) => e.includes("ssr.entry"))).toBe(true);
+        });
+
+        it("ssr without output → invalid", () => {
+            const result = validateBuildConfig(
+                makeConfig({ ssr: { entry: "src/entry-server.tsx" } as any }),
+                "development",
+            );
+            expect(result.valid).toBe(false);
+            expect(result.errors.some((e) => e.includes("ssr.output"))).toBe(true);
+        });
+
+        it("valid ssr config passes", () => {
+            const result = validateBuildConfig(makeConfig({ ssr: baseSsr }), "development");
+            expect(result.valid).toBe(true);
+        });
+    });
 });

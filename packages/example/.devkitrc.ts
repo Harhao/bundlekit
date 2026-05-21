@@ -26,7 +26,23 @@ const config: IBuildConfig = {
   bundler: "webpack",
   mode: "development",
   plugins: ["@devkit/plugin-react", "@devkit/plugin-mock"],
+  tools: {
+    webpack(webpackConfig, ctx) {
+      // change 2 验证：tools.webpack hook 在 transform 之后执行
+      console.log(`[tools.webpack] ctx=${ctx.mode}/${ctx.command}/${ctx.env}/${ctx.bundler}`);
+      (webpackConfig as any).__devkitFlag = true;
+    },
+    vite(viteConfig, ctx) {
+      console.log(`[tools.vite] ctx=${ctx.mode}/${ctx.command}/${ctx.env}/${ctx.bundler}`);
+    },
+  },
   changeConfigure: (webpackConfig, mode) => {
+    // change 2 验证：changeConfigure 在 tools 之后执行，应该能看到 tools 设的 flag
+    if ((webpackConfig as any).__devkitFlag) {
+      console.log(`[changeConfigure] tools 钩子先于 changeConfigure 执行 ✓`);
+      // 清理掉验证用的 flag 避免 webpack 报错
+      delete (webpackConfig as any).__devkitFlag;
+    }
     if (mode === "production") {
       return { ...webpackConfig, devtool: false } as any;
     }

@@ -83,6 +83,18 @@ export default class RspackBundler implements IBuildToolAdapter<RspackOptions> {
             ...extraLoaders,
         ];
 
+        // SSR server pass：target='node' 时输出 commonjs2 / module，并 externalize node_modules
+        const isServerPass = rawEnvConfig.target === 'node';
+        const outputFormat = rawEnvConfig.output?.formats
+            ? (Array.isArray(rawEnvConfig.output.formats) ? rawEnvConfig.output.formats[0] : rawEnvConfig.output.formats)
+            : undefined;
+        const serverLibraryType = outputFormat === 'esm' ? 'module' : 'commonjs2';
+        const libraryConfig = isServerPass
+            ? { type: serverLibraryType }
+            : (rawEnvConfig.output?.formats ? { type: outputFormat } : undefined);
+
+        const serverExternals = isServerPass ? this.resolveServerExternals(rawEnvConfig) : (rawEnvConfig.externals || []);
+
         return {
             mode: this.mode === "development" ? "development" : "production",
             entry: resolvedEntry,
@@ -91,9 +103,7 @@ export default class RspackBundler implements IBuildToolAdapter<RspackOptions> {
                 path: path.resolve(this.context, outDir),
                 filename: rawEnvConfig.output?.filename || "[name].js",
                 publicPath: rawEnvConfig.publicPath || "/",
-                library: rawEnvConfig.output?.formats ? {
-                    type: Array.isArray(rawEnvConfig.output.formats) ? rawEnvConfig.output.formats[0] : rawEnvConfig.output.formats,
-                } : undefined,
+                library: libraryConfig,
             },
             resolve: {
                 extensions,
@@ -149,9 +159,9 @@ export default class RspackBundler implements IBuildToolAdapter<RspackOptions> {
             ],
             optimization: {
                 minimize: rawEnvConfig.js?.minify || false,
-                splitChunks: rawEnvConfig.js?.splitChunks ? { chunks: "all" } : false,
+                splitChunks: isServerPass ? false : (rawEnvConfig.js?.splitChunks ? { chunks: "all" } : false),
             },
-            externals: rawEnvConfig.externals || [],
+            externals: serverExternals,
             target: rawEnvConfig.target || "web",
             resolveLoader: {
                 modules: [
@@ -160,24 +170,55 @@ export default class RspackBundler implements IBuildToolAdapter<RspackOptions> {
                     "node_modules",
                 ],
             },
-            devServer: {
-                hot: true,
-                server: devServerCfg.https ? "https" : "http",
-                historyApiFallback: true,
-                open: devServerCfg.open !== undefined ? devServerCfg.open : true,
-                host: devServerCfg.host || "0.0.0.0",
-                port: devServerCfg.port || 3000,
-                proxy: Array.isArray(devServerCfg.proxy)
-                    ? devServerCfg.proxy
-                    : Object.keys(devServerCfg.proxy || {}).length > 0
-                        ? Object.entries(devServerCfg.proxy).map(([context, target]) => ({
-                            context,
-                            target: typeof target === "object" ? (target as any).target : target,
-                            changeOrigin: true,
-                        }))
-                        : [],
-            },
+            ...(isServerPass ? {} : {
+                devServer: {
+                    hot: true,
+                    server: devServerCfg.https ? "https" : "http",
+                    historyApiFallback: true,
+                    open: devServerCfg.open !== undefined ? devServerCfg.open : true,
+                    host: devServerCfg.host || "0.0.0.0",
+                    port: devServerCfg.port || 3000,
+                    proxy: Array.isArray(devServerCfg.proxy)
+                        ? devServerCfg.proxy
+                        : Object.keys(devServerCfg.proxy || {}).length > 0
+                            ? Object.entries(devServerCfg.proxy).map(([context, target]) => ({
+                                context,
+                                target: typeof target === "object" ? (target as any).target : target,
+                                changeOrigin: true,
+                            }))
+                            : [],
+                },
+            }),
         } as any;
+    }
+
+    /**
+     * SSR server pass externals
+     */
+    private resolveServerExternals(rawEnvConfig: any): any {
+        const ssrExternals = rawEnvConfig.ssr?.externals;
+        if (Array.isArray(ssrExternals)) return ssrExternals;
+        // 默认 'auto'
+        const externalNames = new Set<string>();
+        try {
+            const pkgPath = path.join(this.context, "package.json");
+            if (require("fs").existsSync(pkgPath)) {
+                const pkg = require(pkgPath) as Record<string, any>;
+                Object.keys(pkg.dependencies || {}).forEach((k) => externalNames.add(k));
+                Object.keys(pkg.peerDependencies || {}).forEach((k) => externalNames.add(k));
+            }
+        } catch {}
+        return ({ request }: any, callback: any) => {
+            if (!request) return callback();
+            if (request.startsWith("node:")) return callback(null, "commonjs " + request);
+            if (request.startsWith(".") || path.isAbsolute(request)) return callback();
+            for (const name of externalNames) {
+                if (request === name || request.startsWith(name + "/")) {
+                    return callback(null, "commonjs " + request);
+                }
+            }
+            return callback();
+        };
     }
 
     public validateConfig(config: RspackOptions, buildConfig?: IBuildConfig) {

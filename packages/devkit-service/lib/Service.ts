@@ -1,6 +1,8 @@
 import path from "path";
 import PluginAPI from "./PluginAPI";
 import ConfigLoader from "./ConfigLoader";
+import { applyTools } from "./utils/applyTools";
+import { buildSSRView } from "./utils/ssr";
 import { createJiti } from "jiti";
 
 import { createRequire } from "module";
@@ -8,6 +10,8 @@ import {
     FileManager,
     Logger, 
     PackageManager,
+    confirm,
+    BUNDLER_PACKAGE_MAP,
 } from "@devkit/shared-utils";
 import type {
     IBuildConfig,
@@ -16,6 +20,7 @@ import type {
     IPluginAPIClass,
     IRegisterCommandItem,
     IRegisterPlugin,
+    IToolsCtx,
 } from "@devkit/shared-utils";
 
 export default class Service {
@@ -24,6 +29,8 @@ export default class Service {
     private isInitial: boolean = false;
     // 打包工具环境
     private mode: IBuildEnv = "development";
+    // 当前执行的命令名（serve / build / ...）
+    private currentCommand: string | null = null;
     // 执行命令的目录
     public context: string | null = null;
     // 注册的命令集合
@@ -222,13 +229,82 @@ export default class Service {
      * @returns IBuildTools
      */
     private getBundlerRegistry(): Record<IBuildTools, string> {
-        return {
-            webpack: "@devkit/bundler-webpack",
-            vite: "@devkit/bundler-vite",
-            rollup: "@devkit/bundler-rollup",
-            rspack: "@devkit/bundler-rspack",
-            rolldown: "@devkit/bundler-rolldown",
+        return { ...BUNDLER_PACKAGE_MAP };
+    }
+
+    /**
+     * bundler 缺失时按策略矩阵决定：
+     * - TTY 且未设 DEVKIT_NO_PROMPT      → 弹 yes/no 询问
+     * - 非 TTY 且 DEVKIT_AUTO_INSTALL=1  → 直接装入 devDeps
+     * - 其他情况                          → 报错引导，返回 false
+     */
+    private async resolveBundlerOrPrompt(packageName: string): Promise<boolean> {
+        const isTTY = !!process.stdout.isTTY && !!process.stdin.isTTY;
+        const noPrompt = process.env.DEVKIT_NO_PROMPT === "1";
+        const autoInstall = process.env.DEVKIT_AUTO_INSTALL === "1";
+
+        let shouldInstall = false;
+
+        if (isTTY && !noPrompt) {
+            shouldInstall = await confirm({
+                message: `未安装 ${packageName}，是否现在安装?`,
+                default: true,
+            });
+        } else if (autoInstall) {
+            this.logger.log(`检测到 DEVKIT_AUTO_INSTALL=1，自动安装 ${packageName}`, "构建工具");
+            shouldInstall = true;
+        } else {
+            shouldInstall = false;
+        }
+
+        if (!shouldInstall) {
+            const shortName = packageName.replace(/^@devkit\/bundler-/, "");
+            this.logger.error(
+                `未安装 ${packageName}。请先运行：\n  devkit-cli add bundler-${shortName}\n` +
+                `或在 CI 中设置环境变量 DEVKIT_AUTO_INSTALL=1`,
+                "构建工具",
+            );
+            return false;
+        }
+
+        if (!this.packageManager) {
+            this.logger.error("packageManager is not initialized");
+            return false;
+        }
+
+        const installed = await this.packageManager.add(packageName, { dev: true });
+        if (!installed) {
+            this.logger.error(`安装 ${packageName} 失败`, "构建工具");
+            return false;
+        }
+
+        this.logger.done(`已安装 ${packageName} 至 devDependencies`, "构建工具");
+        return true;
+    }
+
+    /**
+     * 单次 pass 的执行流：transformConfig → tools → changeConfigure → run
+     */
+    private async runSinglePass(
+        bundlerPlugin: any,
+        passConfig: IBuildConfig,
+        bundlerName: IBuildTools,
+        env: "client" | "server",
+    ): Promise<void> {
+        const builder = new bundlerPlugin(this, this.mode);
+
+        // server pass 的 ctx.env 切换为 'server'，给 tools hook 区分
+        const toolsCtx: IToolsCtx = {
+            mode: this.mode,
+            command: (this.currentCommand === "build" ? "build" : "serve"),
+            env,
+            bundler: bundlerName,
         };
+
+        const builderConifg = await builder.transformConfig(passConfig);
+        const afterTools = await applyTools(passConfig, bundlerName, builderConifg, toolsCtx);
+        const finalConfig = await this.configureConfig(afterTools as Record<string, unknown>);
+        await builder.run(finalConfig);
     }
 
     /**
@@ -243,35 +319,45 @@ export default class Service {
 
         let isInstallBundler = !!(await this.loadBundlerPlugin(packageName));
 
-        // 如果打包工具不在默认列表中，则需要安装
+        // 如果打包工具不在默认列表中，则按策略矩阵决定是否安装并写入 devDependencies
         if (!isInstallBundler) {
-
-            // 安装打包依赖, 安装bundler插件package
-            if (!this.packageManager) {
-                this.logger.error('packageManager is not initialized');
-                return;
+            const installed = await this.resolveBundlerOrPrompt(packageName);
+            if (!installed) {
+                process.exit(1);
             }
-            isInstallBundler = await this.packageManager.add(packageName, {
-                noSave: true,
-            });
+            isInstallBundler = !!(await this.loadBundlerPlugin(packageName));
+            if (!isInstallBundler) {
+                this.logger.error(`安装后仍无法加载 ${packageName}，请检查 node_modules`, "构建工具");
+                process.exit(1);
+            }
         }
 
-        if (!!isInstallBundler) {
+        if (!isInstallBundler) return;
 
-            this.logger.log(`使用的构建：${finalBundler}`, "构建工具");
-            // 加载打包工具插件
-            const bundlerPlugin = await this.loadBundlerPlugin(packageName);
+        this.logger.log(`使用的构建：${finalBundler}`, "构建工具");
+        const bundlerPlugin = await this.loadBundlerPlugin(packageName);
 
-            // 实例化打包工具插件
-            let builder = new bundlerPlugin(this, this.mode);
+        // 检测是否启用 SSR：当前 envConfig 上有 ssr 字段
+        const envConfig = this.buildConfig?.config?.[this.mode];
+        const ssrEnabled = !!envConfig?.ssr;
 
-            // 转换成相对应构建工具的配置
-            const builderConifg = await builder.transformConfig(this.buildConfig);
-            // 处理构建工具的原生配置(暴露出去的配置项)
-            const finalConfig = await this.configureConfig(builderConifg);
-            // 开始运行构建任务
-            await builder.run(finalConfig);
+        if (!ssrEnabled) {
+            // 普通单 pass 流（保持向后兼容）
+            await this.runSinglePass(bundlerPlugin, this.buildConfig!, finalBundler, "client");
+            return;
         }
+
+        // SSR 双 pass：先 client，再 server
+        this.logger.log(`SSR 模式启用：将依次执行 client + server 两次构建`, "构建工具");
+
+        // Pass 1: client
+        await this.runSinglePass(bundlerPlugin, this.buildConfig!, finalBundler, "client");
+
+        // Pass 2: server（用 buildSSRView 切换 entry / output / target）
+        const serverBuildConfig = buildSSRView(this.buildConfig!, this.mode);
+        await this.runSinglePass(bundlerPlugin, serverBuildConfig, finalBundler, "server");
+
+        this.logger.done(`SSR 双产物构建完成`, "构建工具");
     }
 
     /**
@@ -286,6 +372,7 @@ export default class Service {
         }
 
             this.isInitial = true;
+            this.currentCommand = command;
             // 解析项目内插件和内置插件处理  
             this.plugins = await this.resolvePlugins();
             // 收集各插件依赖支持的环境

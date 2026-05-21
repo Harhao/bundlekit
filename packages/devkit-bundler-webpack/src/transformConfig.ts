@@ -73,6 +73,11 @@ export default class TransformConfig {
         const fmt = buildOutput?.formats;
         const primaryFormat = Array.isArray(fmt) ? fmt[0] : (fmt || 'umd');
 
+        // SSR server pass：target='node' 时输出 commonjs 模块，并 externalize node_modules
+        const isServerPass = this.buildConfig.target === 'node';
+        const serverFormat = primaryFormat === 'esm' ? 'module' : 'commonjs2';
+        const libraryConfig = isServerPass ? { type: serverFormat } : { type: primaryFormat };
+
         this.transformConfig = {
             mode: this.mode || "none",
             cache: false,
@@ -82,9 +87,7 @@ export default class TransformConfig {
                 path: path.resolve(this.context, outDir),
                 filename: buildOutput?.filename || '[name].js',
                 publicPath: this.buildConfig.publicPath || '/',
-                library: {
-                    type: primaryFormat
-                }
+                library: libraryConfig,
             },
             resolveLoader: {
                 modules: [
@@ -92,8 +95,8 @@ export default class TransformConfig {
                     'node_modules'
                 ]
             },
-            externals: this.buildConfig.externals || [],
-            // 使用 'web' 保证 webpack 运行时代码兼容 ES5，避免 Terser 在处理运行时 chunk 时的语法解析问题
+            externals: isServerPass ? this.resolveServerExternals() : (this.buildConfig.externals || []),
+            // server pass 强制 target=node；client pass 兼容 ES5
             target: this.buildConfig.target === 'node' ? 'node' : 'web',
             resolve: this.transformResolve(),
             module: {
@@ -116,11 +119,41 @@ export default class TransformConfig {
             ]
         };
 
-        if (this.mode === "development") {
+        if (this.mode === "development" && !isServerPass) {
             this.transformConfig.devServer = this.transformDevServer();
         }
 
         return this.transformConfig;
+    }
+    /**
+     * SSR server pass externals：'auto' / array / 默认 'auto'
+     * - 'auto'：把项目的 dependencies / peerDependencies 与 node_modules 全部 externalize
+     * - array：直接用作 webpack externals
+     */
+    private resolveServerExternals(): any {
+        const ssrExternals = (this.buildConfig as any).ssr?.externals;
+        if (Array.isArray(ssrExternals)) return ssrExternals;
+        // 默认 'auto'
+        const externalNames = new Set<string>();
+        try {
+            const pkgPath = path.join(this.context, 'package.json');
+            if (require('fs').existsSync(pkgPath)) {
+                const pkg = require(pkgPath) as Record<string, any>;
+                Object.keys(pkg.dependencies || {}).forEach((k) => externalNames.add(k));
+                Object.keys(pkg.peerDependencies || {}).forEach((k) => externalNames.add(k));
+            }
+        } catch {}
+        return ({ request }: any, callback: any) => {
+            if (!request) return callback();
+            if (request.startsWith('node:')) return callback(null, 'commonjs ' + request);
+            if (request.startsWith('.') || path.isAbsolute(request)) return callback();
+            for (const name of externalNames) {
+                if (request === name || request.startsWith(name + '/')) {
+                    return callback(null, 'commonjs ' + request);
+                }
+            }
+            return callback();
+        };
     }
 
     private transformResolve(): Configuration['resolve'] {

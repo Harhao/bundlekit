@@ -42,10 +42,28 @@ IBuildConfig（抽象配置）
 
 ### 安装
 
-确保 `node >= 18.0.0`，推荐使用 `pnpm`：
+确保 `node >= 18.0.0`，推荐使用 `pnpm`。
+
+#### 方式一：脚手架创建（推荐）
 
 ```bash
-pnpm add -D @devkit/service @devkit/cli
+npx @devkit/cli create my-app
+```
+
+cli 会引导你选择模板与 bundler，并自动安装 `@devkit/service` + 框架插件 + 你选择的 bundler 适配器到新项目。
+
+#### 方式二：现有项目接入
+
+```bash
+pnpm add -D @devkit/service @devkit/plugin-react @devkit/bundler-vite
+```
+
+或：
+
+```bash
+pnpm add -D @devkit/cli
+dc add react
+dc add bundler-vite
 ```
 
 ### 快速开始
@@ -165,10 +183,20 @@ Build output
 
 ### Installation
 
-Requires `node >= 18.0.0`. `pnpm` is recommended:
+Requires `node >= 18.0.0`. `pnpm` is recommended.
+
+#### Option 1: scaffold (recommended)
 
 ```bash
-pnpm add -D @devkit/service @devkit/cli
+npx @devkit/cli create my-app
+```
+
+The cli interactively picks a template and bundler, then installs `@devkit/service` + framework plugin + the chosen bundler adapter into the new project.
+
+#### Option 2: manual integration
+
+```bash
+pnpm add -D @devkit/service @devkit/plugin-react @devkit/bundler-vite
 ```
 
 ### Quick Start

@@ -7,21 +7,29 @@
         "preserveConstEnums": true,
         "removeComments": false,
         "sourceMap": false,
-        "moduleResolution": "node",
+        "moduleResolution": "bundler",
         "esModuleInterop": true,
         "resolveJsonModule": true,
+        "skipLibCheck": true,
+        "jsx": "react-jsx",
+        "jsxImportSource": "react",
         "paths": {
             "@devkit/shared-utils": ["../devkit-shared-utils/lib/index.ts"]
         }
     },
     "include": [
-        "**/*.ts" 
+        "index.tsx",
+        "lib/**/*.ts",
+        "lib/**/*.tsx",
+        "types/**/*.ts"
      ],
     "exclude": [
         "node_modules",
         "package.json",
         "scripts",
         "dist",
-        "tsconfig.json"
+        "tsconfig.json",
+        "test-app",
+        "**/test-app/**"
     ]
 }

@@ -61,14 +61,46 @@ devkit-service serve/build
 ## 模块依赖关系
 
 ```
-devkit-cli ──────────────────────────────► devkit-shared-utils
-devkit-service ──────────────────────────► devkit-shared-utils
-devkit-bundler-* ────────────────────────► devkit-shared-utils
-devkit-plugin-* ─────────────────────────► devkit-shared-utils
-devkit-request        （无 devkit 内部依赖，作为独立 npm 包）
+                ┌──────────────────────────────────────┐
+                │   @devkit/shared-utils (核心)        │
+                └─────────────┬────────────────────────┘
+                              │ 被所有包依赖
+       ┌──────────────────────┼──────────────────────────┐
+       │                      │                          │
+┌──────▼──────────┐   ┌───────▼────────────┐   ┌─────────▼─────────┐
+│ @devkit/cli     │   │ @devkit/service    │   │ @devkit/bundler-* │
+│ create / add    │   │ optional peer:     │   │ (5 个适配器)       │
+│ deps: plugin-*  │   │   bundler-*        │   │ 各自 deps webpack/ │
+└─────────────────┘   └────┬───────────────┘   │ vite/rspack/rollup │
+                            │                  └──────┬────────────┘
+                            │ 运行时按需 import        │
+                            └──────────────────────────┘
+
+      ❌ 不再有：service → bundler-* 的 hard dependency
 ```
 
-`devkit-shared-utils` 是唯一的共享底层包，其他包只依赖它，彼此之间没有直接依赖，保证边界清晰。
+`@devkit/service` 不再硬绑 5 个 bundler 适配器；它们以 `peerDependenciesMeta.optional` 声明，由用户工程的 `devDependencies` 提供（cli `create -b X` 自动写入；`dc add bundler-X` 显式追加；service 启动时缺失则弹出 prompt 安装）。
+
+## 运行时动态加载打包器
+
+```
+ds serve --bundler vite
+    │
+    ▼
+Service.startBuilder()
+    ├─ require.resolve('@devkit/bundler-vite', { paths: [project/node_modules] })
+    │
+    ├─ found  → 加载并执行（单 pass / SSR 双 pass）
+    │
+    └─ not found
+         ├─ TTY + !DEVKIT_NO_PROMPT  → confirm("未安装，现在安装? Y/n")
+         │     ├─ yes → pm.add(pkg, { dev: true })  // 写入 devDependencies
+         │     └─ no  → exit(1) 输出引导
+         ├─ CI + DEVKIT_AUTO_INSTALL=1 → 自动安装写入 devDependencies
+         └─ 其他 → exit(1) 输出引导
+```
+
+**关键变化**：service 不再走 `pm.add(pkg, { noSave: true })` 的"临时安装、装完即忘"路径，避免每次启动都重装。
 
 ## 关键类说明
 
@@ -138,8 +170,8 @@ devkit-service             （依赖所有 bundler 适配器）
 **2. 插件只写字段，不感知打包器**
 构建插件（如 plugin-react）只向 `buildConfig` 写入 `framework: "react"`，不直接修改 webpack/vite 配置。各打包器读取 `framework` 字段后自行处理，做到"一次声明，所有打包器生效"。
 
-**3. 运行时动态加载打包器**
-打包器适配器不预先打包进 service，而是在运行时按需 `require`/`import`，未安装时自动调用 `packageManager.add()` 安装，减少不必要的依赖体积。
+**3. 运行时按需加载打包器（find-or-prompt-or-fail）**
+打包器适配器不预先打包进 service，而是声明为 `peerDependenciesMeta.optional`，运行时通过 `require.resolve` 查找。未安装时根据环境弹出 yes/no 安装提示（TTY）或自动装入 devDependencies（`DEVKIT_AUTO_INSTALL=1`），其他情况报错引导，避免静默临时安装的"装完即忘"问题。
 
 **4. CLI 与 Service 完全分离**
 `devkit-cli` 负责项目初始化，`devkit-service` 负责构建，二者通过 `.devkitrc.ts` 文件间接关联，互不依赖，可独立升级。

@@ -54,9 +54,24 @@
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^11.1.6",
+    "@rspack/core": "^1.7.0",
     "@types/fs-extra": "^11.0.4",
     "rollup": "^4.13.0",
     "tslib": "^2.6.2",
-    "tsx": "^4.19.2"
+    "tsx": "^4.19.2",
+    "vite": "^5.0.0",
+    "webpack": "^5.0.0"
+  },
+  "peerDependencies": {
+    "@rspack/core": "*",
+    "rollup": "*",
+    "vite": "*",
+    "webpack": "*"
+  },
+  "peerDependenciesMeta": {
+    "@rspack/core": { "optional": true },
+    "rollup": { "optional": true },
+    "vite": { "optional": true },
+    "webpack": { "optional": true }
   }
 }

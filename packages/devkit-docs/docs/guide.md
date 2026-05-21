@@ -7,52 +7,76 @@ order: 1
 
 bundle-devkit 是前端多打包器构建工具集，让你用一套配置驱动 Webpack、Vite、Rollup、Rspack、Rolldown 五种主流打包器。
 
-## 安装
+## 你需要什么
 
-确保 `node >= 18.0.0`，推荐使用 `pnpm`：
+- Node ≥ 18
+- pnpm 8+（推荐） / npm / yarn 任选
+- 现代终端（Windows 用户推荐 Windows Terminal / iTerm2）
+
+## 方式一：脚手架创建（推荐）
 
 ```bash
-pnpm add -D @devkit/service @devkit/cli
+npx @devkit/cli create my-app
 ```
 
-## 创建项目
+cli 会引导你完成以下步骤（TTY 终端使用 ink 渲染 banner + 步骤选择）：
 
-使用 CLI 脚手架从模板创建新项目：
+1. 选择模板：`react-ts` / `react-js` / `vue3-ts` / `vue3-js`
+2. 选择默认 bundler：`vite` / `webpack` / `rspack` / `rollup` / `rolldown`
+3. 输入项目描述（可选）
+
+cli 会自动：
+
+- 渲染模板到 `my-app/`
+- 把所选 `@devkit/bundler-{name}` 写入新项目的 `devDependencies`
+- 安装 `@devkit/service`、框架插件、选定的 bundler 等所有依赖
+- 调用框架插件的 generator（如有）
+
+完成后：
 
 ```bash
-# 交互式模式（推荐）
-devkit-cli create my-app
-
-# 指定模板和构建工具
-devkit-cli create my-app --template react-ts --bundler vite
-devkit-cli create my-app --template vue3-ts --bundler vite
-devkit-cli create my-app --template react-js --bundler webpack
+cd my-app
+pnpm dev
 ```
 
-## 追加插件
+> 在 CI / 非 TTY / 设置 `DEVKIT_NO_INK=1` 时，cli 自动回退到 enquirer + 行式日志路径，**功能等价**。
 
-项目创建后，使用 `add` 命令向已有项目追加插件：
+## 方式二：现有项目接入
 
 ```bash
-# 追加构建插件（自动写入 .devkitrc.ts plugins[]）
-devkit-cli add mock
-devkit-cli add vue
+# 1. 安装核心 + 选择的框架插件 + 选择的 bundler 适配器
+pnpm add -D @devkit/service @devkit/plugin-react @devkit/bundler-vite
 
-# 追加运行时库（写入 package.json dependencies）
-devkit-cli add request
+# 或用 dc add（推荐）：
+pnpm add -D @devkit/cli
+dc add react        # → @devkit/plugin-react
+dc add bundler-vite # → @devkit/bundler-vite
+
+# 2. 在项目根创建 .devkitrc.ts，参考 config 文档
+
+# 3. package.json scripts 加：
+#    "dev": "ds serve --bundler vite",
+#    "build": "ds build --bundler vite --mode production"
+```
+
+## 全局安装 cli（可选）
+
+```bash
+pnpm add -g @devkit/cli
+dc create my-app
 ```
 
 ## 项目结构
 
-创建后的项目结构：
+脚手架创建后的项目结构：
 
 ```
 my-app/
 ├── .devkitrc.ts          # 构建配置文件
 ├── tsconfig.json         # TypeScript 配置
-├── package.json          # 项目依赖与脚本
+├── package.json          # 项目依赖（含 service + plugin + 选中的 bundler）
 ├── src/
-│   ├── index.tsx         # 应用入口
+│   ├── index.tsx         # 应用入口（CSR）
 │   └── api/
 │       └── index.ts      # HTTP 请求层（使用 @devkit/request）
 ├── public/
@@ -64,39 +88,64 @@ my-app/
 ## 开发服务
 
 ```bash
-# 使用 Vite 启动开发服务（默认端口 3000）
-devkit-service serve --bundler vite
+# 默认（按 .devkitrc.ts 中的 bundler 字段）
+pnpm dev
 
-# 使用 Webpack 启动开发服务
-devkit-service serve --bundler webpack
-
-# 使用 Rspack 启动开发服务（Rust 实现，极速）
-devkit-service serve --bundler rspack
+# 显式切换 bundler
+ds serve --bundler vite
+ds serve --bundler rspack
 ```
+
+> 如果切换的 bundler 没有安装，service 会弹出 `未安装 @devkit/bundler-X，是否现在安装? (Y/n)` 提示。详见 [CLI 命令](/guide/cli)。
 
 ## 生产构建
 
 ```bash
-# Webpack 生产构建
-devkit-service build --bundler webpack --mode production
+pnpm build
 
-# Vite 生产构建
-devkit-service build --bundler vite --mode production
-
-# 多环境构建
-devkit-service build --bundler webpack --mode staging
-devkit-service build --bundler webpack --mode gray
+# 或显式指定
+ds build --bundler webpack --mode production
+ds build --bundler vite --mode staging
 ```
+
+## SSR 构建
+
+bundle-devkit 5 个 bundler 都支持 build SSR 双产物（client + server）。在 `.devkitrc.ts` 加 `ssr` 字段即可：
+
+```ts
+config: {
+  production: {
+    entry: "src/entry-client.tsx",
+    output: { dir: "dist/client", filename: "[name].js", formats: "esm" },
+    ssr: {
+      entry: "src/entry-server.tsx",
+      output: { dir: "dist/server", filename: "server.cjs", formats: "commonjs" },
+      externals: "auto",
+    },
+    // ...
+  },
+}
+```
+
+详见 [SSR 指南](/guide/ssr)。
 
 ## 跳过插件
 
 ```bash
-devkit-service serve --skip-plugin @devkit/plugin-mock
+ds serve --skip-plugin @devkit/plugin-mock
 ```
 
 ## 帮助信息
 
 ```bash
-devkit-service --help
-devkit-cli --help
+ds --help
+dc --help
 ```
+
+## 下一步
+
+- [CLI 命令](/guide/cli) — `dc create` / `dc add` / `ds serve` / `ds build`
+- [配置参考](/guide/config) — `.devkitrc.ts` 全字段（含 `tools` 逃生舱与 `ssr`）
+- [打包器适配器](/guide/bundlers) — 5 个 bundler 的特性差异 + SSR 支持矩阵
+- [SSR 指南](/guide/ssr) — 双产物构建 + dev SSR middleware
+- [架构设计](/guide/architecture) — 模块依赖、设计原则

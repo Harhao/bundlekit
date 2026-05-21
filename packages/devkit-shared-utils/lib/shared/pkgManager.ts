@@ -244,8 +244,6 @@ export class PackageManager {
 
         const registry = await this.getRegistry();
 
-        console.log('registry', registry);
-
         this.logger.log(registry, "镜像地址");
 
         process.env.npm_config_registry = registry;
@@ -402,8 +400,8 @@ export class PackageManager {
                 shell: true
             };
 
-            console.log(`执行命令: ${command} ${args.join(' ')}`, "安装命令");
-            
+            this.logger.log(`${command} ${args.join(' ')}`, "安装命令");
+
             await this.execa(command, args, {
                 ...spawnOptions,
                 stdio: ['inherit', 'pipe', 'pipe'] as const

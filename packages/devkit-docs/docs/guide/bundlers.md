@@ -15,12 +15,42 @@ devkit 通过 `IBuildToolAdapter` 接口统一五种打包器，一套 `.devkitr
 | Vite | `@devkit/bundler-vite` | Vite 4 + 框架感知插件 |
 | Rollup | `@devkit/bundler-rollup` | Rollup 4 + Babel + TypeScript |
 | Rspack | `@devkit/bundler-rspack` | Rspack 1.x + SWC loader |
-| Rolldown | `@devkit/bundler-rolldown` | Rolldown 1.x（Rust 实现，实验性，需手动安装） |
+| Rolldown | `@devkit/bundler-rolldown` | Rolldown 1.x（Rust 实现，实验性） |
 
-> **Rolldown 额外安装：** `@devkit/bundler-rolldown` 未内置在 `@devkit/service` 的依赖中，使用前需单独安装：
-> ```bash
-> pnpm add -D @devkit/bundler-rolldown
-> ```
+## Bundler 安装方式
+
+`@devkit/service` **不再硬绑** bundler 适配器。三种方式让项目获得需要的 bundler：
+
+### 方式一：`devkit-cli create` 时写入
+
+```bash
+devkit-cli create my-app -b vite
+# my-app/package.json 的 devDependencies 中自动包含 @devkit/bundler-vite
+```
+
+### 方式二：`devkit-cli add` 在已有项目追加
+
+```bash
+devkit-cli add bundler-vite        # 完整短名
+devkit-cli add vite                # 简短形式
+devkit-cli add @devkit/bundler-vite  # 全名
+```
+
+三种写法等价，都会把对应 bundler 装入项目的 `devDependencies`。
+
+### 方式三：运行时缺失提示
+
+```bash
+devkit-service serve --bundler rspack
+# 若 @devkit/bundler-rspack 未安装，service 会提示：
+#   未安装 @devkit/bundler-rspack，是否现在安装? (Y/n)
+```
+
+| 环境变量 | 行为 |
+|---|---|
+| `DEVKIT_NO_PROMPT=1` | 即使在 TTY 也不弹 prompt，缺失即报错退出 |
+| `DEVKIT_AUTO_INSTALL=1` | 非 TTY 环境（CI）自动安装至 devDependencies |
+
 
 ## 工作原理
 
@@ -118,3 +148,15 @@ devkit-service build --bundler rollup     # 适合库打包
 | `js.minify` | `optimization.minimize` | `build.minify` | - | `optimization.minimize` |
 | `js.splitChunks` | `optimization.splitChunks` | `manualChunks` | - | `optimization.splitChunks` |
 | `css.loaders` | css/less/sass-loader | preprocessorOptions | postcss use | style/less/sass-loader |
+
+## SSR 支持矩阵
+
+| Bundler | build SSR | dev SSR | client HMR | server HMR |
+|---|---|---|---|---|
+| vite | ✅ | ✅ | ✅ | ✅ |
+| webpack | ✅ | ⏳ | ✅ | ⚠️ 进程级 |
+| rspack | ✅ | ⏳ | ✅ | ⚠️ 进程级 |
+| rollup | ✅ | ⏳ | ❌ | ❌ |
+| rolldown | ✅ | ⏳ | ❌ | ❌ |
+
+> ⏳ = dev SSR middleware 在后续 release 补齐。详见 [SSR 指南](/guide/ssr)。

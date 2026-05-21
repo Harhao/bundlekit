@@ -27,15 +27,24 @@
     "service:build": "pnpm run clean && rollup -c ./scripts/rollup.config.js"
   },
   "dependencies": {
-    "@devkit/bundler-webpack": "workspace:*",
-    "@devkit/bundler-vite": "workspace:*",
-    "@devkit/bundler-rollup": "workspace:*",
-    "@devkit/bundler-rspack": "workspace:*",
-    "@devkit/bundler-rolldown": "workspace:*",
     "@devkit/shared-utils": "workspace:*",
     "jiti": "^2.4.2",
     "minimist": "^1.2.8",
     "semver": "^7.7.1"
+  },
+  "peerDependencies": {
+    "@devkit/bundler-webpack": "workspace:*",
+    "@devkit/bundler-vite": "workspace:*",
+    "@devkit/bundler-rspack": "workspace:*",
+    "@devkit/bundler-rollup": "workspace:*",
+    "@devkit/bundler-rolldown": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "@devkit/bundler-webpack": { "optional": true },
+    "@devkit/bundler-vite": { "optional": true },
+    "@devkit/bundler-rspack": { "optional": true },
+    "@devkit/bundler-rollup": { "optional": true },
+    "@devkit/bundler-rolldown": { "optional": true }
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.7",

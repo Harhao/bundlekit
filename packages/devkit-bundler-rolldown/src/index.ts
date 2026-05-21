@@ -151,9 +151,11 @@ export default class RolldownBundler implements IBuildToolAdapter {
         this.mode    = mode;
         this.context = api.context || process.cwd();
     }
-
     public transformConfig(config: IBuildConfig) {
         const rawEnvConfig = (config.config?.[this.mode] || config.config?.development || {}) as Record<string, any>;
+
+        // SSR server pass 检测
+        const isServerPass = rawEnvConfig.target === "node";
 
         // ── Entry ──────────────────────────────────────────────────────────────
         const entry = rawEnvConfig.entry
@@ -207,7 +209,17 @@ export default class RolldownBundler implements IBuildToolAdapter {
         const primaryFmt = fmtArr[0] ?? "es";
         const primaryRdFmt = toRolldownFormat(primaryFmt);
 
-        if (isLibrary && fmtArr.length > 1) {
+        if (isServerPass) {
+            // SSR server pass：单产物 cjs/esm
+            const ssrCfg = rawEnvConfig.ssr;
+            const fmt = ssrCfg?.output?.formats === "esm" ? "es" : "cjs";
+            output = {
+                dir: resolvedOutDir,
+                format: fmt,
+                sourcemap: jsConfig.sourcemap || false,
+                entryFileNames: ssrCfg?.output?.filename || "server.cjs",
+            };
+        } else if (isLibrary && fmtArr.length > 1) {
             output = fmtArr.map((fmt) => {
                 const rdFmt  = toRolldownFormat(fmt);
                 const suffix = FORMAT_SUFFIX[fmt] ?? ".js";
@@ -245,8 +257,8 @@ export default class RolldownBundler implements IBuildToolAdapter {
             library: isLibrary,
         };
 
-        // ── 存储 HTML 写入配置（应用模式用） ──────────────────────────────────
-        if (!isLibrary) {
+        // ── 存储 HTML 写入配置（应用模式用，server pass 不需要）─────────────────
+        if (!isLibrary && !isServerPass) {
             const pages = rawEnvConfig.pages as Array<{
                 template?: string;
                 filename?: string;
@@ -311,11 +323,37 @@ export default class RolldownBundler implements IBuildToolAdapter {
             },
             // browser platform → rolldown 不尝试解析 Node 内置模块
             platform: rawEnvConfig.target === "node" ? "node" : "browser",
-            external: rawEnvConfig.externals || [],
+            external: isServerPass ? this.resolveServerExternals(rawEnvConfig) : (rawEnvConfig.externals || []),
             treeshake: rawEnvConfig.js?.splitChunks !== false,
             experimental: {
                 enableComposingJsPlugins: true,
             },
+        };
+    }
+    /**
+     * SSR server pass externals
+     */
+    private resolveServerExternals(rawEnvConfig: any): any[] | ((id: string) => boolean) {
+        const ssrExternals = rawEnvConfig.ssr?.externals;
+        if (Array.isArray(ssrExternals)) return ssrExternals;
+        // 默认 'auto'
+        const externalNames = new Set<string>();
+        try {
+            const pkgPath = path.join(this.context, "package.json");
+            if (existsSync(pkgPath)) {
+                const pkg = JSON.parse(readFileSync(pkgPath, "utf-8")) as Record<string, any>;
+                Object.keys(pkg.dependencies || {}).forEach((k) => externalNames.add(k));
+                Object.keys(pkg.peerDependencies || {}).forEach((k) => externalNames.add(k));
+            }
+        } catch {}
+        return (id: string): boolean => {
+            if (id.startsWith("node:")) return true;
+            if (id.startsWith(".") || path.isAbsolute(id)) return false;
+            if (externalNames.has(id)) return true;
+            for (const name of externalNames) {
+                if (id === name || id.startsWith(name + "/")) return true;
+            }
+            return false;
         };
     }
 

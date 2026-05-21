@@ -41,5 +41,25 @@ export function validateBuildConfig(config: IBuildConfig, mode: IBuildEnv): Vali
         }
     }
 
+    // SSR 互斥校验
+    if (envConfig.ssr) {
+        if (envConfig.target === "node") {
+            errors.push("ssr 与 target='node' 互斥：ssr 默认会启用 server pass 时切换到 node target，不要在 envConfig 顶层声明 target='node'");
+        }
+        if (envConfig.pages && Array.isArray(envConfig.pages) && envConfig.pages.length > 0) {
+            errors.push("ssr 暂不支持 pages[] 多页面（第一版仅支持 SPA SSR）");
+        }
+        if (!envConfig.ssr.entry) {
+            errors.push("ssr.entry 不能为空");
+        }
+        if (!envConfig.ssr.output) {
+            errors.push("ssr.output 不能为空");
+        } else {
+            if (!envConfig.ssr.output.dir) errors.push("缺少 ssr.output.dir");
+            if (!envConfig.ssr.output.filename) errors.push("缺少 ssr.output.filename");
+            if (!envConfig.ssr.output.formats) errors.push("缺少 ssr.output.formats");
+        }
+    }
+
     return { valid: errors.length === 0, errors };
 }

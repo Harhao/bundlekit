@@ -150,6 +150,9 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
         const extensions   = [".js", ".jsx", ".ts", ".tsx"];
         const rawEnvConfig = (config.config?.[this.mode] || config.config?.development || {}) as Record<string, any>;
 
+        // SSR server pass 检测
+        const isServerPass = rawEnvConfig.target === "node";
+
         // ── Entry ──────────────────────────────────────────────────────────────
         const entry = rawEnvConfig.entry
             ? (typeof rawEnvConfig.entry === "string"
@@ -244,8 +247,8 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
             }),
         ];
 
-        // 应用模式：注入 HTML 生成插件
-        if (!isLibrary) {
+        // 应用模式：注入 HTML 生成插件（server pass 不需要）
+        if (!isLibrary && !isServerPass) {
             const pages = rawEnvConfig.pages as Array<{
                 template?: string;
                 filename?: string;
@@ -262,12 +265,25 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
             );
         }
 
-        const external = rawEnvConfig.externals || [];
+        const external = isServerPass
+            ? this.resolveServerExternals(rawEnvConfig)
+            : (rawEnvConfig.externals || []);
 
         // ── Build output config ───────────────────────────────────────────────
         let output: OutputOptions | OutputOptions[];
 
-        if (isLibrary && fmtArr.length > 1) {
+        if (isServerPass) {
+            // SSR server pass：单产物 cjs/esm
+            const ssrCfg = rawEnvConfig.ssr;
+            const fmt = ssrCfg?.output?.formats === "esm" ? "es" : "cjs";
+            output = {
+                file: path.resolve(resolvedOutDir, ssrCfg?.output?.filename || "server.cjs"),
+                format: fmt,
+                sourcemap: rawEnvConfig.js?.sourcemap || false,
+                exports: "named",
+                inlineDynamicImports: true,
+            };
+        } else if (isLibrary && fmtArr.length > 1) {
             // 类库多格式输出
             output = fmtArr.map((fmt): OutputOptions => {
                 const rollupFmt = toRollupFormat(fmt);
@@ -323,11 +339,50 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
         return true;
     }
 
+    /**
+     * SSR server pass externals
+     */
+    private resolveServerExternals(rawEnvConfig: any): any[] | ((id: string) => boolean) {
+        const ssrExternals = rawEnvConfig.ssr?.externals;
+        if (Array.isArray(ssrExternals)) return ssrExternals;
+        // 默认 'auto'
+        const externalNames = new Set<string>();
+        try {
+            const pkgPath = path.join(this.context, "package.json");
+            if (existsSync(pkgPath)) {
+                const pkg = JSON.parse(readFileSync(pkgPath, "utf-8")) as Record<string, any>;
+                Object.keys(pkg.dependencies || {}).forEach((k) => externalNames.add(k));
+                Object.keys(pkg.peerDependencies || {}).forEach((k) => externalNames.add(k));
+            }
+        } catch {}
+        return (id: string): boolean => {
+            if (id.startsWith("node:")) return true;
+            if (id.startsWith(".") || path.isAbsolute(id)) return false;
+            if (externalNames.has(id)) return true;
+            for (const name of externalNames) {
+                if (id === name || id.startsWith(name + "/")) return true;
+            }
+            return false;
+        };
+    }
+
     public async run(config: RollupOptions) {
         try {
             this.logger.info("开始使用rollup进行打包");
+            const isServerPass = (config as any).__isServerPass;  // (legacy hint, not used)
             switch (this.mode) {
-                case "development": await this.devBuild(config);  break;
+                case "development":
+                    // dev 模式：如果是 server pass（已较少出现），跑一次 prodBuild
+                    if (this.devServerConfig && this.devServerConfig.library === false &&
+                        // 通过 output.format 判断 server pass：
+                        Array.isArray(config.output) ? false :
+                        (config.output as OutputOptions)?.format === "cjs" &&
+                        ((config.output as OutputOptions)?.file as string)?.endsWith(".cjs")) {
+                        await this.prodBuild(config);
+                        break;
+                    }
+                    await this.devBuild(config);
+                    break;
                 case "production":
                 case "test":
                 case "staging":

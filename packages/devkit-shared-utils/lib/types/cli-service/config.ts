@@ -5,6 +5,54 @@ export type IBuildFramework = "react" | "vue3";
 
 export type IBuildFormat = "esm" | "commonjs" | "umd" | "iife";
 
+/**
+ * Tools 钩子的上下文：传递给 tools[bundler]?(config, ctx) 的第二个参数
+ */
+export interface IToolsCtx {
+    /** 构建模式 */
+    mode: IBuildEnv;
+    /** 当前命令（serve / build） */
+    command: "serve" | "build";
+    /**
+     * 当前 pass 是 client 还是 server。
+     * 默认 'client'；启用 SSR 后，server pass 会传 'server'（由 change add-ssr-support 启用）
+     */
+    env: "client" | "server";
+    /** 当前激活的 bundler 短名 */
+    bundler: IBuildTools;
+}
+
+/**
+ * bundler 短名到原生 config 类型的映射。
+ *
+ * 类型层使用 `import type` 引用各 bundler 包，避免 shared-utils 在运行时依赖任何
+ * 具体的 bundler 包（与 refactor-bundler-deps 一致）。当用户没有装某个 bundler 时，
+ * 通过 tsconfig 的 `skipLibCheck` + 条件 `unknown` fallback 不会产生错误。
+ */
+export type IBundlerConfigMap = {
+    webpack: import("webpack").Configuration;
+    vite: import("vite").InlineConfig;
+    rspack: import("@rspack/core").RspackOptions;
+    rollup: import("rollup").RollupOptions;
+    rolldown: unknown;
+};
+
+/**
+ * Tools 字段：按 bundler 分块的逃生舱钩子
+ *
+ * 调用时机：transformConfig → tools[bundler] → changeConfigure → run
+ *
+ * 返回值约定：
+ *   - 返回 undefined / void → 用 mutate 后的 config
+ *   - 返回新对象           → 用新对象替换
+ */
+export type IToolsHooks = {
+    [K in IBuildTools]?: (
+        config: IBundlerConfigMap[K],
+        ctx: IToolsCtx,
+    ) => IBundlerConfigMap[K] | void | Promise<IBundlerConfigMap[K] | void>;
+};
+
 export interface IBuildPageConfig {
     /** HTML 模板路径 */
     template: string;
@@ -14,6 +62,34 @@ export interface IBuildPageConfig {
     entry?: string;
     /** script 注入位置 */
     inject?: "head" | "body";
+}
+
+/**
+ * SSR 配置：双产物模式，客户端 + 服务端各一份 bundle。
+ *
+ * 启用条件：在某个 envConfig 上声明 `ssr` 字段。该 env 下 `target` 必须保持 'web'，
+ * `pages[]` 不能与 `ssr` 同时存在（互斥）。
+ */
+export interface ISSRConfig {
+    /** server 入口（如 src/entry-server.tsx），需 export `render(url): string | Promise<string>` */
+    entry: string;
+    /** server bundle 输出配置 */
+    output: {
+        /** server bundle 输出目录（如 dist/server） */
+        dir: string;
+        /** server bundle 文件名（如 server.cjs） */
+        filename: string;
+        /** server bundle 输出格式（commonjs / esm） */
+        formats: "commonjs" | "esm";
+    };
+    /** 外部依赖处理：'auto' 表示把 node_modules 全部 externalize；数组则按规则匹配 */
+    externals?: "auto" | (string | RegExp)[];
+    /** HTML 模板路径（默认 public/index.html） */
+    template?: string;
+    /** 占位符（默认 "<!--ssr-outlet-->"） */
+    placeholder?: string;
+    /** 是否启用 dev SSR middleware（默认 false，开发态走 client-only） */
+    dev?: boolean;
 }
 
 export interface IBuildOutput {
@@ -127,6 +203,12 @@ export interface IEnvBuildConfig {
     library?: boolean;
     /** 类库全局导出名称（UMD/IIFE 格式必填，如 "MyLib"） */
     libraryName?: string;
+    /**
+     * SSR（服务端渲染）配置。
+     * 启用后，service 会串行执行 client + server 两次 build；env='server' 时 transformConfig 会得到 server bundle 的视图。
+     * 与 `target: 'node'` 和 `pages[]` 互斥。
+     */
+    ssr?: ISSRConfig;
 }
 
 export interface IBuildConfig {
@@ -141,6 +223,20 @@ export interface IBuildConfig {
         config: Record<string, unknown>,
         mode: IBuildEnv,
     ) => Promise<Record<string, unknown>> | Record<string, unknown>;
+
+    /**
+     * 按 bundler 分块的逃生舱钩子。在 transformConfig 之后、changeConfigure 之前调用。
+     * 当 bundler 包未安装时，对应字段的类型会回退到 unknown / any，且运行时永远不会被调用。
+     *
+     * @example
+     * tools: {
+     *   webpack(config, { mode }) {
+     *     if (mode === 'production') config.devtool = false;
+     *   },
+     *   vite: (config) => { config.optimizeDeps?.include?.push('lodash-es') }
+     * }
+     */
+    tools?: IToolsHooks;
 
     /** 构建配置 */
     config: Partial<{
