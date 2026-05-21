@@ -57,6 +57,12 @@ export async function copyFixture(bundler: string, mode: FixtureMode): Promise<I
     }
     await fs.copyFile(modeConfig, finalConfig);
 
+    // 4) 写入空 pnpm-workspace.yaml，防止 pnpm 向上找到 monorepo 根的 workspace 配置
+    await fs.writeFile(
+        path.join(tmpRoot, "pnpm-workspace.yaml"),
+        "packages:\n  - '.'\n",
+    );
+
     return {
         dir: tmpRoot,
         cleanup: async () => {

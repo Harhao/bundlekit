@@ -66,10 +66,13 @@ export class Creator {
             this.logger.warn(`bundler "${bundler}" 不在内置列表中，跳过 devDeps 写入`);
         }
 
-        // 4. 安装基础依赖
-        spinner.logWithSpinner("📦", "正在安装依赖...");
-        await installDeps(targetDir, { pm });
-        spinner.stopSpinner(false);
+        // 4. 安装基础依赖（DEVKIT_SKIP_INSTALL=1 跳过）
+        const skipInstall = process.env.DEVKIT_SKIP_INSTALL === "1";
+        if (!skipInstall) {
+            spinner.logWithSpinner("📦", "正在安装依赖...");
+            await installDeps(targetDir, { pm });
+            spinner.stopSpinner(false);
+        }
 
         this.logger.done(`项目 ${name} 创建成功！`);
 
@@ -91,8 +94,10 @@ export class Creator {
         // 6. generator 可能追加了 workspace:^ 依赖，再 normalize 一次
         if (hasPendingDeps) {
             normalizeProjectDeps(targetDir, depMode);
-            this.logger.info("正在安装追加的依赖...");
-            await installDeps(targetDir, { pm });
+            if (!skipInstall) {
+                this.logger.info("正在安装追加的依赖...");
+                await installDeps(targetDir, { pm });
+            }
         }
 
         const runDev = pm === "npm" ? "npm run dev" : `${pm || "pnpm"} dev`;
