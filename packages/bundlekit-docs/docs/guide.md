@@ -5,7 +5,7 @@ order: 1
 
 # 快速开始
 
-bundle-bundlekit 是前端多打包器构建工具集，让你用一套配置驱动 Webpack、Vite、Rollup、Rspack、Rolldown 五种主流打包器。
+bundlekit 是前端多打包器构建工具集，让你用一套配置驱动 Webpack、Vite、Rollup、Rspack、Rolldown 五种主流打包器。
 
 ## 你需要什么
 
@@ -83,11 +83,11 @@ dc create my-app
 
 ## 方式三：本地 monorepo dev（贡献者路径）
 
-如果你正在给 bundle-bundlekit 本身贡献代码，cli 会自动检测 monorepo 环境并用 `link:` 协议指向本地 `packages/`：
+如果你正在给 bundlekit 本身贡献代码，cli 会自动检测 monorepo 环境并用 `link:` 协议指向本地 `packages/`：
 
 ```bash
-git clone https://github.com/Harhao/bundle-bundlekit.git
-cd bundle-bundlekit
+git clone https://github.com/Harhao/bundlekit.git
+cd bundlekit
 pnpm install
 pnpm build:all
 
@@ -147,7 +147,7 @@ ds build --bundler vite --mode staging
 
 ## SSR 构建
 
-bundle-bundlekit 5 个 bundler 都支持 build SSR 双产物（client + server）。在 `.bundlekitrc.ts` 加 `ssr` 字段即可：
+bundlekit 5 个 bundler 都支持 build SSR 双产物（client + server）。在 `.bundlekitrc.ts` 加 `ssr` 字段即可：
 
 ```ts
 config: {

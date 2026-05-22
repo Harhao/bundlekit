@@ -78,7 +78,7 @@ export default config;
 
 ## 逃生舱（tools）
 
-当 bundle-bundlekit 抽象出来的字段不够覆盖某个 bundler 的能力时，可以用 `tools.<bundler>` 直接拿到该 bundler 的原生 config 进行扩展。
+当 bundlekit 抽象出来的字段不够覆盖某个 bundler 的能力时，可以用 `tools.<bundler>` 直接拿到该 bundler 的原生 config 进行扩展。
 
 **调用顺序**：
 

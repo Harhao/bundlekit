@@ -5,7 +5,7 @@ order: 6
 
 # 发版流程（changeset + GitHub Actions）
 
-bundle-bundlekit 用 [Changesets](https://github.com/changesets/changesets) 管理版本与 changelog，配合 GitHub Actions 自动 npm publish。
+bundlekit 用 [Changesets](https://github.com/changesets/changesets) 管理版本与 changelog，配合 GitHub Actions 自动 npm publish。
 
 ## 工作流概览
 
@@ -172,7 +172,7 @@ jobs:
 2. 头像菜单 → Access Tokens
 3. Generate New Token → **Granular Access Token**（推荐）或 Classic → Automation
 4. 配置：
-   - Token name: `bundle-bundlekit-ci`
+   - Token name: `bundlekit-ci`
    - Expiration: 1 年（到期前要轮换）
    - Packages: 选 `@bundlekit/*` scope（首次发布时这个 scope 需先在 npm 上 owner 占领）
    - Permissions: Read and write

@@ -1,6 +1,6 @@
 # DEPLOY — 发版流程
 
-bundle-bundlekit 用 [Changesets](https://github.com/changesets/changesets) + [GitHub Actions](https://docs.github.com/en/actions) 实现自动化 npm publish。本文档记录从零到首发到迭代的完整步骤。
+bundlekit 用 [Changesets](https://github.com/changesets/changesets) + [GitHub Actions](https://docs.github.com/en/actions) 实现自动化 npm publish。本文档记录从零到首发到迭代的完整步骤。
 
 ## 工作流概览
 
@@ -54,7 +54,7 @@ npm view @bundlekit/cli 2>&1 | head -3
 # 期望：404 Not Found（说明 scope 没被占）
 ```
 
-如果 `@bundlekit` scope 已被别人占，需要把所有 `@bundlekit/*` 包改名（例如改成 `@bundle-bundlekit/*` 或 `@<你的用户名>/bundlekit-*`）。涉及修改：
+如果 `@bundlekit` scope 已被别人占，需要把所有 `@bundlekit/*` 包改名（例如改成 `@bundlekit/*` 或 `@<你的用户名>/bundlekit-*`）。涉及修改：
 
 - 各 `packages/*/package.json` 的 `name`
 - `packages/bundlekit-shared-utils/lib/types/cli-init/index.ts` 的 `BUNDLER_PACKAGE_MAP`
@@ -73,7 +73,7 @@ npm view @bundlekit/cli 2>&1 | head -3
 
    | 字段 | 值 |
    |---|---|
-   | Token name | `bundle-bundlekit-ci` |
+   | Token name | `bundlekit-ci` |
    | Expiration | 365 天（到期前要轮换） |
    | Packages and scopes | 勾选 `@bundlekit` scope 下全部包 |
    | Permissions | **Read and write** |
@@ -85,7 +85,7 @@ npm view @bundlekit/cli 2>&1 | head -3
 
 ### 步骤 4：在 GitHub 配置 NPM_TOKEN secret
 
-1. 打开仓库 https://github.com/Harhao/bundle-bundlekit → **Settings** 标签
+1. 打开仓库 https://github.com/Harhao/bundlekit → **Settings** 标签
 2. 左侧 **Secrets and variables** → **Actions**
 3. 点 **New repository secret**
 4. 配置：
@@ -129,12 +129,12 @@ npm view @bundlekit/cli 2>&1 | head -3
 
 ## 首次发版流程（0.0.1 → 0.1.0）
 
-bundle-bundlekit 当前所有包是 `0.0.1`，首发推荐 bump 到 `0.1.0`（pre-1.0 不稳定语义，给 BREAKING 留余地）。
+bundlekit 当前所有包是 `0.0.1`，首发推荐 bump 到 `0.1.0`（pre-1.0 不稳定语义，给 BREAKING 留余地）。
 
 ### 步骤 1：写第一个 changeset
 
 ```bash
-cd /path/to/bundle-bundlekit
+cd /path/to/bundlekit
 pnpm changeset
 ```
 
@@ -198,7 +198,7 @@ git push origin master
 
 ### 步骤 4：等 GitHub Actions 创建 Version Packages PR
 
-打开 https://github.com/Harhao/bundle-bundlekit/actions 看 `publish-npm` workflow：
+打开 https://github.com/Harhao/bundlekit/actions 看 `publish-npm` workflow：
 
 - 第一波（推 master 触发）：
 
@@ -320,7 +320,7 @@ git push origin fix/some-bug
 
 ## 版本号约定
 
-bundle-bundlekit 用 **lockstep 发版**（所有 `@bundlekit/*` 同步 bump），原因：
+bundlekit 用 **lockstep 发版**（所有 `@bundlekit/*` 同步 bump），原因：
 
 - cli 创建项目时模板用 `workspace:^` 协议
 - pnpm publish 自动把 `workspace:^` 转换为依赖包的实际版本

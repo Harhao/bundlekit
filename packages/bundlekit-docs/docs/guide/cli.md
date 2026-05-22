@@ -225,7 +225,7 @@ bundlekit-cli -v
 
 ### Q: 为什么生成的 `package.json` 含 `link:/abs/path` 形式的依赖？
 
-cli 检测到当前 cwd 在 bundle-bundlekit 的 monorepo 内（contributors 调试场景），会自动把模板里的 `workspace:^` 协议替换为 `link:` 绝对路径，让 `pnpm install --ignore-workspace` 秒级跑通。
+cli 检测到当前 cwd 在 bundlekit 的 monorepo 内（contributors 调试场景），会自动把模板里的 `workspace:^` 协议替换为 `link:` 绝对路径，让 `pnpm install --ignore-workspace` 秒级跑通。
 
 如果你不在 monorepo 内（外部用户）：
 
@@ -262,7 +262,7 @@ DEVKIT_SKIP_INSTALL=1 dc create my-app
 # 之后等发版了再 cd my-app && pnpm install
 
 # 或者：在 monorepo 内跑（自动 link 模式）
-cd /path/to/bundle-bundlekit
+cd /path/to/bundlekit
 pnpm exec dc create my-app
 ```
 

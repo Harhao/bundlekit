@@ -1,7 +1,7 @@
 {
   "name": "bundlekit-cli-docs",
   "version": "0.0.1",
-  "description": "a docs description about bundle-bundlekit",
+  "description": "a docs description about bundlekit",
   "private": true,
   "scripts": {
     "start": "npm run dev",

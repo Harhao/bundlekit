@@ -5,7 +5,7 @@ order: 3
 
 # 运行测试
 
-bundle-bundlekit 用三档测试覆盖不同抽象层：
+bundlekit 用三档测试覆盖不同抽象层：
 
 ```
 单元测试 (unit)        毫秒级      纯函数 / 类型 / 配置解析

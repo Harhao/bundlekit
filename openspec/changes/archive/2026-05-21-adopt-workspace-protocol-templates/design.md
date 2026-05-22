@@ -255,6 +255,6 @@ sidebar: {
 ## Open Questions
 
 - **首发版本号是 `0.1.0` 还是 `1.0.0`？** 0.1.0 表示 pre-1.0 不稳定，1.0.0 暗示 API 稳定。建议 `0.1.0`，给后续做 BREAKING 留余地
-- **npm scope `@bundlekit` 是否可用？** 需要去 npmjs.org 查，如果被占用要换成 `@bundle-bundlekit` 或 `@harhao-bundlekit`。本 change 假定可用，发版前需维护者确认
+- **npm scope `@bundlekit` 是否可用？** 需要去 npmjs.org 查，如果被占用要换成 `@bundlekit` 或 `@harhao-bundlekit`。本 change 假定可用，发版前需维护者确认
 - **GitHub Actions 用 `pnpm/action-setup@v4` 还是 `v2`？** 现 workflow 用 v4，保持
 - **release.md 是否包含 OpenSpec workflow？** 建议作为附录，让 contributors 知道每个新 feature 应该开 change

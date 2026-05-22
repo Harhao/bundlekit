@@ -31,7 +31,7 @@ packages/bundlekit-docs/docs/
 
 **Goals**
 
-- 一句话回答"我要怎么开始用 bundle-bundlekit" — 推荐 `npx @bundlekit/cli create my-app`
+- 一句话回答"我要怎么开始用 bundlekit" — 推荐 `npx @bundlekit/cli create my-app`
 - 提供完整的"两条路径"说明：scaffold-first 与 manual-integration
 - 把 changes 1-4 的新行为完整落到文档（runtime prompt、tools、ssr、ink fallback）
 - 文档与代码间的"事实声明"一致，不留矛盾

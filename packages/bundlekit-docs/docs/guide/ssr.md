@@ -5,7 +5,7 @@ order: 5
 
 # SSR 服务端渲染
 
-bundle-bundlekit 在 5 个 bundler 上提供统一的 SSR 双产物（client + server）构建支持。
+bundlekit 在 5 个 bundler 上提供统一的 SSR 双产物（client + server）构建支持。
 
 ## 入口约定
 

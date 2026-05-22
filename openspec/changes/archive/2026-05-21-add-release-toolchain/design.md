@@ -1,6 +1,6 @@
 ## Context
 
-bundle-bundlekit 是一个 pnpm workspace monorepo，包含 11 个 `@bundlekit/` scoped 包（bundlekit-cli、bundlekit-service、bundlekit-bundler-*、bundlekit-plugin-*），使用 Turborepo 编排构建任务，发布到内部私有 npm registry（`https://registry.example.com/`）。
+bundlekit 是一个 pnpm workspace monorepo，包含 11 个 `@bundlekit/` scoped 包（bundlekit-cli、bundlekit-service、bundlekit-bundler-*、bundlekit-plugin-*），使用 Turborepo 编排构建任务，发布到内部私有 npm registry（`https://registry.example.com/`）。
 
 当前工程状态：无 git hooks、无 lint/format 配置、无 commit 格式约束、无 changelog、版本号全部停留在 `0.0.1`，发包流程完全手动。本次改动是纯工程配置层，不涉及任何包 API 或构建产物变更。
 

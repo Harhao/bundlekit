@@ -19,8 +19,8 @@ order: 2
 ## 克隆与安装
 
 ```bash
-git clone https://github.com/Harhao/bundle-bundlekit.git
-cd bundle-bundlekit
+git clone https://github.com/Harhao/bundlekit.git
+cd bundlekit
 
 # 装所有 workspace 依赖（约 1-2 分钟）
 pnpm install

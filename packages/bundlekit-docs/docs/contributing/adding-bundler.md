@@ -5,7 +5,7 @@ order: 4
 
 # 新增 Bundler 适配器
 
-bundle-bundlekit 通过 `IBuildToolAdapter` 接口统一所有打包器。新增 bundler 时只需实现该接口、注册短名映射、补集成测试 fixture。
+bundlekit 通过 `IBuildToolAdapter` 接口统一所有打包器。新增 bundler 时只需实现该接口、注册短名映射、补集成测试 fixture。
 
 ## 1. IBuildToolAdapter 接口
 

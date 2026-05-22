@@ -1,4 +1,8 @@
-# bundle-bundlekit
+<p align="center">
+  <img src=".github/assets/images/poster.png" alt="bundlekit banner" />
+</p>
+
+# bundlekit
 
 [English](#english) | [中文](#chinese)
 

@@ -1,7 +1,7 @@
 ---
-title: bundle-bundlekit
+title: bundlekit
 hero:
-  title: bundle-bundlekit
+  title: bundlekit
   description: 前端多打包器构建工具集，一套配置运行 Webpack / Vite / Rollup / Rspack / Rolldown
   actions:
     - text: 快速开始

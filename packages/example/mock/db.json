@@ -12,7 +12,7 @@
     { "id": 10, "name": "Jack", "email": "jack@example.com", "avatar": "https://i.pravatar.cc/40?img=10", "role": "user" }
   ],
   "posts": [
-    { "id": 1, "title": "Hello Devkit", "body": "Getting started with bundle-bundlekit.", "userId": 1 },
+    { "id": 1, "title": "Hello Devkit", "body": "Getting started with bundlekit.", "userId": 1 },
     { "id": 2, "title": "Webpack Guide", "body": "How to configure webpack with bundlekit.", "userId": 1 },
     { "id": 3, "title": "Vite Tips", "body": "Speed up your dev workflow with Vite.", "userId": 2 },
     { "id": 4, "title": "Rspack Deep Dive", "body": "Rust-based bundler performance.", "userId": 2 },

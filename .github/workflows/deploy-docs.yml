@@ -66,4 +66,4 @@ jobs:
           # ⚠️ 注意 2：命令从 `pages deploy` 变更为 `deploy`
           # ⚠️ 注意 3：通过 `--assets` 参数指定你刚刚编译出来的静态产物路径
           # ⚠️ 注意 4：新版 Workers 资产部署必须显式带有兼容日期参数 `--compatibility-date`
-          command: deploy --assets=./packages/bundlekit-docs/dist --name=bundle-bundlekit --compatibility-date=2026-05-19
+          command: deploy --assets=./packages/bundlekit-docs/dist --name=bundlekit --compatibility-date=2026-05-19

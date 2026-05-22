@@ -1,6 +1,6 @@
 ## Why
 
-当前 `bundle-bundlekit` 只能产出客户端 bundle（CSR）。`IEnvBuildConfig.target` 字段虽然有 `'web' | 'node'` 选项，但没有 SSR 流水线 — 即没有"客户端 bundle + 服务端 bundle"的双产物概念，没有 SSR 入口约定，也没有 dev SSR middleware。
+当前 `bundlekit` 只能产出客户端 bundle（CSR）。`IEnvBuildConfig.target` 字段虽然有 `'web' | 'node'` 选项，但没有 SSR 流水线 — 即没有"客户端 bundle + 服务端 bundle"的双产物概念，没有 SSR 入口约定，也没有 dev SSR middleware。
 
 用户需要在所有 5 个 bundler（webpack / vite / rspack / rollup / rolldown）上都能跑 SSR：
 - **build**：同时产出 client（注入 HTML）+ server（Node 可执行模块）

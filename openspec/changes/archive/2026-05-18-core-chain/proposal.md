@@ -1,6 +1,6 @@
 ## Why
 
-The core build chain (ConfigLoader → Service → Bundler adapters) is the backbone of bundle-bundlekit. Currently ConfigLoader is fully empty, Service has multiple TODOs preventing plugin/bundler resolution, serve command option parsing is commented out, and Webpack/Vite config transformation doesn't properly consume `IBuildConfig`. Without a working core chain, no project can actually build or serve.
+The core build chain (ConfigLoader → Service → Bundler adapters) is the backbone of bundlekit. Currently ConfigLoader is fully empty, Service has multiple TODOs preventing plugin/bundler resolution, serve command option parsing is commented out, and Webpack/Vite config transformation doesn't properly consume `IBuildConfig`. Without a working core chain, no project can actually build or serve.
 
 ## What Changes
 

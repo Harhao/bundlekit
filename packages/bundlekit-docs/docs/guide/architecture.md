@@ -5,12 +5,12 @@ order: 6
 
 # 架构设计
 
-本文介绍 bundle-bundlekit 的整体架构，帮助你理解各模块职责与数据流向。
+本文介绍 bundlekit 的整体架构，帮助你理解各模块职责与数据流向。
 
 ## 整体结构
 
 ```
-bundle-bundlekit/
+bundlekit/
 ├── packages/
 │   ├── bundlekit-service          # 核心服务（命令调度 + 插件加载 + 打包器调度）
 │   ├── bundlekit-cli              # 脚手架 CLI（create / add）

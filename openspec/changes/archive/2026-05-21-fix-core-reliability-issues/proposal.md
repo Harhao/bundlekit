@@ -1,6 +1,6 @@
 ## Why
 
-当前 `bundle-bundlekit` 核心链路存在多个影响正确性的 bug（webpack 生产构建不等待完成、`validateConfig` 从未真正执行、plugin apply 拿到过期 config），以及类型系统和工程规范层面的系统性缺失（TypeScript strict 关闭、零测试覆盖、CI 只构建部分包）。这些问题在项目初期影响有限，但随着功能扩展和多 bundler 适配器增加，已累积成为可靠性风险。
+当前 `bundlekit` 核心链路存在多个影响正确性的 bug（webpack 生产构建不等待完成、`validateConfig` 从未真正执行、plugin apply 拿到过期 config），以及类型系统和工程规范层面的系统性缺失（TypeScript strict 关闭、零测试覆盖、CI 只构建部分包）。这些问题在项目初期影响有限，但随着功能扩展和多 bundler 适配器增加，已累积成为可靠性风险。
 
 ## What Changes
 

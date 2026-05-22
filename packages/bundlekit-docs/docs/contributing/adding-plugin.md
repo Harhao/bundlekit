@@ -5,7 +5,7 @@ order: 5
 
 # 新增 Plugin
 
-bundle-bundlekit 的插件分两种：
+bundlekit 的插件分两种：
 
 - **构建插件**（`@bundlekit/plugin-react` / `@bundlekit/plugin-vue`）：通过 `framework` 字段告知 bundler 如何处理 jsx/vue
 - **运行时插件**（`@bundlekit/plugin-mock`）：用户项目运行时挂钩

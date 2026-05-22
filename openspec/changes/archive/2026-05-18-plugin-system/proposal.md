@@ -1,6 +1,6 @@
 ## Why
 
-The three plugins (React, Mock, Request) are the extensibility layer of bundle-bundlekit. They are currently empty shells (empty entry files, empty generators, empty templates). Without them, the plugin system demonstrated in the Service code has no actual consumers, and users get no out-of-box support for React builds, mock APIs, or HTTP client generation.
+The three plugins (React, Mock, Request) are the extensibility layer of bundlekit. They are currently empty shells (empty entry files, empty generators, empty templates). Without them, the plugin system demonstrated in the Service code has no actual consumers, and users get no out-of-box support for React builds, mock APIs, or HTTP client generation.
 
 ## What Changes
 

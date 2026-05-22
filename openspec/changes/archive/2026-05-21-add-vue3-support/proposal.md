@@ -1,6 +1,6 @@
 ## Why
 
-Currently bundle-bundlekit only supports React project templates (`react-ts`, `react-js`). Vue 3 is a major frontend framework with a large user base. Adding Vue 3 template support extends the toolkit's reach, enabling users to scaffold Vue 3 + TypeScript/JavaScript projects with the same `bundlekit-cli create` command and unified build configuration.
+Currently bundlekit only supports React project templates (`react-ts`, `react-js`). Vue 3 is a major frontend framework with a large user base. Adding Vue 3 template support extends the toolkit's reach, enabling users to scaffold Vue 3 + TypeScript/JavaScript projects with the same `bundlekit-cli create` command and unified build configuration.
 
 ## What Changes
 

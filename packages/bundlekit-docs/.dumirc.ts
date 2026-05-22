@@ -2,7 +2,7 @@ import { defineConfig } from 'dumi';
 
 export default defineConfig({
     themeConfig: {
-        name: 'bundle-bundlekit',
+        name: 'bundlekit',
         logo: false,
         nav: [
             { title: '指南', link: '/guide' },
@@ -30,7 +30,7 @@ export default defineConfig({
         },
         footer: 'Open-source MIT Licensed | Copyright © Harhao ',
         socialLinks: {
-            github: 'https://github.com/Harhao/bundle-bundlekit',
+            github: 'https://github.com/Harhao/bundlekit',
         },
     },
 });

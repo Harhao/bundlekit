@@ -2,7 +2,7 @@
 
 Vue 3 uses Single File Components (`.vue` files) containing `<template>`, `<script>`, and `<style>` blocks. Vite has first-class Vue support via `@vitejs/plugin-vue`. For TypeScript projects, `vue-tsc` provides type checking.
 
-Current state: bundle-bundlekit supports React only via `@bundlekit/plugin-react`. The plugin pattern (register command, modify build config, provide templates) is already established and can be replicated.
+Current state: bundlekit supports React only via `@bundlekit/plugin-react`. The plugin pattern (register command, modify build config, provide templates) is already established and can be replicated.
 
 ## Goals / Non-Goals
 
