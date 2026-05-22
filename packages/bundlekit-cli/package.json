@@ -13,7 +13,7 @@
   },
   "bin": {
     "bundlekit-cli": "./dist/index.mjs",
-    "dc": "./dist/index.mjs"
+    "bc": "./dist/index.mjs"
   },
   "scripts": {
     "clean": "rimraf -rf dist",

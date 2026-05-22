@@ -127,7 +127,7 @@ bundlekit-service build --bundler vite --mode production
 |---|---|
 | `externals: 'auto'` | 自动 externalize 项目 `dependencies` / `peerDependencies` 与所有 `node:` 内置模块 |
 | `externals: ['react', /^@scope\//]` | 显式数组：按字符串 / 正则匹配 |
-| 不配置 | 等价 `'auto'`，避免双 react 实例等问题 |
+| 不配置 | 返回空数组 `[]`，不 externalize 任何依赖 |
 
 ## HMR 支持矩阵
 

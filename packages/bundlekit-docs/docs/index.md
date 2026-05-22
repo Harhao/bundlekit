@@ -52,8 +52,8 @@ npx @bundlekit/cli create my-app
 
 # 进入项目后追加插件 / bundler
 cd my-app
-bundlekit-cli add mock
-bundlekit-cli add bundler-rspack
+bc add mock
+bc add bundler-rspack
 
 # 启动开发服务
 pnpm dev

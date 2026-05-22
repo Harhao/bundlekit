@@ -168,12 +168,37 @@ const config: IBuildConfig = {
     formats: "umd",        // 输出格式: "umd" | "esm" | "commonjs" | "iife"
   },
   framework: "react",      // 由构建插件自动写入，勿手动设置
+  library: false,          // 是否启用 Library 模式（rollup/rolldown 专用）
+  libraryName: "",         // Library 导出名称（UMD/IIFE 模式必填）
 }
 ```
 
 > `framework` 字段由 `plugin-react` / `plugin-vue` 的 `apply()` 自动写入，各打包器据此加载对应 loader / 插件。通常无需手动填写。
 >
 > `bundler` 字段可在某个具体环境中单独覆盖顶层的 `bundler` 设置，例如开发环境用 vite，生产环境用 webpack。
+
+#### Library 模式
+
+当打包器为 rollup 或 rolldown 时，可以启用 Library 模式来构建类库：
+
+```ts
+{
+  entry: "src/index.ts",
+  output: {
+    dir: "dist",
+    filename: "index.js",
+    formats: "esm",  // 推荐使用 esm 格式
+  },
+  library: true,
+  libraryName: "MyLibrary",  // UMD/IIFE 模式下的全局导出名称
+}
+```
+
+支持的输出格式：
+- `esm`：ES Module 格式，推荐用于现代类库
+- `commonjs`：CommonJS 格式，兼容 Node.js
+- `umd`：Universal Module Definition，支持多种环境
+- `iife`：立即执行函数，适合浏览器环境
 
 ### 多页面（pages）
 
@@ -299,9 +324,32 @@ ssr: {
   externals: "auto",                                // 'auto' | (string | RegExp)[]
   template: "public/index.html",                    // HTML 模板（dev SSR 用）
   placeholder: "<!--ssr-outlet-->",                 // HTML 中占位符（默认 "<!--ssr-outlet-->")
+  dev: true,                                        // 是否启用 dev SSR middleware（默认 true）
 }
 ```
 
 启用 SSR 后，`bundlekit-service build` 会**串行执行两次** — 客户端 + 服务端 bundle 各产一份。详见 [SSR 指南](/guide/ssr)。
 
 > ⚠️ `ssr` 与 `pages[]` 互斥（第一版仅支持 SPA SSR），`ssr` 与 `target: 'node'` 互斥（server pass 自动切换 target）。
+
+#### SSR externals 配置
+
+| 配置 | 行为 |
+|------|------|
+| `externals: 'auto'` | 自动 externalize 项目 `dependencies` / `peerDependencies` 与所有 `node:` 内置模块 |
+| `externals: ['react', /^@scope\//]` | 显式数组：按字符串 / 正则匹配 |
+| 不配置 | 返回空数组 `[]`，不 externalize 任何依赖 |
+
+#### dev SSR 中间件
+
+`ssr.dev` 选项控制开发模式下是否启用 SSR 中间件：
+
+```ts
+ssr: {
+  entry: "src/entry-server.tsx",
+  output: { dir: "dist/server", filename: "server.cjs" },
+  dev: true,  // 默认 true，启用后开发服务会提供 HTTP SSR 渲染能力
+}
+```
+
+当 `dev: false` 时，开发服务不会启动 SSR 中间件，仅在生产构建时生成 SSR bundle。

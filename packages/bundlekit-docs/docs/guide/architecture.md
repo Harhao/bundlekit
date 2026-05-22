@@ -23,8 +23,9 @@ bundlekit/
 │   ├── bundlekit-plugin-react     # ┐
 │   ├── bundlekit-plugin-vue       # ├ 构建插件（写入 framework 字段）
 │   ├── bundlekit-plugin-mock      # ┘
-│   └── bundlekit-request          # 运行时 HTTP 客户端（axios / fetch）
-└── docs/                       # 文档站（基于 dumi）
+│   ├── bundlekit-request          # 运行时 HTTP 客户端（axios / fetch）
+│   └── bundlekit-docs             # 文档站（基于 dumi）
+└── docs/                       # 文档源文件
 ```
 
 ## 核心数据流
@@ -69,17 +70,17 @@ bundlekit-service serve/build
        │                      │                          │
 ┌──────▼──────────┐   ┌───────▼────────────┐   ┌─────────▼─────────┐
 │ @bundlekit/cli     │   │ @bundlekit/service    │   │ @bundlekit/bundler-* │
-│ create / add    │   │ optional peer:     │   │ (5 个适配器)       │
-│ deps: plugin-*  │   │   bundler-*        │   │ 各自 deps webpack/ │
-└─────────────────┘   └────┬───────────────┘   │ vite/rspack/rollup │
-                            │                  └──────┬────────────┘
-                            │ 运行时按需 import        │
-                            └──────────────────────────┘
+│ bc create/add   │   │ ds serve/build     │   │ (5 个适配器)       │
+│ deps: plugin-*  │   │ optional peer:     │   │ 各自 deps webpack/ │
+└─────────────────┘   │   bundler-*        │   │ vite/rspack/rollup │
+                      └────┬───────────────┘   └──────┬────────────┘
+                           │ 运行时按需 import        │
+                           └──────────────────────────┘
 
       ❌ 不再有：service → bundler-* 的 hard dependency
 ```
 
-`@bundlekit/service` 不再硬绑 5 个 bundler 适配器；它们以 `peerDependenciesMeta.optional` 声明，由用户工程的 `devDependencies` 提供（cli `create -b X` 自动写入；`dc add bundler-X` 显式追加；service 启动时缺失则弹出 prompt 安装）。
+`@bundlekit/service` 不再硬绑 5 个 bundler 适配器；它们以 `peerDependenciesMeta.optional` 声明，由用户工程的 `devDependencies` 提供（cli `create -b X` 自动写入；`bc add bundler-X` 显式追加；service 启动时缺失则弹出 prompt 安装）。
 
 ## 运行时动态加载打包器
 

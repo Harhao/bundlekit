@@ -141,3 +141,64 @@ describe("cli-create generator prompt silenced", () => {
         expect(text).not.toContain("workspace:");
     });
 });
+
+describe("cli-create SSR file filtering", () => {
+    const cleanups: Array<() => Promise<void>> = [];
+
+    afterAll(async () => {
+        for (const c of cleanups) await c();
+    });
+
+    async function createAndCheckFiles(label: string, template: string, ssr: boolean) {
+        const { cwd, cleanup } = await makeTmpCwd(label);
+        cleanups.push(cleanup);
+
+        const args = [CLI_BIN, "create", "demo-ssr", "-t", template, "-b", "vite", "-d", "test", "--pm", "pnpm"];
+        if (ssr) args.push("--ssr");
+
+        const result = spawnSync("node", args, {
+            cwd,
+            stdio: ["ignore", "pipe", "pipe"],
+            env: {
+                ...process.env,
+                DEVKIT_NO_INK: "1",
+                DEVKIT_NO_PROMPT: "1",
+                DEVKIT_SKIP_INSTALL: "1",
+            },
+        });
+
+        const srcDir = path.join(cwd, "demo-ssr/src");
+        const files = await fs.readdir(srcDir).catch(() => []);
+        return { files, code: result.status ?? -1 };
+    }
+
+    it("generates entry-server.tsx when --ssr is used", async () => {
+        const { files, code } = await createAndCheckFiles("ssr-true", "react-ts", true);
+        expect(code).toBe(0);
+        expect(files).toContain("entry-server.tsx");
+        expect(files).toContain("entry-client.tsx");
+        expect(files).toContain("index.tsx");
+    });
+
+    it("skips entry-server.tsx when --ssr is not used", async () => {
+        const { files, code } = await createAndCheckFiles("ssr-false", "react-ts", false);
+        expect(code).toBe(0);
+        expect(files).not.toContain("entry-server.tsx");
+        expect(files).toContain("entry-client.tsx");
+        expect(files).toContain("index.tsx");
+    });
+
+    it("generates entry-server.ts for vue3 template with --ssr", async () => {
+        const { files, code } = await createAndCheckFiles("ssr-vue", "vue3-ts", true);
+        expect(code).toBe(0);
+        expect(files).toContain("entry-server.ts");
+        expect(files).toContain("entry-client.ts");
+    });
+
+    it("skips entry-server.ts for vue3 template without --ssr", async () => {
+        const { files, code } = await createAndCheckFiles("ssr-vue-false", "vue3-ts", false);
+        expect(code).toBe(0);
+        expect(files).not.toContain("entry-server.ts");
+        expect(files).toContain("entry-client.ts");
+    });
+});

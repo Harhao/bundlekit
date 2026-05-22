@@ -33,6 +33,11 @@ export default class Generator {
         const entries = await fs.readdir(srcDir, { withFileTypes: true });
 
         for (const entry of entries) {
+            // SSR 文件过滤：当 ssr=false 时跳过 entry-server 文件
+            if (!this.context.ssr && entry.name.includes('entry-server')) {
+                continue;
+            }
+
             const srcPath = path.join(srcDir, entry.name);
             const destName = entry.name.replace(/\.ejs$/, "");
             const destPath = path.join(destDir, destName);

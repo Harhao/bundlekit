@@ -63,9 +63,7 @@ export function resolveTemplateDir(template: string): string {
 
     try {
         const require = createRequire(import.meta.url);
-        const pkgJsonPath = require.resolve(`${pluginPkgName}/package.json`, {
-            paths: [process.cwd()],
-        });
+        const pkgJsonPath = require.resolve(`${pluginPkgName}/package.json`);
         const templateDir = path.join(path.dirname(pkgJsonPath), "templates", `template-${normalized}`);
         if (fs.existsSync(templateDir)) return templateDir;
     } catch {}

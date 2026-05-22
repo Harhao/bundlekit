@@ -126,12 +126,17 @@ bundlekit-service build --bundler rollup     # 适合库打包
 - @rollup/plugin-image 图片资源处理
 - rollup-plugin-postcss CSS / Less / Sass 处理
 - watch 模式自动重构建
+- **SSR**：build 双 pass（client + server），dev 通过 `createSSRMiddleware` 提供 HTTP SSR 渲染
 
 ### Rolldown
 
 - Rust 实现，Rollup API 兼容（实验性）
 - 内置 TypeScript / JSX 变换，无需额外 loader
 - `experimental.enableComposingJsPlugins` 启用插件组合
+- SSE 热更新（Server-Sent Events）
+- Library 模式多格式输出（ESM / CJS / UMD / IIFE）
+- HTML 手动生成
+- **SSR**：build 双 pass（client + server），dev 通过 `createSSRMiddleware` 提供 HTTP SSR 渲染
 
 ## 配置字段映射
 
@@ -151,6 +156,8 @@ bundlekit-service build --bundler rollup     # 适合库打包
 | `js.minify` | `optimization.minimize` | `build.minify` | - | `optimization.minimize` |
 | `js.splitChunks` | `optimization.splitChunks` | `manualChunks` | - | `optimization.splitChunks` |
 | `css.loaders` | css/less/sass-loader | preprocessorOptions | postcss use | style/less/sass-loader |
+| `library` | - | - | `output.format` | - |
+| `libraryName` | - | - | `output.name` | - |
 
 ## SSR 支持矩阵
 

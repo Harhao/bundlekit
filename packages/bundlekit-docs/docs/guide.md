@@ -30,7 +30,7 @@ bundlekit 是前端多打包器构建工具集，让你用一套配置驱动 Web
 
 ```bash
 npm install -g @bundlekit/cli
-dc create my-app
+bc create my-app
 ```
 
 cli 会引导你完成以下步骤（TTY 终端使用 ink 渲染 banner + 步骤选择）：
@@ -62,10 +62,10 @@ pnpm dev
 # 1. 安装核心 + 选择的框架插件 + 选择的 bundler 适配器
 pnpm add -D @bundlekit/service @bundlekit/plugin-react @bundlekit/bundler-vite
 
-# 或用 dc add（推荐）：
+# 或用 bc add（推荐）：
 pnpm add -D @bundlekit/cli
-dc add react        # → @bundlekit/plugin-react
-dc add bundler-vite # → @bundlekit/bundler-vite
+bc add react        # → @bundlekit/plugin-react
+bc add bundler-vite # → @bundlekit/bundler-vite
 
 # 2. 在项目根创建 .bundlekitrc.ts，参考 config 文档
 
@@ -78,7 +78,7 @@ dc add bundler-vite # → @bundlekit/bundler-vite
 
 ```bash
 pnpm add -g @bundlekit/cli
-dc create my-app
+bc create my-app
 ```
 
 ## 方式三：本地 monorepo dev（贡献者路径）
@@ -92,7 +92,7 @@ pnpm install
 pnpm build:all
 
 # 在 monorepo 内创建项目（自动 link 模式）
-pnpm exec dc create my-demo -t react-ts -b vite --pm pnpm
+pnpm exec bc create my-demo -t react-ts -b vite --pm pnpm
 
 # 生成的 my-demo/package.json 含：
 #   "@bundlekit/service": "link:/abs/path/to/packages/bundlekit-service"
@@ -114,6 +114,8 @@ my-app/
 ├── package.json          # 项目依赖（含 service + plugin + 选中的 bundler）
 ├── src/
 │   ├── index.tsx         # 应用入口（CSR）
+│   ├── entry-client.tsx  # SSR 客户端入口（可选）
+│   ├── entry-server.tsx  # SSR 服务端入口（可选）
 │   └── api/
 │       └── index.ts      # HTTP 请求层（使用 @bundlekit/request）
 ├── public/
@@ -176,12 +178,12 @@ ds serve --skip-plugin @bundlekit/plugin-mock
 
 ```bash
 ds --help
-dc --help
+bc --help
 ```
 
 ## 下一步
 
-- [CLI 命令](/guide/cli) — `dc create` / `dc add` / `ds serve` / `ds build`
+- [CLI 命令](/guide/cli) — `bc create` / `bc add` / `ds serve` / `ds build`
 - [配置参考](/guide/config) — `.bundlekitrc.ts` 全字段（含 `tools` 逃生舱与 `ssr`）
 - [打包器适配器](/guide/bundlers) — 5 个 bundler 的特性差异 + SSR 支持矩阵
 - [SSR 指南](/guide/ssr) — 双产物构建 + dev SSR middleware
