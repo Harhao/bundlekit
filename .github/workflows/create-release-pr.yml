@@ -1,9 +1,9 @@
-name: publish-npm
+name: create-release-pr
 
 on:
   push:
     branches:
-      - master
+      - develop
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   release:
-    name: Release
+    name: Create Release PR
     runs-on: ubuntu-latest
 
     steps:
@@ -36,19 +36,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build all packages
-        run: pnpm build:all
-
-      - name: Run unit tests
-        run: pnpm test
-
-      - name: Run integration tests
-        run: pnpm test:integration
-
-      - name: Publish to npm
+      - name: Create Release Pull Request
         uses: changesets/action@v1
         with:
-          publish: pnpm changeset publish
+          title: 'chore: version packages'
+          commit: 'chore: version packages [skip ci]'
         env:
           GITHUB_TOKEN: ${{ secrets.DEVKIT_GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
