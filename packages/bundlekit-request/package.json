@@ -1,6 +1,6 @@
 {
   "name": "@bundlekit/request",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "HTTP client runtime library for bundlekit projects - axios/fetch dual engine",
   "main": "./index.ts",
   "type": "module",
