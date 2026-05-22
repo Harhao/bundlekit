@@ -38,7 +38,7 @@ After `transformConfig` returns the vite `InlineConfig`, the system SHALL invoke
 
 #### Scenario: Hook adds a vite plugin
 - **WHEN** the user declares `tools.vite` that pushes a custom plugin into `config.plugins`
-- **AND** runs `devkit-service serve --bundler vite`
+- **AND** runs `bundlekit-service serve --bundler vite`
 - **THEN** the resulting vite server SHALL include the custom plugin in its plugin list
 
 #### Scenario: Hook tweaks server settings

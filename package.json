@@ -1,11 +1,11 @@
 {
-  "name": "bundle-devkit",
+  "name": "bundlekit",
   "version": "1.0.0",
-  "description": "cli,devkit",
+  "description": "cli,bundlekit",
   "keywords": [
-    "devkit",
+    "bundlekit",
     "cli",
-    "devkit-cli"
+    "bundlekit-cli"
   ],
   "scripts": {
     "build:shared": "turbo run shared:build",

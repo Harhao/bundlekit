@@ -56,11 +56,11 @@
 - [x] 8.1 在 `template-react-ts` 中新增 `src/entry-client.tsx`、`src/entry-server.tsx`、`public/index.html` 加 `<!--ssr-outlet-->`
 - [x] 8.2 在 `template-react-js` / `template-vue3-ts` / `template-vue3-js` 同步添加
 - [x] 8.3 模板默认仍是 CSR（不开 ssr 字段），ssr 开启需用户手动；docs 给迁移指南
-- [x] 8.4 在 cli `create` 命令新增 `--ssr` 选项：当传入时模板生成的 `.devkitrc.ts` 默认带 ssr 配置块（注释打开）
+- [x] 8.4 在 cli `create` 命令新增 `--ssr` 选项：当传入时模板生成的 `.bundlekitrc.ts` 默认带 ssr 配置块（注释打开）
 
 ## 9. 文档
 
-- [x] 9.1 新增 `packages/devkit-docs/docs/guide/ssr.md`：架构图、配置字段表、入口约定、示例代码、HMR 矩阵、常见错误
+- [x] 9.1 新增 `packages/bundlekit-docs/docs/guide/ssr.md`：架构图、配置字段表、入口约定、示例代码、HMR 矩阵、常见错误
 - [x] 9.2 在 `bundlers.md` 增加"SSR 支持矩阵"小节
 - [x] 9.3 在 `config.md` 增加 `ssr` 字段说明
 

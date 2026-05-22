@@ -1,7 +1,7 @@
 ## Context
 
-当前 `devkit-cli create` 命令支持两种依赖模式：
-- **link 模式**：检测到 monorepo 环境时，用 `link:/abs/path` 协议将 `@devkit/*` 包链接到新项目
+当前 `bundlekit-cli create` 命令支持两种依赖模式：
+- **link 模式**：检测到 monorepo 环境时，用 `link:/abs/path` 协议将 `@bundlekit/*` 包链接到新项目
 - **npm 模式**：从 npm registry 安装，版本号为 `^cliVersion`
 
 link 模式的初衷是方便 monorepo 内开发调试，但实际造成了 pnpm workspace 冲突和 yarn 不兼容的问题。业界主流 CLI（create-react-app、create-vue、Vite）均采用纯 npm registry 模式。

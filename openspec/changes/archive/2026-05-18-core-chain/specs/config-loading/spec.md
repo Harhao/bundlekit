@@ -1,18 +1,18 @@
 ## ADDED Requirements
 
 ### Requirement: Load project config file
-The system SHALL load project configuration from `.devkitrc.ts` or `.devkitrc.js` in the project root directory, with `.devkitrc.ts` taking priority over `.devkitrc.js`.
+The system SHALL load project configuration from `.bundlekitrc.ts` or `.bundlekitrc.js` in the project root directory, with `.bundlekitrc.ts` taking priority over `.bundlekitrc.js`.
 
 #### Scenario: Load TypeScript config
-- **WHEN** a `.devkitrc.ts` file exists in the project root
+- **WHEN** a `.bundlekitrc.ts` file exists in the project root
 - **THEN** the system loads and executes it via `jiti`, returning the default export as `IBuildConfig`
 
 #### Scenario: Fallback to JavaScript config
-- **WHEN** no `.devkitrc.ts` exists but `.devkitrc.js` exists in the project root
+- **WHEN** no `.bundlekitrc.ts` exists but `.bundlekitrc.js` exists in the project root
 - **THEN** the system loads and executes it via `jiti`, returning the default export as `IBuildConfig`
 
 #### Scenario: No config file found
-- **WHEN** neither `.devkitrc.ts` nor `.devkitrc.js` exists in the project root
+- **WHEN** neither `.bundlekitrc.ts` nor `.bundlekitrc.js` exists in the project root
 - **THEN** the system throws an error with a descriptive message indicating no config file was found
 
 ### Requirement: Merge config with defaults

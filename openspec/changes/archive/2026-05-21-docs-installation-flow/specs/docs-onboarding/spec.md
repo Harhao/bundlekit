@@ -2,15 +2,15 @@
 
 ### Requirement: Quick Start uses scaffold-first
 
-The onboarding documentation (`docs/index.md` Hero, `docs/guide.md` Quick Start, `README.md`) SHALL present `npx @devkit/cli create my-app` as the primary, recommended quick-start command before any other install instruction.
+The onboarding documentation (`docs/index.md` Hero, `docs/guide.md` Quick Start, `README.md`) SHALL present `npx @bundlekit/cli create my-app` as the primary, recommended quick-start command before any other install instruction.
 
 #### Scenario: Index page Quick Start
 - **WHEN** a reader opens `docs/index.md`
-- **THEN** the first executable command in Quick Start SHALL be `npx @devkit/cli create my-app`
+- **THEN** the first executable command in Quick Start SHALL be `npx @bundlekit/cli create my-app`
 
 #### Scenario: README Quick Start
 - **WHEN** a reader opens `README.md`
-- **THEN** the first executable command in Quick Start SHALL be `npx @devkit/cli create my-app`
+- **THEN** the first executable command in Quick Start SHALL be `npx @bundlekit/cli create my-app`
 
 ### Requirement: Two integration paths documented
 
@@ -19,12 +19,12 @@ The `docs/guide.md` page SHALL present two distinct integration paths: scaffold-
 #### Scenario: Scaffold-first path documented
 - **WHEN** a reader navigates to "方式一：脚手架创建"
 - **THEN** the page SHALL list at least three steps culminating in `cd my-app && pnpm dev`
-- **AND** SHALL note that the cli auto-installs `@devkit/service`, framework plugin, and chosen bundler into devDependencies
+- **AND** SHALL note that the cli auto-installs `@bundlekit/service`, framework plugin, and chosen bundler into devDependencies
 
 #### Scenario: Manual-integration path documented
 - **WHEN** a reader navigates to "方式二：现有项目接入"
-- **THEN** the page SHALL list steps including `pnpm add -D @devkit/service @devkit/plugin-react` and `dc add bundler-<name>`
-- **AND** SHALL show how to author a minimal `.devkitrc.ts`
+- **THEN** the page SHALL list steps including `pnpm add -D @bundlekit/service @bundlekit/plugin-react` and `dc add bundler-<name>`
+- **AND** SHALL show how to author a minimal `.bundlekitrc.ts`
 
 ### Requirement: CLI documentation reflects new behaviors
 
@@ -36,7 +36,7 @@ The `docs/guide/cli.md` page SHALL document the bundler short-name table for `dc
 
 #### Scenario: Runtime prompt described
 - **WHEN** a reader views the cli reference
-- **THEN** the page SHALL describe what happens when `devkit-service serve --bundler X` is invoked while X is not installed (yes/no prompt, install written to devDependencies, decline → exit 1)
+- **THEN** the page SHALL describe what happens when `bundlekit-service serve --bundler X` is invoked while X is not installed (yes/no prompt, install written to devDependencies, decline → exit 1)
 - **AND** SHALL document `DEVKIT_AUTO_INSTALL=1` as the CI bypass
 
 #### Scenario: Ink UI screenshot or ASCII diagram
@@ -71,7 +71,7 @@ A new page `docs/guide/ssr.md` SHALL exist providing: architecture diagram, entr
 
 ### Requirement: Architecture page reflects updated dependency graph
 
-The `docs/guide/architecture.md` page's "模块依赖关系" diagram SHALL show that `@devkit/service` no longer depends on `@devkit/bundler-*` packages, and the "运行时动态加载打包器" section SHALL describe the new install-with-consent behavior.
+The `docs/guide/architecture.md` page's "模块依赖关系" diagram SHALL show that `@bundlekit/service` no longer depends on `@bundlekit/bundler-*` packages, and the "运行时动态加载打包器" section SHALL describe the new install-with-consent behavior.
 
 #### Scenario: Updated dependency diagram
 - **WHEN** a reader views the architecture diagram

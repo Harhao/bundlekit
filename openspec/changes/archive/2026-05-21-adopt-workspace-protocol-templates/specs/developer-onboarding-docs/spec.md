@@ -21,7 +21,7 @@ A `setup.md` page SHALL document the steps to set up a local development environ
 
 #### Scenario: Setup page covers per-package scripts
 - **WHEN** the visitor reaches the "包级脚本" section
-- **THEN** examples SHALL include `pnpm --filter @devkit/cli run cli:build` and similar for service / shared-utils / bundler-*
+- **THEN** examples SHALL include `pnpm --filter @bundlekit/cli run cli:build` and similar for service / shared-utils / bundler-*
 
 ### Requirement: Testing documentation
 A `testing.md` page SHALL document the three-tier test infrastructure (unit / integration / e2e), how to run each, when to add what, and the Playwright browser installation step.
@@ -44,10 +44,10 @@ An `adding-bundler.md` page SHALL document how to extend the project with a new 
 
 #### Scenario: Step-by-step example
 - **WHEN** the contributor follows the page
-- **THEN** the steps SHALL include: create `packages/devkit-bundler-<name>/`, implement adapter class, register in `BUNDLER_PACKAGE_MAP`, add `__tests__/integration/fixtures/<name>/` with three `.devkitrc.<mode>.ts` files
+- **THEN** the steps SHALL include: create `packages/bundlekit-bundler-<name>/`, implement adapter class, register in `BUNDLER_PACKAGE_MAP`, add `__tests__/integration/fixtures/<name>/` with three `.bundlekitrc.<mode>.ts` files
 
 ### Requirement: Adding a new framework plugin
-An `adding-plugin.md` page SHALL document how to add a new framework plugin (analogous to `@devkit/plugin-react` / `@devkit/plugin-vue`), covering: PluginAPI usage, the `framework` field convention, template directory structure, and generator hooks.
+An `adding-plugin.md` page SHALL document how to add a new framework plugin (analogous to `@bundlekit/plugin-react` / `@bundlekit/plugin-vue`), covering: PluginAPI usage, the `framework` field convention, template directory structure, and generator hooks.
 
 #### Scenario: Plugin API usage
 - **WHEN** a contributor reads `/contributing/adding-plugin`
@@ -55,7 +55,7 @@ An `adding-plugin.md` page SHALL document how to add a new framework plugin (ana
 
 #### Scenario: Template structure documented
 - **WHEN** the contributor wants to ship templates with the plugin
-- **THEN** the page SHALL describe the convention `packages/devkit-plugin-<name>/templates/template-<name>-<lang>/` with EJS files
+- **THEN** the page SHALL describe the convention `packages/bundlekit-plugin-<name>/templates/template-<name>-<lang>/` with EJS files
 
 ### Requirement: Release documentation
 A `release.md` page SHALL document the complete release flow: changeset creation, version bumping via changesets/action, PR review, merge-triggered npm publish, and required GitHub secrets configuration.
@@ -66,7 +66,7 @@ A `release.md` page SHALL document the complete release flow: changeset creation
 
 #### Scenario: GitHub Actions secrets
 - **WHEN** a maintainer prepares the repo for first release
-- **THEN** the page SHALL list required secrets: `NPM_TOKEN` (npm Automation token, scope `@devkit`), `GITHUB_TOKEN` (auto-provided by GitHub)
+- **THEN** the page SHALL list required secrets: `NPM_TOKEN` (npm Automation token, scope `@bundlekit`), `GITHUB_TOKEN` (auto-provided by GitHub)
 - **AND** the page SHALL include step-by-step screenshots or commands to obtain and set these secrets
 
 #### Scenario: Auto-publish on merge

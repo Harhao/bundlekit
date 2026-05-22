@@ -20,7 +20,7 @@
 
 ## 3. fixtures 每 bundler 配置（Phase 1）
 
-- [x] 3.1 创建 `fixtures/webpack/.devkitrc.spa.ts` / `.devkitrc.lib.ts` / `.devkitrc.ssr.ts` + package.json（指 devkit-service file:）
+- [x] 3.1 创建 `fixtures/webpack/.bundlekitrc.spa.ts` / `.bundlekitrc.lib.ts` / `.bundlekitrc.ssr.ts` + package.json（指 bundlekit-service file:）
 - [x] 3.2 创建 `fixtures/vite/` 同款 3 份配置
 - [x] 3.3 创建 `fixtures/rspack/` 同款
 - [x] 3.4 创建 `fixtures/rollup/` 同款

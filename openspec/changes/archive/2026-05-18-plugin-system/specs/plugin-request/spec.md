@@ -8,7 +8,7 @@ The Request plugin SHALL export a valid `IPluginAPI` object that registers `requ
 - **THEN** it SHALL register `request:generate` via `api.registerCommand`
 
 ### Requirement: Dual engine support
-The Request plugin SHALL support both `axios` and `fetch` as the underlying HTTP engine, configured via `.devkitrc.ts` `request.engine` field.
+The Request plugin SHALL support both `axios` and `fetch` as the underlying HTTP engine, configured via `.bundlekitrc.ts` `request.engine` field.
 
 #### Scenario: Axios engine
 - **WHEN** `request.engine` is `"axios"`

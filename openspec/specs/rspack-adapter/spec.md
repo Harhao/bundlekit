@@ -45,7 +45,7 @@ After `transformConfig` returns the rspack `RspackOptions`, the system SHALL inv
 
 #### Scenario: Hook adds an rspack plugin
 - **WHEN** the user declares `tools.rspack` that pushes a custom plugin into `config.plugins`
-- **AND** runs `devkit-service serve --bundler rspack`
+- **AND** runs `bundlekit-service serve --bundler rspack`
 - **THEN** the resulting rspack compiler SHALL include the custom plugin in its plugin list
 
 ### Requirement: Rspack adapter SSR build pass

@@ -2,15 +2,15 @@
 
 Vue 3 uses Single File Components (`.vue` files) containing `<template>`, `<script>`, and `<style>` blocks. Vite has first-class Vue support via `@vitejs/plugin-vue`. For TypeScript projects, `vue-tsc` provides type checking.
 
-Current state: bundle-devkit supports React only via `@devkit/plugin-react`. The plugin pattern (register command, modify build config, provide templates) is already established and can be replicated.
+Current state: bundle-bundlekit supports React only via `@bundlekit/plugin-react`. The plugin pattern (register command, modify build config, provide templates) is already established and can be replicated.
 
 ## Goals / Non-Goals
 
 **Goals:**
-- Create `@devkit/plugin-vue` package mirroring the React plugin structure
+- Create `@bundlekit/plugin-vue` package mirroring the React plugin structure
 - Provide `vue3-ts` and `vue3-js` templates in `templates/` directory
-- Template includes: `App.vue`, `main.ts/js`, `.devkitrc.ts/js`, `package.json`, `tsconfig.json`, `public/index.html`
-- Register in CLI template selector (`devkit-cli/index.ts`)
+- Template includes: `App.vue`, `main.ts/js`, `.bundlekitrc.ts/js`, `package.json`, `tsconfig.json`, `public/index.html`
+- Register in CLI template selector (`bundlekit-cli/index.ts`)
 - Default bundler: `vite` (Vue 3 + Vite is the standard setup)
 
 **Non-Goals:**

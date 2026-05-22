@@ -27,12 +27,12 @@ CLI `create` 命令的 `link` 依赖模式（在 monorepo 内生成项目并用 
 ## Impact
 
 - **代码文件**：
-  - `packages/devkit-shared-utils/lib/types/cli-init/index.ts` — 移除 `IDepModeKind` 中的 `"link"`，简化 `IDepMode` 接口
-  - `packages/devkit-cli/lib/utils/depMode.ts` — 移除 `findMonorepoRoot`、简化 `resolveDepMode` 和 `resolveDevkitDepValue`
-  - `packages/devkit-shared-utils/lib/shared/pkgManager.ts` — 移除 `isPnpmWorkspaceMember` 和 `findPnpmWorkspaceRoot`
-  - `packages/devkit-cli/lib/ui/Done.tsx` — 移除 depMode 显示
-  - `packages/devkit-cli/lib/ui/CreateApp.tsx` — 简化 depMode 日志
-  - `packages/devkit-cli/lib/commands/create/creator.ts` — 简化 depMode 日志
+  - `packages/bundlekit-shared-utils/lib/types/cli-init/index.ts` — 移除 `IDepModeKind` 中的 `"link"`，简化 `IDepMode` 接口
+  - `packages/bundlekit-cli/lib/utils/depMode.ts` — 移除 `findMonorepoRoot`、简化 `resolveDepMode` 和 `resolveDevkitDepValue`
+  - `packages/bundlekit-shared-utils/lib/shared/pkgManager.ts` — 移除 `isPnpmWorkspaceMember` 和 `findPnpmWorkspaceRoot`
+  - `packages/bundlekit-cli/lib/ui/Done.tsx` — 移除 depMode 显示
+  - `packages/bundlekit-cli/lib/ui/CreateApp.tsx` — 简化 depMode 日志
+  - `packages/bundlekit-cli/lib/commands/create/creator.ts` — 简化 depMode 日志
 - **测试文件**：
   - `__tests__/depMode.test.ts` — 更新断言，移除 link 模式测试
   - `__tests__/integration/cli/cli-create.test.ts` — 更新断言

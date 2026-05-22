@@ -1,6 +1,6 @@
 ## Context
 
-`@devkit/cli` 的 create 流程在最近 4 个 active change（refactor-bundler-deps / improve-cli-ux / polish-create-ux / adopt-workspace-protocol-templates）打磨后已经基本稳定，但本地真实运行 `pnpm debug` 时仍能撞到一组"看似 hang 实则在等输入"的 UX 缺陷。诊断追踪：
+`@bundlekit/cli` 的 create 流程在最近 4 个 active change（refactor-bundler-deps / improve-cli-ux / polish-create-ux / adopt-workspace-protocol-templates）打磨后已经基本稳定，但本地真实运行 `pnpm debug` 时仍能撞到一组"看似 hang 实则在等输入"的 UX 缺陷。诊断追踪：
 
 ```
 用户视角                            实际发生
@@ -9,7 +9,7 @@
 2. stderr 喷一行 ERR_INVALID_PROTOCOL  setBinaryMirrors 探测 cypress mirror 失败
 3. logger: "DONE 项目 创建成功"       install 已完成
 4. spinner 收尾，没换行              spinner.stopSpinner 之后没 println
-5. plugin-react/generator 弹 enquirer  "是否同时安装 @devkit/request..."
+5. plugin-react/generator 弹 enquirer  "是否同时安装 @bundlekit/request..."
 6. 用户看不到 prompt 文案             被前面噪音淹没
 7. 等待键盘输入                       用户以为还在 install，开始焦虑
 8. 5 分钟后 ctrl+c                    test-app 半成品留在磁盘
@@ -20,7 +20,7 @@
 - 但要在 ink TTY / CI / 非 TTY 路径默认 silent，避免抢 stdin
 - monorepo 内 dev 是常用路径，PackageManager 必须正确处理（不能依赖 link 协议侥幸绕开）
 - 不破坏已归档 spec（cli-create / bundler-installation 已被多次 modified，本次再加 modify 子句）
-- 不引入新依赖（lockstep 假设要求 @devkit/request 用 workspace:^）
+- 不引入新依赖（lockstep 假设要求 @bundlekit/request 用 workspace:^）
 
 ## Goals / Non-Goals
 
@@ -35,7 +35,7 @@
 
 **Non-Goals:**
 - 不重构整个 generator 接口（保持现有 `IGeneratorAPI`）
-- 不删除 `@devkit/request` 这个可选包（保留 plugin-react 的"问要不要装 request"语义，仅改触发条件）
+- 不删除 `@bundlekit/request` 这个可选包（保留 plugin-react 的"问要不要装 request"语义，仅改触发条件）
 - 不实现"prompt 升级为 cli step"（让 dc create 命令在 ink 流程内问 request 选项）— 这是更大改动，留给后续
 - 不动 add-config-escape-hatch / add-ssr-support 已落地的 spec
 - 不改 changeset config / GitHub Actions（与发版流程无关）
@@ -68,12 +68,12 @@ ink 路径下注入 `DEVKIT_NO_PROMPT=1` 是因为 ink 控制 stdout/stdin，再
 ### D2：generator 依赖版本用 workspace:^
 
 ```diff
-- api.addDependency("@devkit/request", "^1.0.0");
-+ api.addDependency("@devkit/request", "workspace:^");
+- api.addDependency("@bundlekit/request", "^1.0.0");
++ api.addDependency("@bundlekit/request", "workspace:^");
 ```
 
 后续由 cli 的 `normalizeDeps` 兜底转换：
-- monorepo 内 → `link:/abs/path/to/packages/devkit-request`
+- monorepo 内 → `link:/abs/path/to/packages/bundlekit-request`
 - monorepo 外 → `^${cliVersion}`
 
 但 `addDependency` 是 generator 调用的，写完之后还会跑一次 `installDeps`（如果 hasPendingDeps）。需要在 generator 写完之后**再调一次 normalizeDeps**，否则 `workspace:^` 会被 `pnpm install` 直接拒绝（项目不在 workspace 中）。
@@ -88,7 +88,7 @@ ink 路径下注入 `DEVKIT_NO_PROMPT=1` 是因为 ink 控制 stdout/stdin，再
    4. installDeps                           (pnpm install 跑通)
    5. runGenerator
        └─ generator.addDependency
-           写 "@devkit/request": "workspace:^"
+           写 "@bundlekit/request": "workspace:^"
    6. normalizeDeps    ← 新增！            (再替换一次)
    7. installDeps（如果 hasPendingDeps）   (装 generator 追加的依赖)
 ```
@@ -113,7 +113,7 @@ private shouldIgnoreWorkspace(): boolean {
 - 检查 `path.relative(ws.root, this.context)` 是否匹配某个 glob
 
 为什么不是无脑全部加 `--ignore-workspace`：
-- 真 workspace 成员（如 `packages/devkit-cli/` 自己）需要 workspace 协议解析
+- 真 workspace 成员（如 `packages/bundlekit-cli/` 自己）需要 workspace 协议解析
 - 自动检测能在两种场景下都对
 
 ### D4：setBinaryMirrors 错误静默
@@ -164,7 +164,7 @@ describe("cli-create generator prompt silenced", () => {
         });
         expect(r.code).toBe(0);
         const pkg = readPkg(cwd, "demo");
-        expect(pkg.dependencies?.["@devkit/request"]).toBeUndefined();
+        expect(pkg.dependencies?.["@bundlekit/request"]).toBeUndefined();
         expect(JSON.stringify(pkg)).not.toContain("^1.0.0");
         await cleanup();
     });
@@ -177,7 +177,7 @@ describe("cli-create generator prompt silenced", () => {
 
 | 风险 | 缓解 |
 |---|---|
-| 用户在真 TTY 下确实想装 @devkit/request 但 prompt 被静默 | 仅在 `DEVKIT_NO_PROMPT=1` / CI / 非 TTY 时静默；`pnpm dc create my-app` 在终端跑会弹 prompt |
+| 用户在真 TTY 下确实想装 @bundlekit/request 但 prompt 被静默 | 仅在 `DEVKIT_NO_PROMPT=1` / CI / 非 TTY 时静默；`pnpm dc create my-app` 在终端跑会弹 prompt |
 | `--ignore-workspace` 检测误判（其他 monorepo 含 `pnpm-workspace.yaml`） | 双重判定：cwd 在 workspace 树下 + 不是 workspace member 才加 |
 | addDependency("workspace:^") 在 generator-only 场景（非 cli create 路径）下 normalize 不会再调 | 如果用户在已有项目目录手工 `dc add react` 触发 generator，会留下 `workspace:^`；但本 change 同时让 `dc add` 命令在调用 generator 后也跑 normalizeDeps |
 | Logger 没有 debug 方法导致运行时 undefined | 用可选链 `logger.debug?.(...)` + Logger 类同步加一个 noop debug 方法 |
@@ -225,6 +225,6 @@ describe("cli-create generator prompt silenced", () => {
 ## Open Questions
 
 - **`dc add` 命令是否也要改 prompt 静默？** 目前不改（保留交互能力），但要在 docs 里强调"`dc add` 是交互式，cli create 是非交互式"
-- **如果用户已经有 `@devkit/request@^1.0.0` 在 package.json，本次升级会被覆盖吗？** generator 的 `addDependency` 是直接写 entries，会覆盖；但用户主动 install 过的依赖应该不会被 generator 触发到（generator 只在 cli create / dc add 路径里跑）
+- **如果用户已经有 `@bundlekit/request@^1.0.0` 在 package.json，本次升级会被覆盖吗？** generator 的 `addDependency` 是直接写 entries，会覆盖；但用户主动 install 过的依赖应该不会被 generator 触发到（generator 只在 cli create / dc add 路径里跑）
 - **PackageManager 的 workspace 检测是否需要缓存？** 一次 cli 命令只会调一次，不需要
 - **是否要加 GH Actions check 验证 cli 创建流程在 CI 默认能跑通？** 集成测试已经覆盖；CI workflow 跑 `pnpm test:integration` 时会自动验证

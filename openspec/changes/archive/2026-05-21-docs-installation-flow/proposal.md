@@ -1,21 +1,21 @@
 ## Why
 
-`@devkit/docs` 的 onboarding 文档（`docs/index.md`、`docs/guide.md`、`docs/guide/cli.md`）目前给出的安装命令是：
+`@bundlekit/docs` 的 onboarding 文档（`docs/index.md`、`docs/guide.md`、`docs/guide/cli.md`）目前给出的安装命令是：
 
 ```bash
-pnpm add -D @devkit/service @devkit/cli
+pnpm add -D @bundlekit/service @bundlekit/cli
 ```
 
-这条命令暗示用户**先在某个项目里**装两个包，但实际推荐的"心智模型"是 cli 先行（全局或 npx），由 cli 创建项目并自动写入 `@devkit/service` + `@devkit/bundler-X` 到新项目的 `devDependencies`。当 change 1 / 4 落地后，老文档与真实行为之间的差距会更大（cli 创建出来的 devDeps 多一项 bundler-*，runtime prompt 行为也需要说明）。
+这条命令暗示用户**先在某个项目里**装两个包，但实际推荐的"心智模型"是 cli 先行（全局或 npx），由 cli 创建项目并自动写入 `@bundlekit/service` + `@bundlekit/bundler-X` 到新项目的 `devDependencies`。当 change 1 / 4 落地后，老文档与真实行为之间的差距会更大（cli 创建出来的 devDeps 多一项 bundler-*，runtime prompt 行为也需要说明）。
 
 本 change 的目标是把 4 个代码 change 的产出**汇总到 onboarding 文档**中，让用户从"零到能跑"的心智清晰一致。
 
 ## What Changes
 
 - 重写 `docs/index.md` 与 `docs/guide.md` 的"安装"章节：
-  - 推荐流：`npx @devkit/cli create my-app` 一条命令（cli 自动装 service / plugin / bundler）
-  - 手工集成流：现有项目里 `pnpm add -D @devkit/service @devkit/plugin-react`，再 `dc add bundler-vite`
-  - 全局安装可选项：`pnpm add -g @devkit/cli`
+  - 推荐流：`npx @bundlekit/cli create my-app` 一条命令（cli 自动装 service / plugin / bundler）
+  - 手工集成流：现有项目里 `pnpm add -D @bundlekit/service @bundlekit/plugin-react`，再 `dc add bundler-vite`
+  - 全局安装可选项：`pnpm add -g @bundlekit/cli`
 - 修订 `docs/guide/cli.md`：
   - `add` 命令章节加 `bundler-*` 短名表（来自 change 1）
   - 加 ink UI 截图与 `DEVKIT_NO_INK` fallback 说明（来自 change 4）
@@ -41,13 +41,13 @@ pnpm add -D @devkit/service @devkit/cli
 ## Impact
 
 **仅文档变更**
-- `packages/devkit-docs/docs/index.md`
-- `packages/devkit-docs/docs/guide.md`
-- `packages/devkit-docs/docs/guide/cli.md`
-- `packages/devkit-docs/docs/guide/config.md`
-- `packages/devkit-docs/docs/guide/bundlers.md`
-- `packages/devkit-docs/docs/guide/architecture.md`
-- 新增 `packages/devkit-docs/docs/guide/ssr.md`
+- `packages/bundlekit-docs/docs/index.md`
+- `packages/bundlekit-docs/docs/guide.md`
+- `packages/bundlekit-docs/docs/guide/cli.md`
+- `packages/bundlekit-docs/docs/guide/config.md`
+- `packages/bundlekit-docs/docs/guide/bundlers.md`
+- `packages/bundlekit-docs/docs/guide/architecture.md`
+- 新增 `packages/bundlekit-docs/docs/guide/ssr.md`
 - `README.md`
 
 **依赖前置**

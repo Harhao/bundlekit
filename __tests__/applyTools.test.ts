@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
-import { applyTools } from "../packages/devkit-service/lib/utils/applyTools";
-import type { IBuildConfig, IToolsCtx } from "../packages/devkit-shared-utils/lib/types/cli-service/config";
+import { applyTools } from "../packages/bundlekit-service/lib/utils/applyTools";
+import type { IBuildConfig, IToolsCtx } from "../packages/bundlekit-shared-utils/lib/types/cli-service/config";
 
 const baseCtx: IToolsCtx = {
     mode: "production",

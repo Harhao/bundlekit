@@ -18,6 +18,6 @@
 
 ## 4. Verification
 
-- [x] 4.1 Run `pnpm build` for devkit-cli
+- [x] 4.1 Run `pnpm build` for bundlekit-cli
 - [x] 4.2 Test `create` command end-to-end
 - [x] 4.3 Test `mock` command end-to-end

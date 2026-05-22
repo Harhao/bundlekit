@@ -65,11 +65,11 @@ importers:
         specifier: ^4.92.0
         version: 4.92.0
 
-  packages/devkit-bundler-rolldown:
+  packages/bundlekit-bundler-rolldown:
     dependencies:
-      '@devkit/shared-utils':
+      '@bundlekit/shared-utils':
         specifier: workspace:*
-        version: link:../devkit-shared-utils
+        version: link:../bundlekit-shared-utils
       less:
         specifier: ^4.2.2
         version: 4.6.4
@@ -99,7 +99,7 @@ importers:
         specifier: ^2.6.2
         version: 2.8.1
 
-  packages/devkit-bundler-rollup:
+  packages/bundlekit-bundler-rollup:
     dependencies:
       '@babel/preset-env':
         specifier: ^7.24.0
@@ -107,9 +107,9 @@ importers:
       '@babel/preset-typescript':
         specifier: ^7.24.0
         version: 7.28.5(@babel/core@7.29.0)
-      '@devkit/shared-utils':
+      '@bundlekit/shared-utils':
         specifier: workspace:*
-        version: link:../devkit-shared-utils
+        version: link:../bundlekit-shared-utils
       '@rollup/plugin-babel':
         specifier: ^6.0.4
         version: 6.1.0(@babel/core@7.29.0)(rollup@4.60.4)
@@ -148,11 +148,11 @@ importers:
         specifier: ^2.6.2
         version: 2.8.1
 
-  packages/devkit-bundler-rspack:
+  packages/bundlekit-bundler-rspack:
     dependencies:
-      '@devkit/shared-utils':
+      '@bundlekit/shared-utils':
         specifier: workspace:*
-        version: link:../devkit-shared-utils
+        version: link:../bundlekit-shared-utils
       '@rspack/core':
         specifier: ^1.3.4
         version: 1.7.11
@@ -179,11 +179,11 @@ importers:
         specifier: ^2.6.2
         version: 2.8.1
 
-  packages/devkit-bundler-vite:
+  packages/bundlekit-bundler-vite:
     dependencies:
-      '@devkit/shared-utils':
+      '@bundlekit/shared-utils':
         specifier: workspace:*
-        version: link:../devkit-shared-utils
+        version: link:../bundlekit-shared-utils
       '@vitejs/plugin-react':
         specifier: ^4.4.1
         version: 4.7.0(vite@4.5.14)
@@ -216,11 +216,11 @@ importers:
         specifier: ^2.6.2
         version: 2.8.1
 
-  packages/devkit-bundler-webpack:
+  packages/bundlekit-bundler-webpack:
     dependencies:
-      '@devkit/shared-utils':
+      '@bundlekit/shared-utils':
         specifier: workspace:*
-        version: link:../devkit-shared-utils
+        version: link:../bundlekit-shared-utils
       css-loader:
         specifier: ^6.8.1
         version: 6.11.0(webpack@5.106.2)
@@ -304,17 +304,17 @@ importers:
         specifier: ^2.6.2
         version: 2.8.1
 
-  packages/devkit-cli:
+  packages/bundlekit-cli:
     dependencies:
-      '@devkit/plugin-react':
+      '@bundlekit/plugin-react':
         specifier: workspace:*
-        version: link:../devkit-plugin-react
-      '@devkit/plugin-vue':
+        version: link:../bundlekit-plugin-react
+      '@bundlekit/plugin-vue':
         specifier: workspace:*
-        version: link:../devkit-plugin-vue
-      '@devkit/shared-utils':
+        version: link:../bundlekit-plugin-vue
+      '@bundlekit/shared-utils':
         specifier: workspace:*
-        version: link:../devkit-shared-utils
+        version: link:../bundlekit-shared-utils
       commander:
         specifier: ^13.1.0
         version: 13.1.0
@@ -392,32 +392,32 @@ importers:
         specifier: ^5.8.2
         version: 5.9.3
 
-  packages/devkit-docs:
+  packages/bundlekit-docs:
     devDependencies:
       dumi:
         specifier: ^2.4.27
         version: 2.4.28(@babel/core@7.29.0)(@types/node@22.19.19)(@types/react@18.3.28)(eslint@8.57.1)(prettier@2.8.8)(react-dom@18.3.1)(react@18.3.1)(styled-jsx@5.1.7)(stylelint@14.16.1)(typescript@5.9.3)(webpack@5.106.2)
 
-  packages/devkit-plugin-mock:
+  packages/bundlekit-plugin-mock:
     dependencies:
-      '@devkit/shared-utils':
+      '@bundlekit/shared-utils':
         specifier: workspace:*
-        version: link:../devkit-shared-utils
+        version: link:../bundlekit-shared-utils
       json-server:
         specifier: ^0.17.3
         version: 0.17.4
 
-  packages/devkit-plugin-react:
+  packages/bundlekit-plugin-react:
     dependencies:
-      '@devkit/shared-utils':
+      '@bundlekit/shared-utils':
         specifier: workspace:*
-        version: link:../devkit-shared-utils
+        version: link:../bundlekit-shared-utils
 
-  packages/devkit-plugin-vue:
+  packages/bundlekit-plugin-vue:
     dependencies:
-      '@devkit/shared-utils':
+      '@bundlekit/shared-utils':
         specifier: workspace:*
-        version: link:../devkit-shared-utils
+        version: link:../bundlekit-shared-utils
       '@vitejs/plugin-vue':
         specifier: ^5.2.0
         version: 5.2.4(vite@5.4.21)(vue@3.5.34)
@@ -432,32 +432,32 @@ importers:
         specifier: ^5.8.2
         version: 5.9.3
 
-  packages/devkit-request:
+  packages/bundlekit-request:
     dependencies:
       axios:
         specifier: ^1.6.0
         version: 1.16.1
 
-  packages/devkit-service:
+  packages/bundlekit-service:
     dependencies:
-      '@devkit/bundler-rolldown':
+      '@bundlekit/bundler-rolldown':
         specifier: workspace:*
-        version: link:../devkit-bundler-rolldown
-      '@devkit/bundler-rollup':
+        version: link:../bundlekit-bundler-rolldown
+      '@bundlekit/bundler-rollup':
         specifier: workspace:*
-        version: link:../devkit-bundler-rollup
-      '@devkit/bundler-rspack':
+        version: link:../bundlekit-bundler-rollup
+      '@bundlekit/bundler-rspack':
         specifier: workspace:*
-        version: link:../devkit-bundler-rspack
-      '@devkit/bundler-vite':
+        version: link:../bundlekit-bundler-rspack
+      '@bundlekit/bundler-vite':
         specifier: workspace:*
-        version: link:../devkit-bundler-vite
-      '@devkit/bundler-webpack':
+        version: link:../bundlekit-bundler-vite
+      '@bundlekit/bundler-webpack':
         specifier: workspace:*
-        version: link:../devkit-bundler-webpack
-      '@devkit/shared-utils':
+        version: link:../bundlekit-bundler-webpack
+      '@bundlekit/shared-utils':
         specifier: workspace:*
-        version: link:../devkit-shared-utils
+        version: link:../bundlekit-shared-utils
       jiti:
         specifier: ^2.4.2
         version: 2.7.0
@@ -505,7 +505,7 @@ importers:
         specifier: ^5.8.2
         version: 5.9.3
 
-  packages/devkit-shared-utils:
+  packages/bundlekit-shared-utils:
     dependencies:
       chalk:
         specifier: ^5.4.1
@@ -580,9 +580,9 @@ importers:
 
   packages/example:
     dependencies:
-      '@devkit/request':
+      '@bundlekit/request':
         specifier: workspace:*
-        version: link:../devkit-request
+        version: link:../bundlekit-request
       react:
         specifier: ^18.2.0
         version: 18.3.1
@@ -596,30 +596,30 @@ importers:
         specifier: ^4.5.0
         version: 4.5.7(@types/react@18.3.28)(react@18.3.1)
     devDependencies:
-      '@devkit/bundler-rolldown':
+      '@bundlekit/bundler-rolldown':
         specifier: workspace:*
-        version: link:../devkit-bundler-rolldown
-      '@devkit/bundler-rollup':
+        version: link:../bundlekit-bundler-rolldown
+      '@bundlekit/bundler-rollup':
         specifier: workspace:*
-        version: link:../devkit-bundler-rollup
-      '@devkit/bundler-rspack':
+        version: link:../bundlekit-bundler-rollup
+      '@bundlekit/bundler-rspack':
         specifier: workspace:*
-        version: link:../devkit-bundler-rspack
-      '@devkit/bundler-vite':
+        version: link:../bundlekit-bundler-rspack
+      '@bundlekit/bundler-vite':
         specifier: workspace:*
-        version: link:../devkit-bundler-vite
-      '@devkit/bundler-webpack':
+        version: link:../bundlekit-bundler-vite
+      '@bundlekit/bundler-webpack':
         specifier: workspace:*
-        version: link:../devkit-bundler-webpack
-      '@devkit/plugin-mock':
+        version: link:../bundlekit-bundler-webpack
+      '@bundlekit/plugin-mock':
         specifier: workspace:*
-        version: link:../devkit-plugin-mock
-      '@devkit/plugin-react':
+        version: link:../bundlekit-plugin-mock
+      '@bundlekit/plugin-react':
         specifier: workspace:*
-        version: link:../devkit-plugin-react
-      '@devkit/service':
+        version: link:../bundlekit-plugin-react
+      '@bundlekit/service':
         specifier: workspace:*
-        version: link:../devkit-service
+        version: link:../bundlekit-service
       '@types/react':
         specifier: ^18.2.0
         version: 18.3.28
@@ -13605,7 +13605,7 @@ packages:
   /md5.js@1.3.5:
     resolution: {integrity: sha512-xitP+WxNPcTTOgnTJcrhM0xvdPepipPSf3I8EIpGKeFLjt3PlJLIDG3u8EX53ZIubkb+5U2+3rELYpEhHhzdkg==}
     dependencies:
-      hash-base: 3.0.5
+      hash-base: 3.1.2
       inherits: 2.0.4
       safe-buffer: 5.2.1
     dev: true

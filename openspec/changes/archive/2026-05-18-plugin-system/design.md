@@ -15,7 +15,7 @@
 ### Request Plugin
 
 - `registerPlugin(api)`: register `request:generate` command
-- Engine selection via `.devkitrc.ts` `request.engine: "axios" | "fetch"`
+- Engine selection via `.bundlekitrc.ts` `request.engine: "axios" | "fetch"`
 - Generate wrapper: `get/post/put/delete` with interceptors, timeout, baseURL
 - Fetch engine: wrap native fetch with equivalent API surface
 - Swagger/openapi parsing for code generation

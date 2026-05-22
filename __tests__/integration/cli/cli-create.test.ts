@@ -12,7 +12,7 @@ import { spawnSync } from "node:child_process";
  */
 
 const REPO_ROOT = path.resolve(__dirname, "../../..");
-const CLI_BIN = path.resolve(REPO_ROOT, "packages/devkit-cli/dist/index.mjs");
+const CLI_BIN = path.resolve(REPO_ROOT, "packages/bundlekit-cli/dist/index.mjs");
 
 async function makeTmpCwd(label: string): Promise<{ cwd: string; cleanup: () => Promise<void> }> {
     const cwd = path.join(REPO_ROOT, "__tests__/integration/.tmp", `cli-create-${label}-${Date.now()}-${Math.floor(Math.random() * 1e6)}`);
@@ -85,9 +85,9 @@ describe("cli-create dep normalization", () => {
         const text = JSON.stringify(pkg);
 
         expect(text).not.toContain("workspace:");
-        expect(pkg.devDependencies["@devkit/service"]).toMatch(/^\^/);
-        expect(pkg.devDependencies["@devkit/plugin-vue"]).toMatch(/^\^/);
-        expect(pkg.devDependencies["@devkit/bundler-webpack"]).toMatch(/^\^/);
+        expect(pkg.devDependencies["@bundlekit/service"]).toMatch(/^\^/);
+        expect(pkg.devDependencies["@bundlekit/plugin-vue"]).toMatch(/^\^/);
+        expect(pkg.devDependencies["@bundlekit/bundler-webpack"]).toMatch(/^\^/);
         // 防御：不含 ^1.0.0 死硬编码
         expect(text).not.toContain('"^1.0.0"');
     });
@@ -118,13 +118,13 @@ describe("cli-create generator prompt silenced", () => {
         return JSON.parse(await fs.readFile(pkgPath, "utf-8"));
     }
 
-    it("DEVKIT_NO_PROMPT=1 skips @devkit/request prompt, no ^1.0.0 literal", async () => {
+    it("DEVKIT_NO_PROMPT=1 skips @bundlekit/request prompt, no ^1.0.0 literal", async () => {
         const pkg = await createAndReadPkg("no-prompt", {
             DEVKIT_NO_PROMPT: "1",
         });
         const text = JSON.stringify(pkg);
         // generator 跳过 → request 不会被写入
-        expect(pkg.dependencies?.["@devkit/request"]).toBeUndefined();
+        expect(pkg.dependencies?.["@bundlekit/request"]).toBeUndefined();
         // 防御：无任何 ^1.0.0 死硬编码版本
         expect(text).not.toContain('"^1.0.0"');
         // 无 workspace:^ 残留
@@ -136,7 +136,7 @@ describe("cli-create generator prompt silenced", () => {
             CI: "true",
         });
         const text = JSON.stringify(pkg);
-        expect(pkg.dependencies?.["@devkit/request"]).toBeUndefined();
+        expect(pkg.dependencies?.["@bundlekit/request"]).toBeUndefined();
         expect(text).not.toContain('"^1.0.0"');
         expect(text).not.toContain("workspace:");
     });

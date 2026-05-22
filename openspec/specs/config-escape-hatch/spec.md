@@ -8,7 +8,7 @@ TBD - created by archiving change add-config-escape-hatch. Update Purpose after 
 The `IBuildConfig` type SHALL expose an optional `tools` field at the top level. The `tools` field is a record keyed by bundler name (`webpack`, `vite`, `rspack`, `rollup`, `rolldown`); each entry is an optional function that receives the bundler's native config object and a `ToolsCtx` parameter.
 
 #### Scenario: Type declaration shape
-- **WHEN** a user authors `.devkitrc.ts`
+- **WHEN** a user authors `.bundlekitrc.ts`
 - **THEN** the IDE SHALL accept `tools.webpack` whose first parameter is typed as webpack `Configuration`
 - **AND** SHALL accept `tools.vite` whose first parameter is typed as vite `InlineConfig`
 - **AND** SHALL accept `tools.rspack`, `tools.rollup`, `tools.rolldown` with their respective native config types
@@ -22,7 +22,7 @@ The `IBuildConfig` type SHALL expose an optional `tools` field at the top level.
 The `ToolsCtx` parameter passed to every tools hook SHALL contain `mode: IBuildEnv`, `command: 'serve' | 'build'`, `env: 'client' | 'server'`, and `bundler: IBundlerName`.
 
 #### Scenario: Mode and command propagation
-- **WHEN** the user runs `devkit-service build --bundler webpack --mode production`
+- **WHEN** the user runs `bundlekit-service build --bundler webpack --mode production`
 - **AND** `tools.webpack` is declared
 - **THEN** the hook SHALL be invoked with `ctx.mode === 'production'` and `ctx.command === 'build'`
 
@@ -60,13 +60,13 @@ The system SHALL NOT swallow exceptions thrown by tools hooks. Any thrown error 
 
 ### Requirement: shared-utils does not require bundler packages at runtime
 
-The `@devkit/shared-utils` package SHALL only `import type` from bundler packages (webpack, vite, rspack, rollup, rolldown) for the purpose of typing the `tools` field. It SHALL NOT add any of these packages to its runtime `dependencies`.
+The `@bundlekit/shared-utils` package SHALL only `import type` from bundler packages (webpack, vite, rspack, rollup, rolldown) for the purpose of typing the `tools` field. It SHALL NOT add any of these packages to its runtime `dependencies`.
 
 #### Scenario: Inspect shared-utils manifest
-- **WHEN** inspecting the published `@devkit/shared-utils` package's `package.json`
+- **WHEN** inspecting the published `@bundlekit/shared-utils` package's `package.json`
 - **THEN** the `dependencies` object SHALL NOT contain `webpack`, `vite`, `@rspack/core`, `rollup`, or `rolldown`
 
 #### Scenario: Type fallback when bundler missing
 - **WHEN** a user does not have `webpack` installed in their workspace
-- **THEN** the `tools.webpack` parameter type SHALL gracefully fall back to a permissive type (e.g. `any` or `unknown`) without producing a TypeScript error in `.devkitrc.ts`
+- **THEN** the `tools.webpack` parameter type SHALL gracefully fall back to a permissive type (e.g. `any` or `unknown`) without producing a TypeScript error in `.bundlekitrc.ts`
 

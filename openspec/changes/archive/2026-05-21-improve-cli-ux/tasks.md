@@ -1,33 +1,33 @@
 ## 1. 工程基建
 
-- [x] 1.1 `packages/devkit-cli/package.json` 新增依赖：`ink`、`ink-select-input`、`ink-text-input`、`ink-spinner`、`ink-gradient`、`ink-big-text`、`react`、`react-dom`、`@types/react`
-- [x] 1.2 `packages/devkit-cli/tsconfig.json` 加 `"jsx": "react-jsx"`、`"jsxImportSource": "react"`
-- [x] 1.3 `packages/devkit-cli/scripts/rollup.config.js` 改造：
-- [x] 1.4 `packages/devkit-cli/package.json` 的 bin 改为：`devkit-cli` / `dc` 都指向 `dist/index.mjs`，移除 `main.cjs` 字段
-- [x] 1.5 验证 `pnpm --filter @devkit/cli build` 能产出可执行的 `dist/index.mjs`
+- [x] 1.1 `packages/bundlekit-cli/package.json` 新增依赖：`ink`、`ink-select-input`、`ink-text-input`、`ink-spinner`、`ink-gradient`、`ink-big-text`、`react`、`react-dom`、`@types/react`
+- [x] 1.2 `packages/bundlekit-cli/tsconfig.json` 加 `"jsx": "react-jsx"`、`"jsxImportSource": "react"`
+- [x] 1.3 `packages/bundlekit-cli/scripts/rollup.config.js` 改造：
+- [x] 1.4 `packages/bundlekit-cli/package.json` 的 bin 改为：`bundlekit-cli` / `dc` 都指向 `dist/index.mjs`，移除 `main.cjs` 字段
+- [x] 1.5 验证 `pnpm --filter @bundlekit/cli build` 能产出可执行的 `dist/index.mjs`
 
 ## 2. 副作用抽象
 
-- [x] 2.1 新增 `packages/devkit-cli/lib/commands/create/actions.ts`，把 `Creator.create()` 的步骤拆为：
+- [x] 2.1 新增 `packages/bundlekit-cli/lib/commands/create/actions.ts`，把 `Creator.create()` 的步骤拆为：
 - [x] 2.2 actions 模块函数式纯化：不依赖类成员，纯参数 + 返回值
 - [x] 2.3 `Creator` 类保留为 thin wrapper（用于非 TTY fallback path 与单测）
 
 ## 3. ink 组件
 
-- [x] 3.1 新增 `packages/devkit-cli/lib/ui/Banner.tsx`：`ink-big-text` + `ink-gradient` 渲染 logo
-- [x] 3.2 新增 `packages/devkit-cli/lib/ui/StepFrame.tsx`：步骤式表单的统一外框（标题 / 进度 / 子内容）
-- [x] 3.3 新增 `packages/devkit-cli/lib/ui/Select.tsx`：包装 `ink-select-input`，统一样式与按键
-- [x] 3.4 新增 `packages/devkit-cli/lib/ui/TextInput.tsx`：包装 `ink-text-input`
-- [x] 3.5 新增 `packages/devkit-cli/lib/ui/TaskList.tsx`：用 `ink-spinner` + check mark 展示多任务进度
-- [x] 3.6 新增 `packages/devkit-cli/lib/ui/Done.tsx`：成功提示 + 下一步指令
-- [x] 3.7 新增 `packages/devkit-cli/lib/ui/ErrorView.tsx`：错误展示组件
-- [x] 3.8 新增 `packages/devkit-cli/lib/ui/CreateApp.tsx`：状态机（template → bundler → description → tasks → done）驱动整个 create 流程
-- [x] 3.9 新增 `packages/devkit-cli/lib/ui/AddApp.tsx`：add 命令 ink 形态
-- [x] 3.10 新增 `packages/devkit-cli/lib/ui/App.tsx`：根组件，按 command 路由到 CreateApp / AddApp
+- [x] 3.1 新增 `packages/bundlekit-cli/lib/ui/Banner.tsx`：`ink-big-text` + `ink-gradient` 渲染 logo
+- [x] 3.2 新增 `packages/bundlekit-cli/lib/ui/StepFrame.tsx`：步骤式表单的统一外框（标题 / 进度 / 子内容）
+- [x] 3.3 新增 `packages/bundlekit-cli/lib/ui/Select.tsx`：包装 `ink-select-input`，统一样式与按键
+- [x] 3.4 新增 `packages/bundlekit-cli/lib/ui/TextInput.tsx`：包装 `ink-text-input`
+- [x] 3.5 新增 `packages/bundlekit-cli/lib/ui/TaskList.tsx`：用 `ink-spinner` + check mark 展示多任务进度
+- [x] 3.6 新增 `packages/bundlekit-cli/lib/ui/Done.tsx`：成功提示 + 下一步指令
+- [x] 3.7 新增 `packages/bundlekit-cli/lib/ui/ErrorView.tsx`：错误展示组件
+- [x] 3.8 新增 `packages/bundlekit-cli/lib/ui/CreateApp.tsx`：状态机（template → bundler → description → tasks → done）驱动整个 create 流程
+- [x] 3.9 新增 `packages/bundlekit-cli/lib/ui/AddApp.tsx`：add 命令 ink 形态
+- [x] 3.10 新增 `packages/bundlekit-cli/lib/ui/App.tsx`：根组件，按 command 路由到 CreateApp / AddApp
 
 ## 4. 入口集成
 
-- [x] 4.1 改写 `packages/devkit-cli/index.ts`：commander 解析后判断 `process.stdout.isTTY && !process.env.DEVKIT_NO_INK`
+- [x] 4.1 改写 `packages/bundlekit-cli/index.ts`：commander 解析后判断 `process.stdout.isTTY && !process.env.DEVKIT_NO_INK`
 - [x] 4.2 TTY 路径：`render(<App command params />)`
 - [x] 4.3 非 TTY 路径：调用 `legacyCreate(name, opts)` / `legacyAdd(plugin)`，沿用 enquirer 与 Logger
 - [x] 4.4 SIGINT 处理：`useApp().exit()` + `process.on('SIGINT', cleanup)`，避免遗留半渲染状态
@@ -37,7 +37,7 @@
 
 - [x] 5.1 `lib/utils/generatorRunner.ts` 中的 `buildGeneratorAPI` 行为不变，但底层 `prompt` 在 TTY 路径下用 ink 实现，其他场景退回 enquirer
 - [x] 5.2 实现一个 `inkPromptAdapter(question)` 把 enquirer 风格 questions 转换为 ink `<SelectInput>` / `<TextInput>` 渲染并返回 Promise<answers>
-- [x] 5.3 验证现有 `@devkit/plugin-react/generator` 与 `@devkit/plugin-vue/generator` 的 prompt 在 ink 路径下能正常工作
+- [x] 5.3 验证现有 `@bundlekit/plugin-react/generator` 与 `@bundlekit/plugin-vue/generator` 的 prompt 在 ink 路径下能正常工作
 
 ## 6. 协同 Change 1（confirm 工具）
 

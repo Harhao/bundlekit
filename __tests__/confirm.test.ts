@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { confirm } from "../packages/devkit-shared-utils/lib/shared/confirm";
+import { confirm } from "../packages/bundlekit-shared-utils/lib/shared/confirm";
 
 describe("confirm", () => {
     let originalIsTTY: any;

@@ -5,7 +5,7 @@
 
 ## 2. cli 端依赖模式 helpers
 
-- [x] 2.1 新增 `packages/devkit-cli/lib/utils/depMode.ts`：实现 `findMonorepoRoot(cwd): string | null`（双重判定 pnpm-workspace.yaml + packages/devkit-service）
+- [x] 2.1 新增 `packages/bundlekit-cli/lib/utils/depMode.ts`：实现 `findMonorepoRoot(cwd): string | null`（双重判定 pnpm-workspace.yaml + packages/bundlekit-service）
 - [x] 2.2 同文件实现 `resolveDepMode(cwd, cliVersion): IDepMode`（env > monorepo 检测 > npm 兜底）
 - [x] 2.3 同文件实现 `normalizeDeps(targetDir, depMode): void`：读 package.json，把所有 `workspace:^` 替换为 link/^ver，写回
 - [x] 2.4 单测 `__tests__/depMode.test.ts`：findMonorepoRoot 各场景、resolveDepMode 决策树、normalizeDeps 替换正确性 + 零残留
@@ -21,17 +21,17 @@
 
 ## 4. 模板 ejs 改用 workspace:^
 
-- [x] 4.1 `template-react-ts/package.json.ejs`：`@devkit/service` / `@devkit/plugin-react` / `@devkit/bundler-*` 改 `workspace:^`
+- [x] 4.1 `template-react-ts/package.json.ejs`：`@bundlekit/service` / `@bundlekit/plugin-react` / `@bundlekit/bundler-*` 改 `workspace:^`
 - [x] 4.2 `template-react-js/package.json.ejs` 同款
-- [x] 4.3 `template-vue3-ts/package.json.ejs` 同款（含 `@devkit/plugin-vue`）
+- [x] 4.3 `template-vue3-ts/package.json.ejs` 同款（含 `@bundlekit/plugin-vue`）
 - [x] 4.4 `template-vue3-js/package.json.ejs` 同款
 - [x] 4.5 验证：手工渲染 4 个模板，确认未经 normalizeDeps 时含 `workspace:^`，经 normalizeDeps 后零残留
 
 ## 5. plugin 包版本归一
 
-- [x] 5.1 `packages/devkit-plugin-react/package.json` version 从 `1.0.0` 改 `0.0.1`
-- [x] 5.2 `packages/devkit-plugin-vue/package.json` version 从 `1.0.0` 改 `0.0.1`
-- [x] 5.3 全 monorepo grep `^"version":` 验证 `@devkit/cli` / `@devkit/service` / `@devkit/shared-utils` / `@devkit/bundler-*` / `@devkit/plugin-*` 均为 `0.0.1`
+- [x] 5.1 `packages/bundlekit-plugin-react/package.json` version 从 `1.0.0` 改 `0.0.1`
+- [x] 5.2 `packages/bundlekit-plugin-vue/package.json` version 从 `1.0.0` 改 `0.0.1`
+- [x] 5.3 全 monorepo grep `^"version":` 验证 `@bundlekit/cli` / `@bundlekit/service` / `@bundlekit/shared-utils` / `@bundlekit/bundler-*` / `@bundlekit/plugin-*` 均为 `0.0.1`
 
 ## 6. 集成测试覆盖
 
@@ -41,7 +41,7 @@
 
 ## 7. 开发者贡献文档
 
-- [x] 7.1 创建 `packages/devkit-docs/docs/contributing/index.md`：贡献流程总览（fork → branch → develop → test → PR → review → release）
+- [x] 7.1 创建 `packages/bundlekit-docs/docs/contributing/index.md`：贡献流程总览（fork → branch → develop → test → PR → review → release）
 - [x] 7.2 创建 `docs/contributing/setup.md`：本地 dev 环境（git clone / pnpm install / pnpm build:all / 包级脚本）
 - [x] 7.3 创建 `docs/contributing/testing.md`：unit / integration / e2e 三档测试 + Playwright 安装 + 测试矩阵
 - [x] 7.4 创建 `docs/contributing/adding-bundler.md`：IBuildToolAdapter 接口 + 注册 + 测试 fixture 写法
@@ -54,7 +54,7 @@
 - [x] 8.1 `docs/guide.md`：在"快速开始"section 区分 monorepo dev / 全局 cli 两条路径
 - [x] 8.2 `docs/guide/cli.md`：新增"为什么生成的 package.json 含 link:"FAQ section
 - [x] 8.3 `docs/index.md`（如适用）：在 hero / quickstart 中补 monorepo 用户的 pnpm install --ignore-workspace 命令
-- [x] 8.4 跑 `pnpm --filter devkit-cli-docs run docs:build`：无 broken link / 无 dumi error
+- [x] 8.4 跑 `pnpm --filter bundlekit-cli-docs run docs:build`：无 broken link / 无 dumi error
 
 ## 9. CI / changeset 配置完善
 
@@ -66,16 +66,16 @@
 
 ## 10. publishConfig 与 files 字段审计
 
-- [x] 10.1 `@devkit/cli` 检查 `publishConfig.registry` + `files` 字段（应只含 dist + bin）
-- [x] 10.2 `@devkit/service` 同款
-- [x] 10.3 `@devkit/shared-utils` 同款
-- [x] 10.4 `@devkit/bundler-{webpack,vite,rspack,rollup,rolldown}` 同款
-- [x] 10.5 `@devkit/plugin-{react,vue}` 同款（注意 plugin 包要含 templates/ 目录）
+- [x] 10.1 `@bundlekit/cli` 检查 `publishConfig.registry` + `files` 字段（应只含 dist + bin）
+- [x] 10.2 `@bundlekit/service` 同款
+- [x] 10.3 `@bundlekit/shared-utils` 同款
+- [x] 10.4 `@bundlekit/bundler-{webpack,vite,rspack,rollup,rolldown}` 同款
+- [x] 10.5 `@bundlekit/plugin-{react,vue}` 同款（注意 plugin 包要含 templates/ 目录）
 - [x] 10.6 跑 `pnpm pack --dry-run` 在每个包验证 tarball 不含 src / __tests__ / scripts 等 dev 文件
 
 ## 11. changeset
 
-- [x] 11.1 写 `.changeset/adopt-workspace-protocol-templates.md`，标记所有受影响包为 `minor`，包括 `@devkit/cli`、`@devkit/plugin-react`（version bump 从 1.0.0 回退到 0.1.0 时单独说明）、`@devkit/plugin-vue` 同款
+- [x] 11.1 写 `.changeset/adopt-workspace-protocol-templates.md`，标记所有受影响包为 `minor`，包括 `@bundlekit/cli`、`@bundlekit/plugin-react`（version bump 从 1.0.0 回退到 0.1.0 时单独说明）、`@bundlekit/plugin-vue` 同款
 
 ## 12. 验证 / 回归
 

@@ -1,6 +1,6 @@
 ## 1. ConfigLoader Implementation
 
-- [x] 1.1 Implement `loadDevkitFileConfig()` using jiti to load `.devkitrc.ts` or `.devkitrc.js`
+- [x] 1.1 Implement `loadDevkitFileConfig()` using jiti to load `.bundlekitrc.ts` or `.bundlekitrc.js`
 - [x] 1.2 Implement `defaultConfig()` with sensible defaults (entry, outDir, mode)
 - [x] 1.3 Implement `resolveAllConfig()` deep-merging user config over defaults, resolving relative paths to absolute
 - [x] 1.4 Remove empty stub methods (`loadEnvConfig`, `loadTomlConfig`, `mergeAllConfig`) and simplify ConfigLoader
@@ -8,7 +8,7 @@
 ## 2. Service Core Fixes
 
 - [x] 2.1 Implement `--skip-plugin` parsing from CLI args
-- [x] 2.2 Wire plugin loading from `.devkitrc.ts` plugins field
+- [x] 2.2 Wire plugin loading from `.bundlekitrc.ts` plugins field
 - [x] 2.3 Resolve remaining TODOs in Service.ts
 
 ## 3. Serve Command

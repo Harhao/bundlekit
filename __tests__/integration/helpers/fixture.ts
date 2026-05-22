@@ -7,14 +7,14 @@ import { spawnSync } from "node:child_process";
  * 在临时目录里跑 install + build，避免污染源 fixture。
  *
  * 临时目录放在 monorepo 内（不放 /tmp）的原因：
- *   - fixture 的 package.json 用 `link:../../packages/devkit-service` 等相对路径
+ *   - fixture 的 package.json 用 `link:../../packages/bundlekit-service` 等相对路径
  *     引用 monorepo 包，让 pnpm install 在 fixture 内秒级完成（无需 publish）
  *   - 必须在 monorepo 文件树内才能保证相对路径解析正确
  *
- * mode 参数控制使用哪份 .devkitrc：
- *   - 'spa' → .devkitrc.spa.ts → 复制为 .devkitrc.ts
- *   - 'lib' → .devkitrc.lib.ts → 复制为 .devkitrc.ts
- *   - 'ssr' → .devkitrc.ssr.ts → 复制为 .devkitrc.ts
+ * mode 参数控制使用哪份 .bundlekitrc：
+ *   - 'spa' → .bundlekitrc.spa.ts → 复制为 .bundlekitrc.ts
+ *   - 'lib' → .bundlekitrc.lib.ts → 复制为 .bundlekitrc.ts
+ *   - 'ssr' → .bundlekitrc.ssr.ts → 复制为 .bundlekitrc.ts
  */
 export type FixtureMode = "spa" | "lib" | "ssr";
 
@@ -39,7 +39,7 @@ export async function copyFixture(bundler: string, mode: FixtureMode): Promise<I
     const tmpRoot = path.join(TMP_ROOT, `${bundler}-${mode}-${Date.now()}-${Math.floor(Math.random() * 1e6)}`);
     await fs.mkdir(tmpRoot, { recursive: true });
 
-    // 1) 拷 bundler-specific files（含 3 份 .devkitrc.<mode>.ts + package.json）
+    // 1) 拷 bundler-specific files（含 3 份 .bundlekitrc.<mode>.ts + package.json）
     await copyDir(src, tmpRoot);
 
     // 2) 拷 shared/ 进去
@@ -48,12 +48,12 @@ export async function copyFixture(bundler: string, mode: FixtureMode): Promise<I
         path.join(tmpRoot, "shared"),
     );
 
-    // 3) 把 .devkitrc.<mode>.ts 选定为 .devkitrc.ts
-    const modeConfig = path.join(tmpRoot, `.devkitrc.${mode}.ts`);
-    const finalConfig = path.join(tmpRoot, ".devkitrc.ts");
+    // 3) 把 .bundlekitrc.<mode>.ts 选定为 .bundlekitrc.ts
+    const modeConfig = path.join(tmpRoot, `.bundlekitrc.${mode}.ts`);
+    const finalConfig = path.join(tmpRoot, ".bundlekitrc.ts");
     const exists = await fs.stat(modeConfig).catch(() => null);
     if (!exists) {
-        throw new Error(`fixture ${bundler} 缺少 .devkitrc.${mode}.ts`);
+        throw new Error(`fixture ${bundler} 缺少 .bundlekitrc.${mode}.ts`);
     }
     await fs.copyFile(modeConfig, finalConfig);
 

@@ -21,7 +21,7 @@ The system SHALL resolve all relative paths in the config (entry, outDir, resolv
 The `IBuildConfig.config` field SHALL accept any subset of `IBuildEnv` keys; not all environment keys are required.
 
 #### Scenario: Only development config defined
-- **WHEN** user's `.devkitrc.ts` defines only a `development` key in `config`
+- **WHEN** user's `.bundlekitrc.ts` defines only a `development` key in `config`
 - **THEN** the system SHALL load and merge it successfully without TypeScript errors
 
 #### Scenario: Default config does not require all envs

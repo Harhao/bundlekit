@@ -9,7 +9,7 @@ __tests__/integration/
 ├── helpers/
 │   ├── port.ts            # getFreePort 包装 get-port
 │   ├── fixture.ts         # copyFixture(bundler, mode) → 复制源 fixture 到 .tmp/<rand>/
-│   ├── spawnService.ts    # spawn `pnpm exec devkit-service ...` 子进程
+│   ├── spawnService.ts    # spawn `pnpm exec bundlekit-service ...` 子进程
 │   ├── fetch.ts           # fetchSSR + waitUntilHttp
 │   ├── runBuild.ts        # build helper（同步 spawnSync）
 │   ├── buildAssertions.ts # assertSpaBuild / assertLibraryBuild / assertSsrBuild
@@ -22,9 +22,9 @@ __tests__/integration/
 │   │   └── tsconfig.json
 │   ├── webpack/           # 5 个 bundler 各自一份
 │   ├── vite/              #   ├─ package.json (link: 协议引 monorepo 包)
-│   ├── rspack/            #   ├─ .devkitrc.spa.ts
-│   ├── rollup/            #   ├─ .devkitrc.lib.ts
-│   └── rolldown/          #   └─ .devkitrc.ssr.ts
+│   ├── rspack/            #   ├─ .bundlekitrc.spa.ts
+│   ├── rollup/            #   ├─ .bundlekitrc.lib.ts
+│   └── rolldown/          #   └─ .bundlekitrc.ssr.ts
 ├── build/                 # 15 个 build 测试（5 bundler × 3 mode）
 ├── dev-ssr/               # 5 个 dev SSR HTTP curl 测试
 ├── e2e/                   # 3 个 Playwright HMR 测试
@@ -62,7 +62,7 @@ pnpm test:all
 
 ## 添加新测试
 
-1. **新增 bundler**: 在 `fixtures/` 下创建目录 + `package.json` (link: 协议) + 3 份 `.devkitrc.<mode>.ts`
+1. **新增 bundler**: 在 `fixtures/` 下创建目录 + `package.json` (link: 协议) + 3 份 `.bundlekitrc.<mode>.ts`
 2. **新增 build 用例**: `build/<bundler>-<mode>.test.ts`，调 `assertSpaBuild` / `assertLibraryBuild` / `assertSsrBuild`
 3. **新增 dev-ssr 用例**: `dev-ssr/<bundler>-curl.test.ts`，调 `assertDevSSR`
 4. **新增 HMR 用例**: `e2e/hmr-<bundler>.spec.ts`，调 `assertClientHMR(bundler, page)`

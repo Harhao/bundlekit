@@ -17,20 +17,20 @@ The repository SHALL provide a `__tests__/integration/` directory containing fix
 #### Scenario: Fixtures use shared source code
 - **WHEN** a new bundler fixture is added at `__tests__/integration/fixtures/<bundler>/`
 - **THEN** the fixture SHALL reuse `__tests__/integration/fixtures/shared/src/` rather than duplicating source files
-- **AND** the fixture SHALL contain its own `.devkitrc.ts` variants and `package.json`
+- **AND** the fixture SHALL contain its own `.bundlekitrc.ts` variants and `package.json`
 
 ### Requirement: Build matrix coverage
-The integration suite SHALL execute a build test for each combination of `{webpack, vite, rspack, rollup, rolldown}` × `{SPA build, Library build, SSR build}`, covering 15 cases. Each test SHALL spawn `devkit-service build` as a subprocess and assert on the produced artifacts.
+The integration suite SHALL execute a build test for each combination of `{webpack, vite, rspack, rollup, rolldown}` × `{SPA build, Library build, SSR build}`, covering 15 cases. Each test SHALL spawn `bundlekit-service build` as a subprocess and assert on the produced artifacts.
 
 #### Scenario: SPA build produces client bundle
 - **WHEN** the SPA build test runs for any bundler
-- **THEN** the test SHALL spawn `devkit-service build --bundler <name> --mode production`
+- **THEN** the test SHALL spawn `bundlekit-service build --bundler <name> --mode production`
 - **AND** the test SHALL assert that `dist/<bundle-name>.js` (or equivalent) exists
 - **AND** the bundle file SHALL contain a known marker string from the fixture source
 
 #### Scenario: Library build produces node-targetable bundle
 - **WHEN** the Library build test runs for any bundler
-- **THEN** the test SHALL spawn `devkit-service build` with `target: 'node'` config
+- **THEN** the test SHALL spawn `bundlekit-service build` with `target: 'node'` config
 - **AND** the test SHALL `require()` the produced file in node and assert exported names
 
 #### Scenario: SSR build produces dual bundles
@@ -39,11 +39,11 @@ The integration suite SHALL execute a build test for each combination of `{webpa
 - **AND** the test SHALL `require('dist/server/server.cjs').render('/')` and assert the returned HTML contains the SSR marker
 
 ### Requirement: Dev SSR HTTP coverage
-The integration suite SHALL execute a dev SSR HTTP test for each bundler in `{webpack, vite, rspack, rollup, rolldown}`, where the test spawns `devkit-service serve` with SSR enabled, performs HTTP GET against a dynamic port, and asserts the response.
+The integration suite SHALL execute a dev SSR HTTP test for each bundler in `{webpack, vite, rspack, rollup, rolldown}`, where the test spawns `bundlekit-service serve` with SSR enabled, performs HTTP GET against a dynamic port, and asserts the response.
 
 #### Scenario: Dev SSR responds with hydrated HTML (vite/webpack/rspack)
 - **WHEN** the dev SSR test runs for vite, webpack, or rspack
-- **THEN** the test SHALL spawn `devkit-service serve --bundler <name> --mode development`
+- **THEN** the test SHALL spawn `bundlekit-service serve --bundler <name> --mode development`
 - **AND** the test SHALL wait for "server ready" log
 - **AND** an HTTP GET to `localhost:<port>/` SHALL return status 200
 - **AND** the response body SHALL contain the SSR marker string
@@ -82,12 +82,12 @@ Each integration test SHALL run in an isolated working directory copied from the
 
 #### Scenario: Subprocess cleanup on test completion
 - **WHEN** an integration test completes (pass, fail, or timeout)
-- **THEN** the spawned `devkit-service` subprocess SHALL be terminated
+- **THEN** the spawned `bundlekit-service` subprocess SHALL be terminated
 - **AND** the test SHALL await the process `close` event before resolving
-- **AND** no `devkit-service` processes SHALL remain after the suite ends
+- **AND** no `bundlekit-service` processes SHALL remain after the suite ends
 
 #### Scenario: Working directory isolation
 - **WHEN** a build or dev SSR test starts
-- **THEN** the fixture SHALL be copied to a temporary directory (e.g. `/tmp/devkit-int-<hash>/`)
+- **THEN** the fixture SHALL be copied to a temporary directory (e.g. `/tmp/bundlekit-int-<hash>/`)
 - **AND** all writes (dist/, node_modules/) SHALL go to the temp dir
 - **AND** the source fixture SHALL remain unchanged

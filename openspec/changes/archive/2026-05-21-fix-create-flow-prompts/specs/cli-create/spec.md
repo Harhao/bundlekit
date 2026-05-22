@@ -12,7 +12,7 @@ The `normalize dependency versions` step SHALL replace every `workspace:^` liter
 - **AND** ink rendering is active (default unless `DEVKIT_NO_INK=1`)
 - **THEN** before invoking the framework generator, the CLI SHALL set `process.env.DEVKIT_NO_PROMPT = "1"`
 - **AND** the generator SHALL NOT block waiting for any keyboard input
-- **AND** the resulting project SHALL be created without optional dependencies (e.g. `@devkit/request`) unless they were added via subsequent `dc add` calls
+- **AND** the resulting project SHALL be created without optional dependencies (e.g. `@bundlekit/request`) unless they were added via subsequent `dc add` calls
 
 #### Scenario: CI environment silences generator prompt
 - **WHEN** the CLI runs with `CI=true` or `CI=1` in environment
@@ -20,11 +20,11 @@ The `normalize dependency versions` step SHALL replace every `workspace:^` liter
 - **AND** the create flow SHALL complete without timing out on stdin
 
 #### Scenario: Generator-added workspace literal normalized after install
-- **WHEN** the framework generator calls `api.addDependency("@devkit/request", "workspace:^")`
+- **WHEN** the framework generator calls `api.addDependency("@bundlekit/request", "workspace:^")`
 - **THEN** the CLI SHALL run `normalizeDeps` again before the second `installDeps` call
-- **AND** the final `package.json` SHALL contain a `link:` URI or `^cliVersion` range for `@devkit/request`, but never a `workspace:^` literal
+- **AND** the final `package.json` SHALL contain a `link:` URI or `^cliVersion` range for `@bundlekit/request`, but never a `workspace:^` literal
 
 #### Scenario: Generated package.json never contains hardcoded ^1.0.0
 - **WHEN** the CLI generates any project under `react-ts`, `react-js`, `vue3-ts`, `vue3-js` template
 - **AND** the framework generator runs to completion
-- **THEN** the resulting `package.json` SHALL NOT contain `"^1.0.0"` literal as a value of any `@devkit/*` dependency
+- **THEN** the resulting `package.json` SHALL NOT contain `"^1.0.0"` literal as a value of any `@bundlekit/*` dependency

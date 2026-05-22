@@ -5,12 +5,12 @@
 The `IEnvBuildConfig` type SHALL expose an optional `ssr` field. When present, the field SHALL describe how to produce a server bundle alongside the existing client bundle. The `ssr` field SHALL include `entry` (server entry path), `output` (server output dir / filename / format), optional `externals` (`'auto'` or array of patterns), optional `template` (HTML template with placeholder), and optional `placeholder` (default `<!--ssr-outlet-->`).
 
 #### Scenario: SSR enabled
-- **WHEN** `.devkitrc.ts` declares `config.production.ssr = { entry: 'src/entry-server.tsx', output: { dir: 'dist/server', filename: 'server.cjs', formats: 'commonjs' } }`
+- **WHEN** `.bundlekitrc.ts` declares `config.production.ssr = { entry: 'src/entry-server.tsx', output: { dir: 'dist/server', filename: 'server.cjs', formats: 'commonjs' } }`
 - **THEN** the schema SHALL accept the configuration as valid
 - **AND** the runtime SHALL treat the env as SSR-enabled
 
 #### Scenario: SSR disabled (default)
-- **WHEN** `.devkitrc.ts` does not declare `ssr` for an env
+- **WHEN** `.bundlekitrc.ts` does not declare `ssr` for an env
 - **THEN** the runtime SHALL produce only a client bundle for that env, with no behavior change versus current
 
 ### Requirement: SSR mutually exclusive with target=node and pages[]
@@ -27,10 +27,10 @@ The system SHALL reject configurations that simultaneously enable `ssr` with eit
 
 ### Requirement: Build pipeline produces dual artifacts
 
-When `ssr` is enabled, the `devkit-service build` command SHALL produce two artifacts: a client bundle (using existing client config, output dir from envConfig.output) and a server bundle (using ssr.entry / ssr.output / target='node' / externals as configured). The two passes SHALL run sequentially in the order client → server.
+When `ssr` is enabled, the `bundlekit-service build` command SHALL produce two artifacts: a client bundle (using existing client config, output dir from envConfig.output) and a server bundle (using ssr.entry / ssr.output / target='node' / externals as configured). The two passes SHALL run sequentially in the order client → server.
 
 #### Scenario: Build produces dist/client and dist/server
-- **WHEN** user runs `devkit-service build --bundler webpack --mode production` with SSR enabled
+- **WHEN** user runs `bundlekit-service build --bundler webpack --mode production` with SSR enabled
 - **AND** envConfig.output.dir = 'dist/client', ssr.output.dir = 'dist/server', ssr.output.filename = 'server.cjs'
 - **THEN** after build the file `dist/client/index.html` SHALL exist
 - **AND** the file `dist/server/server.cjs` SHALL exist

@@ -5,11 +5,11 @@
 
 #### Scenario: 运行 changeset 命令成功
 - **WHEN** 运行 `pnpm changeset`
-- **THEN** 交互式 CLI 启动，列出所有 `@devkit/` 包供选择
+- **THEN** 交互式 CLI 启动，列出所有 `@bundlekit/` 包供选择
 
 #### Scenario: changeset 文件生成正确
-- **WHEN** 完成 changeset 交互，选择 `@devkit/cli` patch 级别
-- **THEN** `.changeset/` 目录下生成一个 `.md` 文件，frontmatter 包含 `"@devkit/cli": patch`
+- **WHEN** 完成 changeset 交互，选择 `@bundlekit/cli` patch 级别
+- **THEN** `.changeset/` 目录下生成一个 `.md` 文件，frontmatter 包含 `"@bundlekit/cli": patch`
 
 ### Requirement: changesets 配置指定独立版本模式
 `.changeset/config.json` SHALL 包含：

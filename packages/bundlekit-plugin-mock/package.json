@@ -1,0 +1,32 @@
+{
+  "name": "@bundlekit/plugin-mock",
+  "version": "0.0.1",
+  "description": "Mock plugin for bundlekit - provides mock API server with proxy config",
+  "main": "./index.ts",
+  "type": "module",
+  "files": [
+    "index.ts",
+    "package.json"
+  ],
+  "scripts": {
+    "plugin:mock:build": "echo 'plugin:mock built successfully'"
+  },
+  "keywords": [
+    "mock",
+    "bundlekit-plugin",
+    "bundlekit"
+  ],
+  "author": "harhao@163.com",
+  "license": "ISC",
+  "dependencies": {
+    "@bundlekit/shared-utils": "workspace:*",
+    "json-server": "^0.17.3"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "engines": {
+    "node": ">= 18.0.0"
+  }
+}

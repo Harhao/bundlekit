@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Plugin registration
-The Vue plugin SHALL export a valid `IPluginAPI` object with `registerPlugin` method, registering itself as `@devkit/plugin-vue`.
+The Vue plugin SHALL export a valid `IPluginAPI` object with `registerPlugin` method, registering itself as `@bundlekit/plugin-vue`.
 
 #### Scenario: Plugin initializes with service
 - **WHEN** the Vue plugin is loaded by the service
@@ -19,8 +19,8 @@ The Vue plugin SHALL provide `template-vue3-ts` and `template-vue3-js` templates
 
 #### Scenario: TypeScript template structure
 - **WHEN** the `vue3-ts` template is used
-- **THEN** it SHALL contain `src/App.vue`, `src/main.ts`, `tsconfig.json`, `package.json`, `.devkitrc.ts`, `public/index.html`
+- **THEN** it SHALL contain `src/App.vue`, `src/main.ts`, `tsconfig.json`, `package.json`, `.bundlekitrc.ts`, `public/index.html`
 
 #### Scenario: JavaScript template structure
 - **WHEN** the `vue3-js` template is used
-- **THEN** it SHALL contain `src/App.vue`, `src/main.js`, `package.json`, `.devkitrc.js`, `public/index.html`
+- **THEN** it SHALL contain `src/App.vue`, `src/main.js`, `package.json`, `.bundlekitrc.js`, `public/index.html`

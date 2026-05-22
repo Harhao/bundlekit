@@ -4,7 +4,7 @@
     "shared:build": {
       "dependsOn": [],
       "outputs": [
-        "packages/devkit-shared-utils/dist/**"
+        "packages/bundlekit-shared-utils/dist/**"
       ]
     },
     "cli:build": {
@@ -12,7 +12,7 @@
         "shared:build"
       ],
       "outputs": [
-        "packages/devkit-cli/dist/**"
+        "packages/bundlekit-cli/dist/**"
       ]
     },
     "service:build": {
@@ -25,7 +25,7 @@
         "rolldown:build"
       ],
       "outputs": [
-        "packages/devkit-service/dist/**"
+        "packages/bundlekit-service/dist/**"
       ]
     },
     "webpack:build": {
@@ -33,7 +33,7 @@
         "shared:build"
       ],
       "outputs": [
-        "packages/devkit-bundler-webpack/dist/**"
+        "packages/bundlekit-bundler-webpack/dist/**"
       ]
     },
     "vite:build": {
@@ -41,7 +41,7 @@
         "shared:build"
       ],
       "outputs": [
-        "packages/devkit-bundler-vite/dist/**"
+        "packages/bundlekit-bundler-vite/dist/**"
       ]
     },
     "rollup:build": {
@@ -49,7 +49,7 @@
         "shared:build"
       ],
       "outputs": [
-        "packages/devkit-bundler-rollup/dist/**"
+        "packages/bundlekit-bundler-rollup/dist/**"
       ]
     },
     "rspack:build": {
@@ -57,7 +57,7 @@
         "shared:build"
       ],
       "outputs": [
-        "packages/devkit-bundler-rspack/dist/**"
+        "packages/bundlekit-bundler-rspack/dist/**"
       ]
     },
     "plugin:mock:build": {
@@ -65,13 +65,13 @@
         "shared:build"
       ],
       "outputs": [
-        "packages/devkit-plugin-mock/dist/**"
+        "packages/bundlekit-plugin-mock/dist/**"
       ]
     },
     "request:build": {
       "dependsOn": [],
       "outputs": [
-        "packages/devkit-request/dist/**"
+        "packages/bundlekit-request/dist/**"
       ]
     },
     "plugin:react:build": {
@@ -79,7 +79,7 @@
         "shared:build"
       ],
       "outputs": [
-        "packages/devkit-plugin-react/dist/**"
+        "packages/bundlekit-plugin-react/dist/**"
       ]
     },
     "plugin:vue:build": {
@@ -87,7 +87,7 @@
         "shared:build"
       ],
       "outputs": [
-        "packages/devkit-plugin-vue/dist/**"
+        "packages/bundlekit-plugin-vue/dist/**"
       ]
     },
     "rolldown:build": {
@@ -95,13 +95,13 @@
         "shared:build"
       ],
       "outputs": [
-        "packages/devkit-bundler-rolldown/dist/**"
+        "packages/bundlekit-bundler-rolldown/dist/**"
       ]
     },
     "docs:build": {
       "dependsOn": [],
       "outputs": [
-        "packages/devkit-docs/dist/**"
+        "packages/bundlekit-docs/dist/**"
       ]
     }
   }

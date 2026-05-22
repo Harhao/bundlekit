@@ -1,7 +1,7 @@
 ## 1. 主入口（index.md / guide.md / README）
 
-- [x] 1.1 重写 `packages/devkit-docs/docs/index.md` 的 Hero + Quick Start：第一条命令改为 `npx @devkit/cli create my-app`
-- [x] 1.2 重写 `packages/devkit-docs/docs/guide.md` 为"两条集成路径"结构（方式一脚手架 / 方式二手工集成 / 全局安装可选项）
+- [x] 1.1 重写 `packages/bundlekit-docs/docs/index.md` 的 Hero + Quick Start：第一条命令改为 `npx @bundlekit/cli create my-app`
+- [x] 1.2 重写 `packages/bundlekit-docs/docs/guide.md` 为"两条集成路径"结构（方式一脚手架 / 方式二手工集成 / 全局安装可选项）
 - [x] 1.3 同步 `README.md` 顶部 Quick Start 与 docs/index 一致
 - [x] 1.4 加入"你需要什么"section（Node ≥ 18、pnpm 8+、TTY 推荐 Windows Terminal）
 
@@ -36,7 +36,7 @@
 
 ## 6. 新增 ssr.md（依赖 change 3）
 
-- [x] 6.1 创建 `packages/devkit-docs/docs/guide/ssr.md` frontmatter 与 sidebar 注册
+- [x] 6.1 创建 `packages/bundlekit-docs/docs/guide/ssr.md` frontmatter 与 sidebar 注册
 - [x] 6.2 章节：背景与目标 / 架构图 / 入口约定 / 配置字段 / build 行为 / dev 行为
 - [x] 6.3 HMR 支持矩阵表格
 - [x] 6.4 react-ts 完整迁移示例（从 CSR 改 SSR 的 diff）
@@ -45,10 +45,10 @@
 
 ## 7. 一致性收口
 
-- [x] 7.1 全局 grep `pnpm add -D @devkit/service @devkit/cli`，逐处更新或加上 admonition 上下文说明
+- [x] 7.1 全局 grep `pnpm add -D @bundlekit/service @bundlekit/cli`，逐处更新或加上 admonition 上下文说明
 - [x] 7.2 检查 `architecture.md`、`config.md`、`cli.md`、`bundlers.md` 之间的交叉链接
 - [x] 7.3 在 `index.md` 增加"按主题导航"卡片：CLI / 配置 / SSR / 架构
-- [x] 7.4 验证 dumi `pnpm --filter @devkit/docs build` 能跑通，无 broken link
+- [x] 7.4 验证 dumi `pnpm --filter @bundlekit/docs build` 能跑通，无 broken link
 
 ## 8. 协同 / 时序
 

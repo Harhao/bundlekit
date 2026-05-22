@@ -6,7 +6,7 @@ After `transformConfig` returns the webpack `Configuration` object, the system S
 
 #### Scenario: Hook adds a webpack plugin
 - **WHEN** the user declares `tools.webpack` that pushes a custom plugin into `config.plugins`
-- **AND** runs `devkit-service serve --bundler webpack`
+- **AND** runs `bundlekit-service serve --bundler webpack`
 - **THEN** the resulting webpack compiler SHALL include the custom plugin in its plugin list
 
 #### Scenario: Hook replaces config object

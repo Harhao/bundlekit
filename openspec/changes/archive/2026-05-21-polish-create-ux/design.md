@@ -1,6 +1,6 @@
 ## Context
 
-`@devkit/cli` 在最近两个 change（`improve-cli-ux`、`refactor-bundler-deps`）中已经完成了：
+`@bundlekit/cli` 在最近两个 change（`improve-cli-ux`、`refactor-bundler-deps`）中已经完成了：
 - ink ESM-only 渲染 + commander 路由
 - TTY 检测与 `DEVKIT_NO_INK` fallback
 - `actions.ts` 纯函数化，`CreateApp` 用 useEffect 编排 task
@@ -10,14 +10,14 @@
 但用户实际跑 `dc create my-app -t react-ts` 时仍能立刻发现 4 处粗糙体验，本 change 把它们一次性收掉。
 
 涉及的代码区域非常局部：
-- `packages/devkit-cli/index.tsx`（CLI 入口、commander 选项）
-- `packages/devkit-cli/lib/ui/CreateApp.tsx`（状态机 + step 渲染）
-- `packages/devkit-cli/lib/ui/Select.tsx`（选择列表组件）
-- `packages/devkit-cli/lib/ui/Done.tsx`（完成视图）
-- `packages/devkit-cli/lib/commands/create/actions.ts`（`installDeps` 签名）
-- `packages/devkit-cli/lib/commands/create/creator.ts`（legacy 路径同步）
-- `packages/devkit-plugin-react/templates/template-react-{ts,js}/package.json.ejs`
-- `packages/devkit-plugin-vue/templates/template-vue3-{ts,js}/package.json.ejs`
+- `packages/bundlekit-cli/index.tsx`（CLI 入口、commander 选项）
+- `packages/bundlekit-cli/lib/ui/CreateApp.tsx`（状态机 + step 渲染）
+- `packages/bundlekit-cli/lib/ui/Select.tsx`（选择列表组件）
+- `packages/bundlekit-cli/lib/ui/Done.tsx`（完成视图）
+- `packages/bundlekit-cli/lib/commands/create/actions.ts`（`installDeps` 签名）
+- `packages/bundlekit-cli/lib/commands/create/creator.ts`（legacy 路径同步）
+- `packages/bundlekit-plugin-react/templates/template-react-{ts,js}/package.json.ejs`
+- `packages/bundlekit-plugin-vue/templates/template-vue3-{ts,js}/package.json.ejs`
 
 不触及 service / bundler-* / docs / changeset 之外的内容。
 
@@ -68,11 +68,11 @@ const [descriptionSubmitted, setDescriptionSubmitted] = useState(
 ```diff
   "scripts": {
     "clean": "rimraf dist",
-    "dev":   "devkit-service serve --bundler <%= bundler %> --mode development",
--   "build": "devkit-service build --bundler <%= bundler %> --mode production",
+    "dev":   "bundlekit-service serve --bundler <%= bundler %> --mode development",
+-   "build": "bundlekit-service build --bundler <%= bundler %> --mode production",
 -   "vite:dev":   "...",
 -   "vite:prod":  "..."
-+   "build": "devkit-service build --bundler <%= bundler %> --mode production"
++   "build": "bundlekit-service build --bundler <%= bundler %> --mode production"
   }
 ```
 

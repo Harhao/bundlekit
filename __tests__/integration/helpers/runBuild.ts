@@ -17,7 +17,7 @@ export interface IBuildResult {
 }
 
 /**
- * 在 fixture 中运行 `pnpm exec devkit-service build` 并返回结果。
+ * 在 fixture 中运行 `pnpm exec bundlekit-service build` 并返回结果。
  *
  * 调用方负责 cleanup（即使 code !== 0）。
  */
@@ -34,7 +34,7 @@ export async function runBuild(
 
         const result = spawnSync(
             "pnpm",
-            ["exec", "devkit-service", "build", "--mode", "production"],
+            ["exec", "bundlekit-service", "build", "--mode", "production"],
             {
                 cwd: handle.dir,
                 stdio: ["ignore", "pipe", "pipe"],

@@ -8,23 +8,23 @@ import {
     shortNameFromFullPkg,
     normalizeDeps,
     writeBundlerDevDep,
-} from "../packages/devkit-cli/lib/utils/depMode";
-import { DEP_MODE_ENV_KEYS } from "../packages/devkit-shared-utils/lib/types/cli-init";
+} from "../packages/bundlekit-cli/lib/utils/depMode";
+import { DEP_MODE_ENV_KEYS } from "../packages/bundlekit-shared-utils/lib/types/cli-init";
 
 function makeTmpDir(name: string): string {
-    const dir = path.join(os.tmpdir(), `devkit-depMode-${name}-${Date.now()}-${Math.floor(Math.random() * 1e6)}`);
+    const dir = path.join(os.tmpdir(), `bundlekit-depMode-${name}-${Date.now()}-${Math.floor(Math.random() * 1e6)}`);
     fs.mkdirSync(dir, { recursive: true });
     return dir;
 }
 
 describe("shortNameFromFullPkg", () => {
-    it("extracts short name from @devkit/* packages", () => {
-        expect(shortNameFromFullPkg("@devkit/service")).toBe("service");
-        expect(shortNameFromFullPkg("@devkit/plugin-react")).toBe("plugin-react");
-        expect(shortNameFromFullPkg("@devkit/bundler-vite")).toBe("bundler-vite");
+    it("extracts short name from @bundlekit/* packages", () => {
+        expect(shortNameFromFullPkg("@bundlekit/service")).toBe("service");
+        expect(shortNameFromFullPkg("@bundlekit/plugin-react")).toBe("plugin-react");
+        expect(shortNameFromFullPkg("@bundlekit/bundler-vite")).toBe("bundler-vite");
     });
 
-    it("returns null for non-@devkit packages", () => {
+    it("returns null for non-@bundlekit packages", () => {
         expect(shortNameFromFullPkg("react")).toBeNull();
         expect(shortNameFromFullPkg("@types/react")).toBeNull();
     });
@@ -76,15 +76,15 @@ describe("normalizeDeps", () => {
                 JSON.stringify({
                     name: "demo",
                     devDependencies: {
-                        "@devkit/service": "workspace:^",
-                        "@devkit/bundler-vite": "workspace:^",
+                        "@bundlekit/service": "workspace:^",
+                        "@bundlekit/bundler-vite": "workspace:^",
                     },
                 }, null, 2),
             );
             normalizeDeps(tmp, { kind: "npm", cliVersion: "0.0.1" });
             const pkg = JSON.parse(fs.readFileSync(path.join(tmp, "package.json"), "utf-8"));
-            expect(pkg.devDependencies["@devkit/service"]).toBe("^0.0.1");
-            expect(pkg.devDependencies["@devkit/bundler-vite"]).toBe("^0.0.1");
+            expect(pkg.devDependencies["@bundlekit/service"]).toBe("^0.0.1");
+            expect(pkg.devDependencies["@bundlekit/bundler-vite"]).toBe("^0.0.1");
         } finally {
             fs.rmSync(tmp, { recursive: true, force: true });
         }
@@ -97,9 +97,9 @@ describe("normalizeDeps", () => {
                 path.join(tmp, "package.json"),
                 JSON.stringify({
                     devDependencies: {
-                        "@devkit/service": "workspace:^",
-                        "@devkit/plugin-vue": "workspace:^",
-                        "@devkit/bundler-rspack": "workspace:^",
+                        "@bundlekit/service": "workspace:^",
+                        "@bundlekit/plugin-vue": "workspace:^",
+                        "@bundlekit/bundler-rspack": "workspace:^",
                     },
                 }, null, 2),
             );

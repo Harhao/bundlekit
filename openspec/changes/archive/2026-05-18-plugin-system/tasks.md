@@ -3,8 +3,8 @@
 - [x] 1.1 Implement plugin entry point with `registerPlugin(api)`
 - [x] 1.2 Register `plugin:react` command via `api.registerCommand`
 - [x] 1.3 Inject React build config via `api.modifyBuildConfig` (jsx support, babel preset)
-- [x] 1.4 Create `template-react-ts` template files (App.tsx, index.tsx, tsconfig.json, package.json, .devkitrc.ts)
-- [x] 1.5 Create `template-react-js` template files (App.jsx, index.jsx, package.json, .devkitrc.js)
+- [x] 1.4 Create `template-react-ts` template files (App.tsx, index.tsx, tsconfig.json, package.json, .bundlekitrc.ts)
+- [x] 1.5 Create `template-react-js` template files (App.jsx, index.jsx, package.json, .bundlekitrc.js)
 - [x] 1.6 Implement generator for React templates
 
 ## 2. Mock Plugin

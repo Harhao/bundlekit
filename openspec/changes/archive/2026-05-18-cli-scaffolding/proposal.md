@@ -1,6 +1,6 @@
 ## Why
 
-The `devkit-cli` is the user-facing entry point for project creation and mock service management. Currently all commands except `create` are stubs, `creator.ts` has syntax errors with undefined variables, and the Generator class is empty. Without a working CLI, users cannot scaffold projects or run mock servers.
+The `bundlekit-cli` is the user-facing entry point for project creation and mock service management. Currently all commands except `create` are stubs, `creator.ts` has syntax errors with undefined variables, and the Generator class is empty. Without a working CLI, users cannot scaffold projects or run mock servers.
 
 ## What Changes
 
@@ -22,6 +22,6 @@ The `devkit-cli` is the user-facing entry point for project creation and mock se
 
 ## Impact
 
-- Affected packages: `@devkit/cli`
-- Dependencies: `ejs` (template engine), `@devkit/shared-utils` (logger, spinner, pkgManager)
+- Affected packages: `@bundlekit/cli`
+- Dependencies: `ejs` (template engine), `@bundlekit/shared-utils` (logger, spinner, pkgManager)
 - Breaks nothing: no working consumers

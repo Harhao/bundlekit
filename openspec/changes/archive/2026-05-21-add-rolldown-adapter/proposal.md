@@ -4,13 +4,13 @@ Rolldown is a Rust-based JavaScript bundler with Rollup-compatible API, designed
 
 ## What Changes
 
-- New package `@devkit/bundler-rolldown` implementing `IBuildToolAdapter<RolldownOptions>`
+- New package `@bundlekit/bundler-rolldown` implementing `IBuildToolAdapter<RolldownOptions>`
 - Config transformation: `IBuildConfig` → Rolldown `RolldownOptions` (entry, output, resolve, plugins, define, inject)
 - Dev mode: `rolldown.watch()` with rebuild logging
 - Prod mode: `rolldown.build()` producing output to configured `outDir`
 - Built-in transforms for TypeScript/JSX (native in Rolldown, no extra loaders needed)
 - Schema validation using Rolldown's schema
-- Register `rolldown` in bundler resolution system (`@devkit/service`)
+- Register `rolldown` in bundler resolution system (`@bundlekit/service`)
 - Update example project `package.json` with `rolldown:dev` / `rolldown:prod` scripts
 
 ## Capabilities
@@ -23,7 +23,7 @@ Rolldown is a Rust-based JavaScript bundler with Rollup-compatible API, designed
 
 ## Impact
 
-- New package: `@devkit/bundler-rolldown`
+- New package: `@bundlekit/bundler-rolldown`
 - Dependency: `rolldown` npm package
-- Modified packages: `@devkit/service` (add `rolldown` to bundler map and dependencies), `exmaple` (add rolldown scripts)
+- Modified packages: `@bundlekit/service` (add `rolldown` to bundler map and dependencies), `exmaple` (add rolldown scripts)
 - Breaking: none (additive change)

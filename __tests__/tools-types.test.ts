@@ -1,5 +1,5 @@
 import { describe, it } from "vitest";
-import type { IBuildConfig, IToolsCtx } from "../packages/devkit-shared-utils/lib/types/cli-service/config";
+import type { IBuildConfig, IToolsCtx } from "../packages/bundlekit-shared-utils/lib/types/cli-service/config";
 
 describe("tools type inference", () => {
     it("compile-time only: tools.webpack receives webpack Configuration", () => {

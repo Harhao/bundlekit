@@ -1,6 +1,6 @@
 ## Context
 
-`bundle-devkit` 是一个多 bundler 前端构建工具包，核心链路为：CLI → Service（插件系统 + 配置加载）→ bundler adapter（webpack/vite/rollup/rspack/rolldown）。当前代码库存在多个影响运行时正确性的 bug 和类型系统缺口，具体背景见 proposal.md。
+`bundle-bundlekit` 是一个多 bundler 前端构建工具包，核心链路为：CLI → Service（插件系统 + 配置加载）→ bundler adapter（webpack/vite/rollup/rspack/rolldown）。当前代码库存在多个影响运行时正确性的 bug 和类型系统缺口，具体背景见 proposal.md。
 
 本设计文档涵盖跨多个模块的修复策略、测试基础设施引入以及 TypeScript strict 模式迁移方案。
 
@@ -106,7 +106,7 @@
 
 ## Migration Plan
 
-所有修改均向后兼容（用户的 `.devkitrc.ts` 无需改动），按以下顺序执行：
+所有修改均向后兼容（用户的 `.bundlekitrc.ts` 无需改动），按以下顺序执行：
 
 1. 修复类型层（shared-utils/types）
 2. 修复 ConfigLoader（resolvePaths + defaultConfig）

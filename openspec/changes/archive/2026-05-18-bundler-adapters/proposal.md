@@ -19,6 +19,6 @@ Rollup and Rspack adapters are the remaining bundler backends. Both are currentl
 
 ## Impact
 
-- Affected packages: `@devkit/bundler-rollup`, `@devkit/bundler-rspack`
-- Dependency on: `@devkit/shared-utils` (types and utilities)
+- Affected packages: `@bundlekit/bundler-rollup`, `@bundlekit/bundler-rspack`
+- Dependency on: `@bundlekit/shared-utils` (types and utilities)
 - Breaks nothing: skeleton code with no consumers

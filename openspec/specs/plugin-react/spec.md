@@ -22,5 +22,5 @@ The React plugin SHALL provide `template-react-ts` and `template-react-js` templ
 
 #### Scenario: TypeScript template structure
 - **WHEN** the `template-react-ts` template is used
-- **THEN** it SHALL contain `src/App.tsx`, `src/index.tsx`, `tsconfig.json`, `package.json`, and `.devkitrc.ts`
+- **THEN** it SHALL contain `src/App.tsx`, `src/index.tsx`, `tsconfig.json`, `package.json`, and `.bundlekitrc.ts`
 

@@ -15,7 +15,7 @@
 系统 SHALL 在根目录提供 `.prettierrc`，配置：单引号、2空格缩进、trailing comma `all`、print width 100。`.prettierignore` 排除 `dist/`、`node_modules/`、`*.md`（不强制格式化文档）。
 
 #### Scenario: 运行 prettier 格式化 TS 文件符合约定
-- **WHEN** 运行 `prettier --check packages/devkit-cli/index.ts`
+- **WHEN** 运行 `prettier --check packages/bundlekit-cli/index.ts`
 - **THEN** 如文件符合配置规则则退出码为 0
 
 #### Scenario: 与 ESLint 格式规则无冲突

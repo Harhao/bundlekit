@@ -36,22 +36,22 @@ The `publish-npm.yml` workflow SHALL pass an `NPM_TOKEN` secret as an environmen
 - **THEN** the page SHALL include the steps: generate npm Automation token, configure as repo secret named `NPM_TOKEN`, verify with a test run
 
 ### Requirement: Release-ready package metadata
-Every `@devkit/*` package intended for npm publication SHALL declare `publishConfig.registry` pointing to the public npm registry, and SHALL declare appropriate `files` / `main` / `module` / `types` fields so the published tarball contains only `dist/` artifacts.
+Every `@bundlekit/*` package intended for npm publication SHALL declare `publishConfig.registry` pointing to the public npm registry, and SHALL declare appropriate `files` / `main` / `module` / `types` fields so the published tarball contains only `dist/` artifacts.
 
 #### Scenario: publishConfig set
-- **WHEN** scanning `@devkit/cli`, `@devkit/service`, `@devkit/shared-utils`, `@devkit/bundler-*`, `@devkit/plugin-*` package.json files
+- **WHEN** scanning `@bundlekit/cli`, `@bundlekit/service`, `@bundlekit/shared-utils`, `@bundlekit/bundler-*`, `@bundlekit/plugin-*` package.json files
 - **THEN** each SHALL contain `"publishConfig": { "registry": "https://registry.npmjs.org/" }`
 
 #### Scenario: Files allowlist excludes source
-- **WHEN** running `npm pack --dry-run` against any `@devkit/*` package
+- **WHEN** running `npm pack --dry-run` against any `@bundlekit/*` package
 - **THEN** the resulting tarball file list SHALL NOT include `src/`, `lib/`, or `__tests__/`
 - **AND** SHALL include `dist/` and `package.json`
 
 ### Requirement: Lockstep version uniformity
-All publishable `@devkit/*` packages SHALL use the same starting version number prior to first npm release, satisfying the lockstep assumption used by `addBundlerToDevDeps` and template version normalization.
+All publishable `@bundlekit/*` packages SHALL use the same starting version number prior to first npm release, satisfying the lockstep assumption used by `addBundlerToDevDeps` and template version normalization.
 
 #### Scenario: Pre-release version uniform
-- **WHEN** scanning `@devkit/cli`, `@devkit/service`, `@devkit/shared-utils`, `@devkit/bundler-*`, `@devkit/plugin-react`, `@devkit/plugin-vue` `package.json` `version` fields prior to the first changeset publish
+- **WHEN** scanning `@bundlekit/cli`, `@bundlekit/service`, `@bundlekit/shared-utils`, `@bundlekit/bundler-*`, `@bundlekit/plugin-react`, `@bundlekit/plugin-vue` `package.json` `version` fields prior to the first changeset publish
 - **THEN** all SHALL equal `"0.0.1"`
 
 #### Scenario: First release uses changeset

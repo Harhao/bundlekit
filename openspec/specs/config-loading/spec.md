@@ -4,18 +4,18 @@
 TBD - created by archiving change core-chain. Update Purpose after archive.
 ## Requirements
 ### Requirement: Load project config file
-The system SHALL load project configuration from `.devkitrc.ts` or `.devkitrc.js` in the project root directory, with `.devkitrc.ts` taking priority over `.devkitrc.js`.
+The system SHALL load project configuration from `.bundlekitrc.ts` or `.bundlekitrc.js` in the project root directory, with `.bundlekitrc.ts` taking priority over `.bundlekitrc.js`.
 
 #### Scenario: Load TypeScript config
-- **WHEN** a `.devkitrc.ts` file exists in the project root
+- **WHEN** a `.bundlekitrc.ts` file exists in the project root
 - **THEN** the system loads and executes it via `jiti`, returning the default export as `IBuildConfig`
 
 #### Scenario: Fallback to JavaScript config
-- **WHEN** no `.devkitrc.ts` exists but `.devkitrc.js` exists in the project root
+- **WHEN** no `.bundlekitrc.ts` exists but `.bundlekitrc.js` exists in the project root
 - **THEN** the system loads and executes it via `jiti`, returning the default export as `IBuildConfig`
 
 #### Scenario: No config file found
-- **WHEN** neither `.devkitrc.ts` nor `.devkitrc.js` exists in the project root
+- **WHEN** neither `.bundlekitrc.ts` nor `.bundlekitrc.js` exists in the project root
 - **THEN** the system throws an error with a descriptive message indicating no config file was found
 
 ### Requirement: Merge config with defaults
@@ -48,7 +48,7 @@ The system SHALL resolve all relative paths in the config (entry, outDir, resolv
 The `IBuildConfig.config` field SHALL accept any subset of `IBuildEnv` keys; not all environment keys are required.
 
 #### Scenario: Only development config defined
-- **WHEN** user's `.devkitrc.ts` defines only a `development` key in `config`
+- **WHEN** user's `.bundlekitrc.ts` defines only a `development` key in `config`
 - **THEN** the system SHALL load and merge it successfully without TypeScript errors
 
 #### Scenario: Default config does not require all envs

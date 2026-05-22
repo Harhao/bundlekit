@@ -1,19 +1,19 @@
 ---
-"@devkit/service": minor
-"@devkit/shared-utils": minor
-"@devkit/bundler-webpack": minor
-"@devkit/bundler-vite": minor
-"@devkit/bundler-rspack": minor
-"@devkit/bundler-rollup": minor
-"@devkit/bundler-rolldown": minor
-"@devkit/cli": minor
-"@devkit/plugin-react": minor
-"@devkit/plugin-vue": minor
+"@bundlekit/service": minor
+"@bundlekit/shared-utils": minor
+"@bundlekit/bundler-webpack": minor
+"@bundlekit/bundler-vite": minor
+"@bundlekit/bundler-rspack": minor
+"@bundlekit/bundler-rollup": minor
+"@bundlekit/bundler-rolldown": minor
+"@bundlekit/cli": minor
+"@bundlekit/plugin-react": minor
+"@bundlekit/plugin-vue": minor
 ---
 
 Add SSR (server-side rendering) support across all 5 bundlers.
 
-**New `ssr` config field on `IEnvBuildConfig`** with `entry`, `output`, `externals`, `template`, `placeholder`, `dev` fields. When set, `devkit-service build` runs two sequential passes (client + server) producing dual bundle artifacts. When `ssr.dev: true` and command is `serve`, service starts a dev SSR HTTP server using the bundler's `createSSRMiddleware`.
+**New `ssr` config field on `IEnvBuildConfig`** with `entry`, `output`, `externals`, `template`, `placeholder`, `dev` fields. When set, `bundlekit-service build` runs two sequential passes (client + server) producing dual bundle artifacts. When `ssr.dev: true` and command is `serve`, service starts a dev SSR HTTP server using the bundler's `createSSRMiddleware`.
 
 **Build SSR — supported on all 5 bundlers**:
 - vite: native `build.ssr` mode
@@ -40,11 +40,11 @@ Add SSR (server-side rendering) support across all 5 bundlers.
 
 **New `IBuildToolAdapter.createSSRMiddleware?` optional method** for dev SSR middleware. New `IRequestHandler` type exported from shared-utils.
 
-**Templates updated** (`@devkit/plugin-react`, `@devkit/plugin-vue`):
-- All 4 templates (react-ts, react-js, vue3-ts, vue3-js) now include `App.{tsx,vue}`, `entry-client.{tsx,ts,jsx,js}`, `entry-server.{tsx,ts,jsx,js}` — these files are always generated but only referenced in `.devkitrc.ts` when SSR is enabled
+**Templates updated** (`@bundlekit/plugin-react`, `@bundlekit/plugin-vue`):
+- All 4 templates (react-ts, react-js, vue3-ts, vue3-js) now include `App.{tsx,vue}`, `entry-client.{tsx,ts,jsx,js}`, `entry-server.{tsx,ts,jsx,js}` — these files are always generated but only referenced in `.bundlekitrc.ts` when SSR is enabled
 - `public/index.html` now contains `<!--ssr-outlet-->` placeholder
-- `.devkitrc.ts` conditionally includes `ssr` config block when context `ssr === true`
+- `.bundlekitrc.ts` conditionally includes `ssr` config block when context `ssr === true`
 
-**`@devkit/cli` `create` command new flag `--ssr`**: passing this flag sets `ssr: true` in the template context, switching the generated `.devkitrc.ts` to the SSR config form (drops `pages`, adds `ssr` block with `dev: true`).
+**`@bundlekit/cli` `create` command new flag `--ssr`**: passing this flag sets `ssr: true` in the template context, switching the generated `.bundlekitrc.ts` to the SSR config form (drops `pages`, adds `ssr` block with `dev: true`).
 
-Migration: existing projects unaffected. New projects without `--ssr` continue to use the SPA flow. To enable SSR on an existing project, manually add the `ssr` field to `.devkitrc.ts` referencing your `entry-server.tsx`.
+Migration: existing projects unaffected. New projects without `--ssr` continue to use the SPA flow. To enable SSR on an existing project, manually add the `ssr` field to `.bundlekitrc.ts` referencing your `entry-server.tsx`.

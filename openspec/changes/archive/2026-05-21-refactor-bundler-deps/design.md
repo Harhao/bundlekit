@@ -2,11 +2,11 @@
 
 **当前实现**
 
-- `@devkit/service/package.json` 在 `dependencies` 里硬绑：
-  - `@devkit/bundler-webpack` / `bundler-vite` / `bundler-rollup` / `bundler-rspack` / `bundler-rolldown`
-- `Service.startBuilder()` (`packages/devkit-service/lib/Service.ts:238-275`) 在 `loadBundlerPlugin` 失败时调用 `packageManager.add(packageName, { noSave: true })`，安装到 `node_modules` 但**不写**进项目 `package.json`。
-- `@devkit/cli/lib/commands/create/creator.ts:48` 仅做 `pm.add("", { noSave: true })`（即 `pnpm install`），不会因 `-b` 选项写入对应 bundler。
-- 模板 `package.json.ejs` 的 `devDependencies` 中只列了 `@devkit/service` 与 `@devkit/plugin-react`，没有 bundler-*。
+- `@bundlekit/service/package.json` 在 `dependencies` 里硬绑：
+  - `@bundlekit/bundler-webpack` / `bundler-vite` / `bundler-rollup` / `bundler-rspack` / `bundler-rolldown`
+- `Service.startBuilder()` (`packages/bundlekit-service/lib/Service.ts:238-275`) 在 `loadBundlerPlugin` 失败时调用 `packageManager.add(packageName, { noSave: true })`，安装到 `node_modules` 但**不写**进项目 `package.json`。
+- `@bundlekit/cli/lib/commands/create/creator.ts:48` 仅做 `pm.add("", { noSave: true })`（即 `pnpm install`），不会因 `-b` 选项写入对应 bundler。
+- 模板 `package.json.ejs` 的 `devDependencies` 中只列了 `@bundlekit/service` 与 `@bundlekit/plugin-react`，没有 bundler-*。
 
 **业界对照**
 
@@ -48,18 +48,18 @@
 ```jsonc
 {
   "peerDependencies": {
-    "@devkit/bundler-webpack": "workspace:*",
-    "@devkit/bundler-vite":    "workspace:*",
-    "@devkit/bundler-rspack":  "workspace:*",
-    "@devkit/bundler-rollup":  "workspace:*",
-    "@devkit/bundler-rolldown":"workspace:*"
+    "@bundlekit/bundler-webpack": "workspace:*",
+    "@bundlekit/bundler-vite":    "workspace:*",
+    "@bundlekit/bundler-rspack":  "workspace:*",
+    "@bundlekit/bundler-rollup":  "workspace:*",
+    "@bundlekit/bundler-rolldown":"workspace:*"
   },
   "peerDependenciesMeta": {
-    "@devkit/bundler-webpack": { "optional": true },
-    "@devkit/bundler-vite":    { "optional": true },
-    "@devkit/bundler-rspack":  { "optional": true },
-    "@devkit/bundler-rollup":  { "optional": true },
-    "@devkit/bundler-rolldown":{ "optional": true }
+    "@bundlekit/bundler-webpack": { "optional": true },
+    "@bundlekit/bundler-vite":    { "optional": true },
+    "@bundlekit/bundler-rspack":  { "optional": true },
+    "@bundlekit/bundler-rollup":  { "optional": true },
+    "@bundlekit/bundler-rolldown":{ "optional": true }
   }
 }
 ```
@@ -107,8 +107,8 @@ projectPkg.devDependencies[bundlerPkgName] = version;
 
 理由：
 - 整个 monorepo 用 changeset 锁版（fixed versioning），cli / bundler 同步发版
-- 把 bundler-* 加入 cli 的 `dependencies` 来"取版本"会反作用 — 用户 `npm i @devkit/cli` 时会拖进 5 个 bundler，恰恰是要避免的
-- 当 lockstep 失效（极少数场景），用户可以手工 `pnpm add -D @devkit/bundler-X@<version>` 覆盖
+- 把 bundler-* 加入 cli 的 `dependencies` 来"取版本"会反作用 — 用户 `npm i @bundlekit/cli` 时会拖进 5 个 bundler，恰恰是要避免的
+- 当 lockstep 失效（极少数场景），用户可以手工 `pnpm add -D @bundlekit/bundler-X@<version>` 覆盖
 
 替代方案：硬编码版本表 — 否决（发版漂移）。
 替代方案：把 bundler-* 加入 cli devDependencies — 否决（user install 仍会拉）。
@@ -119,15 +119,15 @@ projectPkg.devDependencies[bundlerPkgName] = version;
 
 ```ts
 const BUNDLER_MAP: Record<string, string> = {
-  webpack:  "@devkit/bundler-webpack",
-  vite:     "@devkit/bundler-vite",
-  rspack:   "@devkit/bundler-rspack",
-  rollup:   "@devkit/bundler-rollup",
-  rolldown: "@devkit/bundler-rolldown",
+  webpack:  "@bundlekit/bundler-webpack",
+  vite:     "@bundlekit/bundler-vite",
+  rspack:   "@bundlekit/bundler-rspack",
+  rollup:   "@bundlekit/bundler-rollup",
+  rolldown: "@bundlekit/bundler-rolldown",
 };
 ```
 
-输入约定：`dc add bundler-vite` → `@devkit/bundler-vite`；裸 `dc add vite` 仍解析为 vite bundler（前缀 `bundler-` 可省略，但需在 `add` 命令内消歧 — 通过判断字符串是否在 `BUNDLER_MAP` 即可）。
+输入约定：`dc add bundler-vite` → `@bundlekit/bundler-vite`；裸 `dc add vite` 仍解析为 vite bundler（前缀 `bundler-` 可省略，但需在 `add` 命令内消歧 — 通过判断字符串是否在 `BUNDLER_MAP` 即可）。
 
 ### D6：Service 中加载 bundler 适配器的版本一致性
 
@@ -141,7 +141,7 @@ const BUNDLER_MAP: Record<string, string> = {
 | `peerDependenciesMeta.optional` 在不同包管理器表现略异（npm/pnpm/yarn） | 限定 README 推荐 pnpm；npm 用户在文档中给出手工 install 指引 |
 | CI 没设 `DEVKIT_AUTO_INSTALL` 会直接 exit(1) | 文档中明确 CI 配置示例 |
 | dev workspace 链接断裂（service 不再 deps bundler-*，turbo task graph 可能不再传递依赖） | `turbo.json` 中 `service:build` 任务显式 `dependsOn` 各 bundler 的 build；workspace 中 service 仍可 require.resolve，因为它们都是 sibling package |
-| 多 bundler 用户每个都要被 prompt 一次，繁琐 | 不缓解（用户主动行为）；提供 docs 例子让用户一次性 `pnpm add -D @devkit/bundler-{vite,webpack}` |
+| 多 bundler 用户每个都要被 prompt 一次，繁琐 | 不缓解（用户主动行为）；提供 docs 例子让用户一次性 `pnpm add -D @bundlekit/bundler-{vite,webpack}` |
 
 ## Migration Plan
 
@@ -158,6 +158,6 @@ const BUNDLER_MAP: Record<string, string> = {
 
 ## Open Questions
 
-- 是否需要给 `add bundler-*` 后**自动更新 `.devkitrc.ts` 的 `bundler` 字段**？倾向不自动改（用户切 bundler 是显式动作，让 cli 再问一次更友好）。
+- 是否需要给 `add bundler-*` 后**自动更新 `.bundlekitrc.ts` 的 `bundler` 字段**？倾向不自动改（用户切 bundler 是显式动作，让 cli 再问一次更友好）。
 - prompt 文案中文 / 英文：与现有 cli 一致（中文）。
 - 是否对 npm registry 之外的私有 registry（公司内网）做特殊处理？暂不做。

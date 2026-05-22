@@ -1,0 +1,18 @@
+{
+  "name": "<%= projectName %>",
+  "version": "1.0.0",
+  "description": "<%= description %>",
+  "scripts": {
+    "clean": "rimraf dist",
+    "dev": "bundlekit-service serve --bundler <%= bundler %> --mode development",
+    "build": "bundlekit-service build --bundler <%= bundler %> --mode production"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@bundlekit/service": "workspace:^",
+    "@bundlekit/plugin-react": "workspace:^"
+  }
+}

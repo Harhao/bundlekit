@@ -6,5 +6,5 @@ After `transformConfig` returns the rollup `RollupOptions`, the system SHALL inv
 
 #### Scenario: Hook adds a rollup plugin
 - **WHEN** the user declares `tools.rollup` that pushes a custom plugin into `config.plugins`
-- **AND** runs `devkit-service build --bundler rollup`
+- **AND** runs `bundlekit-service build --bundler rollup`
 - **THEN** the resulting rollup pipeline SHALL include the custom plugin in its plugin list

@@ -1,17 +1,17 @@
 ---
-"@devkit/service": patch
-"@devkit/bundler-webpack": patch
-"@devkit/bundler-vite": patch
-"@devkit/bundler-rspack": patch
-"@devkit/bundler-rollup": patch
-"@devkit/bundler-rolldown": patch
+"@bundlekit/service": patch
+"@bundlekit/bundler-webpack": patch
+"@bundlekit/bundler-vite": patch
+"@bundlekit/bundler-rspack": patch
+"@bundlekit/bundler-rollup": patch
+"@bundlekit/bundler-rolldown": patch
 ---
 
 Add a fixture-driven bundler integration test suite at `__tests__/integration/`.
 
 **Coverage**:
-- **15 build tests** (5 bundlers × {SPA, Library, SSR}): each spawns `devkit-service build` against an isolated fixture copy, asserts artifacts on disk, and (for SSR) `require()` the produced `server.cjs` to call `render('/')` and assert `__SSR_MARKER__` in the returned HTML
-- **5 dev SSR HTTP tests** (5 bundlers): each spawns `devkit-service serve` with `ssr.dev: true`, performs HTTP GET against a dynamic port via `node fetch`, asserts SSR_MARKER in the response body
+- **15 build tests** (5 bundlers × {SPA, Library, SSR}): each spawns `bundlekit-service build` against an isolated fixture copy, asserts artifacts on disk, and (for SSR) `require()` the produced `server.cjs` to call `render('/')` and assert `__SSR_MARKER__` in the returned HTML
+- **5 dev SSR HTTP tests** (5 bundlers): each spawns `bundlekit-service serve` with `ssr.dev: true`, performs HTTP GET against a dynamic port via `node fetch`, asserts SSR_MARKER in the response body
 - **1 Playwright HMR test** (vite): launches chromium, navigates to dev SSR server, edits `App.tsx`, asserts text update within 15s. webpack/rspack HMR are scaffolded but currently `test.skip` (needs React Fast Refresh integration; dev SSR HTTP is already covered separately).
 
 **Infrastructure**:

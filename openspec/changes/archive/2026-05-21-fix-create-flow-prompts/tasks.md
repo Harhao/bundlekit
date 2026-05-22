@@ -1,10 +1,10 @@
 ## 1. plugin-react / plugin-vue generator silenced
 
-- [x] 1.1 在 `packages/devkit-plugin-react/generator/index.ts` 加 `shouldSkipPrompt()` helper（检测 `!process.stdout.isTTY` / `DEVKIT_NO_PROMPT === "1"` / `CI === "true"|"1"`）
+- [x] 1.1 在 `packages/bundlekit-plugin-react/generator/index.ts` 加 `shouldSkipPrompt()` helper（检测 `!process.stdout.isTTY` / `DEVKIT_NO_PROMPT === "1"` / `CI === "true"|"1"`）
 - [x] 1.2 同文件 prompt 之前判断：`if (shouldSkipPrompt()) return;`
 - [x] 1.3 prompt 渲染前加 `console.log("\n")` + 颜色分隔符，让真 TTY 下文案醒目
-- [x] 1.4 把 `api.addDependency("@devkit/request", "^1.0.0")` 改为 `"workspace:^"`
-- [x] 1.5 `packages/devkit-plugin-vue/generator/index.ts` 同款改造
+- [x] 1.4 把 `api.addDependency("@bundlekit/request", "^1.0.0")` 改为 `"workspace:^"`
+- [x] 1.5 `packages/bundlekit-plugin-vue/generator/index.ts` 同款改造
 - [x] 1.6 plugin-react / plugin-vue 各加 1 个单测：环境变量设置后 prompt 不被调用（vitest mock api.prompt）
 
 ## 2. cli 在 ink 路径注入 DEVKIT_NO_PROMPT
@@ -22,7 +22,7 @@
 
 ## 4. PackageManager 加 --ignore-workspace 检测
 
-- [x] 4.1 `packages/devkit-shared-utils/lib/shared/pkgManager.ts` 新增 `findEnclosingPnpmWorkspace(cwd): { root, packages } | null`
+- [x] 4.1 `packages/bundlekit-shared-utils/lib/shared/pkgManager.ts` 新增 `findEnclosingPnpmWorkspace(cwd): { root, packages } | null`
 - [x] 4.2 同文件新增 `isWorkspaceMember(workspaceRoot, cwd, packagesGlobs): boolean`（用 minimatch 或简单 glob）
 - [x] 4.3 `runCommand` / `install` / `add` 在 pnpm + 非 member 场景追加 `--ignore-workspace`
 - [x] 4.4 单测 `__tests__/pkgManagerWorkspace.test.ts`：4 个判定场景（member / 非 member / 全外 / 非 pnpm）
@@ -36,14 +36,14 @@
 
 ## 6. 集成测试
 
-- [x] 6.1 `__tests__/integration/cli/cli-create-prompts.test.ts` 新建：DEVKIT_NO_PROMPT=1 跑完整 create，断言 generator 跳过 prompt + package.json 不含 `@devkit/request`
+- [x] 6.1 `__tests__/integration/cli/cli-create-prompts.test.ts` 新建：DEVKIT_NO_PROMPT=1 跑完整 create，断言 generator 跳过 prompt + package.json 不含 `@bundlekit/request`
 - [x] 6.2 同文件加 case：CI=true 同款验证
 - [x] 6.3 现有 `cli-create.test.ts` 加断言：生成 `package.json` 不含 `^1.0.0` 字面量（防御 generator 留死硬编码）
 - [x] 6.4 跑 `pnpm test` + `pnpm test:integration` 全过
 
 ## 7. changeset
 
-- [x] 7.1 写 `.changeset/fix-create-flow-prompts.md`，标记所有受影响包（`@devkit/cli` / `@devkit/plugin-react` / `@devkit/plugin-vue` / `@devkit/shared-utils`）为 patch
+- [x] 7.1 写 `.changeset/fix-create-flow-prompts.md`，标记所有受影响包（`@bundlekit/cli` / `@bundlekit/plugin-react` / `@bundlekit/plugin-vue` / `@bundlekit/shared-utils`）为 patch
 
 ## 8. 验证 / 回归
 

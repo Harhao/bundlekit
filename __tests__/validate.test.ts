@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { validateBuildConfig } from "../packages/devkit-shared-utils/lib/shared/validate";
-import type { IBuildConfig } from "../packages/devkit-shared-utils/lib/types/cli-service/config";
-import type { IBuildEnv } from "../packages/devkit-shared-utils/lib/types/cli-service/env";
+import { validateBuildConfig } from "../packages/bundlekit-shared-utils/lib/shared/validate";
+import type { IBuildConfig } from "../packages/bundlekit-shared-utils/lib/types/cli-service/config";
+import type { IBuildEnv } from "../packages/bundlekit-shared-utils/lib/types/cli-service/env";
 
 function makeConfig(envOverride: Record<string, any> = {}): IBuildConfig {
     return {

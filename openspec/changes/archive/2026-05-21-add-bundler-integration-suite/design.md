@@ -56,9 +56,9 @@ __tests__/integration/fixtures/
 │   ├── tsconfig.json
 │   └── package.json             # 共用 deps（react/react-dom）
 ├── webpack/
-│   ├── .devkitrc.spa.ts
-│   ├── .devkitrc.lib.ts
-│   ├── .devkitrc.ssr.ts
+│   ├── .bundlekitrc.spa.ts
+│   ├── .bundlekitrc.lib.ts
+│   ├── .bundlekitrc.ssr.ts
 │   └── package.json             # symlink 或 extends shared
 ├── vite/  ...
 ├── rspack/ ...
@@ -68,7 +68,7 @@ __tests__/integration/fixtures/
 
 **为什么不每 bundler × 模式独立 fixture**：
 - 5 × 3 = 15 份重复源码，维护噩梦
-- 共享源码 + 不同 .devkitrc.ts 是"换一行 import"的最小差异
+- 共享源码 + 不同 .bundlekitrc.ts 是"换一行 import"的最小差异
 
 **为什么不用 monorepo workspace**：
 - fixtures 作为黑盒应该模拟外部用户项目，不该共享 lockfile / hoist
@@ -100,7 +100,7 @@ playwright.config.ts            # e2e HMR 测试单独跑
 
 ### D3: 每个测试的子进程编排
 
-**采用方案**：用 `child_process.spawn` 起 `devkit-service` 子进程，用 `get-port` 拿空闲端口，等待"server ready"日志后发请求。
+**采用方案**：用 `child_process.spawn` 起 `bundlekit-service` 子进程，用 `get-port` 拿空闲端口，等待"server ready"日志后发请求。
 
 ```ts
 // __tests__/integration/helpers/spawnService.ts
@@ -212,11 +212,11 @@ __tests__/integration/
 
 ### D8: fixture 安装策略
 
-每个 fixture `package.json` 用 `file:../../packages/devkit-service` 等本地路径引用，避免发版才能测。
+每个 fixture `package.json` 用 `file:../../packages/bundlekit-service` 等本地路径引用，避免发版才能测。
 测试 setUp 时：
-1. `cp -r fixtures/<bundler> /tmp/devkit-int-<random>` 到隔离目录
+1. `cp -r fixtures/<bundler> /tmp/bundlekit-int-<random>` 到隔离目录
 2. `pnpm install --no-frozen-lockfile`（首次跑慢，~30s；缓存 node_modules 后续秒级）
-3. `npx devkit-service ...`
+3. `npx bundlekit-service ...`
 
 CI 加 `actions/cache` 缓存 `__tests__/integration/.cache/node_modules`。
 
@@ -225,7 +225,7 @@ CI 加 `actions/cache` 缓存 `__tests__/integration/.cache/node_modules`。
 | 风险 | 缓解 |
 |---|---|
 | Playwright 浏览器下载在 CI 慢（~150MB） | 用 `actions/setup-node` 内置缓存；开发者本地 `playwright install --with-deps chromium` 一次即可 |
-| watcher 子进程 kill 不干净导致 next test 端口被占 | helper `kill()` 用 `process.kill('SIGTERM')` 后 `await once(child, 'close')`；fixture teardown 加全局保险 `pkill -f 'devkit-service'` |
+| watcher 子进程 kill 不干净导致 next test 端口被占 | helper `kill()` 用 `process.kill('SIGTERM')` 后 `await once(child, 'close')`；fixture teardown 加全局保险 `pkill -f 'bundlekit-service'` |
 | HMR 测试 race（编辑文件后 5s 等不到更新视为失败） | 每次测试开端口和子进程都新建，独立 timeout；HMR timeout 5s + 重试 1 次 |
 | fixture 源码被测试脏改未还原 | helper `editFile` 用 try-finally 模式，无论成功失败都还原；CI 跑前后各 git diff fixtures 校验干净 |
 | 5 bundler × 3 mode = 15 build 测试在 CI 上累计 1~2min | 接受；用 turbo 缓存 + vitest 并发可降到 ~30s |

@@ -1,0 +1,19 @@
+{
+  "name": "bundlekit-cli-docs",
+  "version": "0.0.1",
+  "description": "a docs description about bundle-bundlekit",
+  "private": true,
+  "scripts": {
+    "start": "npm run dev",
+    "dev": "dumi dev",
+    "docs:build": "dumi build",
+    "preview": "dumi preview"
+  },
+  "authors": [
+    "harhao@163.com"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "dumi": "^2.4.27"
+  }
+}

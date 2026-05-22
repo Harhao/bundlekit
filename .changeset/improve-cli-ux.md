@@ -1,10 +1,10 @@
 ---
-"@devkit/cli": minor
+"@bundlekit/cli": minor
 ---
 
-**BREAKING (cjs entry removal)**: `@devkit/cli` is now ESM-only.
+**BREAKING (cjs entry removal)**: `@bundlekit/cli` is now ESM-only.
 
-- Bin entries (`devkit-cli`, `dc`) both point to `dist/index.mjs`.
+- Bin entries (`bundlekit-cli`, `dc`) both point to `dist/index.mjs`.
 - The previous `dist/index.cjs` build is removed; users invoking the cli must use Node ≥ 18 with ESM support (already the project requirement).
 - New ink-based interactive UI for `create` and `add` commands in TTY terminals: gradient banner, step-based prompts, animated task list, and final success view. Behavior is functionally equivalent to the previous flow.
 - Non-TTY environments (CI / piped) and `DEVKIT_NO_INK=1` automatically fall back to the legacy enquirer + Logger flow, no breaking change for scripted use.

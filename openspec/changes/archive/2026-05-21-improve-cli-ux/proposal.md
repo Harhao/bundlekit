@@ -1,21 +1,21 @@
 ## Why
 
-`@devkit/cli` 当前的交互层基于 `enquirer` + `console.log`（通过 Logger）+ 一个简单的 Spinner。体感上：交互单调，缺少视觉层次；进度反馈靠分散的 spinner / log 拼接，跨步骤的状态不连贯；新用户缺少 brand 识别的 banner。
+`@bundlekit/cli` 当前的交互层基于 `enquirer` + `console.log`（通过 Logger）+ 一个简单的 Spinner。体感上：交互单调，缺少视觉层次；进度反馈靠分散的 spinner / log 拼接，跨步骤的状态不连贯；新用户缺少 brand 识别的 banner。
 
 业界脚手架（create-vite、create-rsbuild、create-modern）已经普遍采用 [ink](https://github.com/vadimdemedes/ink) — 用 React 组件树渲染 TUI — 来获得稳定的多区域更新、动画 spinner、彩色 logo、可复用的多步表单。
 
-本 change 仅改造 `@devkit/cli` 的交互层（命令解析后的所有提示 / 进度 / 完成提示），其他模块（service / bundler-* / plugin-* / shared-utils）一律不动。
+本 change 仅改造 `@bundlekit/cli` 的交互层（命令解析后的所有提示 / 进度 / 完成提示），其他模块（service / bundler-* / plugin-* / shared-utils）一律不动。
 
 ## What Changes
 
 - 引入 ink 体系：`ink`、`ink-select-input`、`ink-text-input`、`ink-spinner`、`ink-gradient`、`ink-big-text`，以及 `react`、`react-dom` 作为 ink 的对等依赖。
-- `packages/devkit-cli/index.ts` 重写为：commander 解析参数 → 根据命令 render 不同的 ink App（`<CreateApp options>`、`<AddApp plugin>` 等）。
+- `packages/bundlekit-cli/index.ts` 重写为：commander 解析参数 → 根据命令 render 不同的 ink App（`<CreateApp options>`、`<AddApp plugin>` 等）。
 - `Creator` 的交互部分（`prompt` 模板、`prompt` bundler）改为通过 ink App 输入；非交互部分（`fs` 渲染、`pm.add`）从 `Creator` 中保持纯函数化，方便被 ink 组件以受控方式调用。
 - TTY 检测：`process.stdout.isTTY === false` 时回退到旧 enquirer 路径（保留作为 fallback），CI 环境继续可用。
-- 构建产物：`@devkit/cli/dist/index.cjs` 砍掉，bin 仅保留 ESM 入口（`dist/index.mjs`）。`bin.devkit-cli` 与 `bin.dc` 都指向 `index.mjs`。
+- 构建产物：`@bundlekit/cli/dist/index.cjs` 砍掉，bin 仅保留 ESM 入口（`dist/index.mjs`）。`bin.bundlekit-cli` 与 `bin.dc` 都指向 `index.mjs`。
 - rollup 构建配置改造：支持 jsx/tsx，`react / ink / ink-*` 全部 external，避免打入 bundle。
 - tsconfig 加 `"jsx": "react-jsx"`、`"jsxImportSource": "react"`。
-- 新增组件目录 `packages/devkit-cli/lib/ui/`：`<App>`、`<Banner>`、`<StepCreate>`、`<StepAdd>`、`<TaskList>`、`<Done>` 等可复用组件。
+- 新增组件目录 `packages/bundlekit-cli/lib/ui/`：`<App>`、`<Banner>`、`<StepCreate>`、`<StepAdd>`、`<TaskList>`、`<Done>` 等可复用组件。
 
 ## Capabilities
 
@@ -34,9 +34,9 @@
 - 可选：`@types/react`、`@inkjs/ui`（更现代的 ink 组件库，待评估）
 
 **构建配置**
-- `packages/devkit-cli/tsconfig.json`：`jsx: react-jsx`
-- `packages/devkit-cli/scripts/rollup.config.js`：jsx 处理（`@rollup/plugin-typescript` 已支持，仅需 `jsx: 'react-jsx'`）；`react / ink / ink-*` external
-- `packages/devkit-cli/package.json`：bin 改单 ESM；type:module 已是
+- `packages/bundlekit-cli/tsconfig.json`：`jsx: react-jsx`
+- `packages/bundlekit-cli/scripts/rollup.config.js`：jsx 处理（`@rollup/plugin-typescript` 已支持，仅需 `jsx: 'react-jsx'`）；`react / ink / ink-*` external
+- `packages/bundlekit-cli/package.json`：bin 改单 ESM；type:module 已是
 
 **API 变更**
 - 终端用户视角：行为等价（同样的 prompt、同样的最终结果），仅视觉升级

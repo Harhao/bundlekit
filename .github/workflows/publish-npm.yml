@@ -53,7 +53,7 @@ jobs:
         with:
           title: 'chore: version packages'
           commit: 'chore: version packages [skip ci]'
-          publish: pnpm changeset publish
+          publish: pnpm changeset publish --access public
         env:
           GITHUB_TOKEN: ${{ secrets.DEVKIT_GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

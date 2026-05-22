@@ -7,9 +7,9 @@
 
 ## 2. 模板 scripts 精简（#6）
 
-- [x] 2.1 修改 `packages/devkit-plugin-react/templates/template-react-ts/package.json.ejs` 仅保留 `clean` / `dev` / `build`
+- [x] 2.1 修改 `packages/bundlekit-plugin-react/templates/template-react-ts/package.json.ejs` 仅保留 `clean` / `dev` / `build`
 - [x] 2.2 同步修改 `template-react-js/package.json.ejs`
-- [x] 2.3 同步修改 `packages/devkit-plugin-vue/templates/template-vue3-ts/package.json.ejs`
+- [x] 2.3 同步修改 `packages/bundlekit-plugin-vue/templates/template-vue3-ts/package.json.ejs`
 - [x] 2.4 同步修改 `template-vue3-js/package.json.ejs`
 - [x] 2.5 跑一遍 `dc create demo-react -t react-ts -b webpack`，断言 `demo-react/package.json` 的 `scripts` 仅有 3 个 key 且不含 `webpack:dev`
 

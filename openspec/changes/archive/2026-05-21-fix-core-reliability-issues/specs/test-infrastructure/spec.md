@@ -15,11 +15,11 @@ The system SHALL have Vitest configured at the monorepo root with support for Ty
 The system SHALL have unit tests covering all public methods of `ConfigLoader`.
 
 #### Scenario: loadDevkitFileConfig resolves .ts config
-- **WHEN** a `.devkitrc.ts` file exists in the test fixture root
+- **WHEN** a `.bundlekitrc.ts` file exists in the test fixture root
 - **THEN** `loadDevkitFileConfig()` SHALL return the parsed `IBuildConfig` object
 
 #### Scenario: loadDevkitFileConfig throws when no config file
-- **WHEN** neither `.devkitrc.ts` nor `.devkitrc.js` exists
+- **WHEN** neither `.bundlekitrc.ts` nor `.bundlekitrc.js` exists
 - **THEN** `loadDevkitFileConfig()` SHALL throw an error
 
 #### Scenario: resolvePaths resolves string entry
@@ -58,4 +58,4 @@ The system SHALL have unit tests for the core Service methods.
 
 #### Scenario: getBundlerRegistry returns correct mapping
 - **WHEN** `getBundlerRegistry()` is called
-- **THEN** it SHALL return an object mapping `"webpack"` to `"@devkit/bundler-webpack"` (and similarly for other bundlers)
+- **THEN** it SHALL return an object mapping `"webpack"` to `"@bundlekit/bundler-webpack"` (and similarly for other bundlers)

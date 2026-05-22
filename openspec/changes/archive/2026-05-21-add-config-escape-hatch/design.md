@@ -3,7 +3,7 @@
 **当前扩展点**
 
 ```
-.devkitrc.ts            ConfigLoader.resolveAllConfig()
+.bundlekitrc.ts            ConfigLoader.resolveAllConfig()
    │                            │
    └─ IBuildConfig ◄────────────┘
         │
@@ -24,7 +24,7 @@
 
 **约束**
 
-- `@devkit/shared-utils` 不能在运行时 deps 里引入 webpack/vite/rspack/rollup/rolldown（包体积、与 change 1 的方向冲突）。
+- `@bundlekit/shared-utils` 不能在运行时 deps 里引入 webpack/vite/rspack/rollup/rolldown（包体积、与 change 1 的方向冲突）。
 - 用户期望写 `tools.webpack(config) => { ... }` 时 IDE 自动补全。
 - 调用顺序对插件生态可能影响很大（plugins / changeConfigure / tools 三者）。
 
@@ -111,7 +111,7 @@ interface ToolsCtx {
 shared-utils 用三种手段：
 
 1. `import type { Configuration } from 'webpack'` — 仅类型，不会被运行时 require。
-2. webpack/vite/rspack/rollup/rolldown 在 shared-utils 的 `peerDependencies` 中标注 `optional: true`（与各自 `@devkit/bundler-*` 一致）。
+2. webpack/vite/rspack/rollup/rolldown 在 shared-utils 的 `peerDependencies` 中标注 `optional: true`（与各自 `@bundlekit/bundler-*` 一致）。
 3. 提供 fallback 类型 `type WebpackConfig = unknown` 当 webpack 没装，但通过 `declare module` + 条件 import 让有装的用户拿到精确类型。
 
 实现层面更简单的做法：

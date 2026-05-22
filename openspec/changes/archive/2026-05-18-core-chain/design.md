@@ -2,7 +2,7 @@
 
 ### ConfigLoader
 
-Use `jiti` to dynamically import `.devkitrc.ts`/`.devkitrc.js`. Load order: try `.devkitrc.ts` → try `.devkitrc.js` → throw error. Deep-merge user config over defaults. Resolve relative paths to absolute using `path.resolve(cwd, ...)`.
+Use `jiti` to dynamically import `.bundlekitrc.ts`/`.bundlekitrc.js`. Load order: try `.bundlekitrc.ts` → try `.bundlekitrc.js` → throw error. Deep-merge user config over defaults. Resolve relative paths to absolute using `path.resolve(cwd, ...)`.
 
 ### defaultConfig
 
@@ -14,7 +14,7 @@ Define defaults in `lib/config/defaultConfig.ts`:
 ### Service.ts
 
 - `--skip-plugin`: parse from CLI args, skip matching plugin names during load
-- Plugin resolution from `.devkitrc.ts` `plugins` field
+- Plugin resolution from `.bundlekitrc.ts` `plugins` field
 - Pass CLI args to `startBuilder`
 
 ### serve command

@@ -3,20 +3,20 @@
 **当前文档结构**
 
 ```
-packages/devkit-docs/docs/
+packages/bundlekit-docs/docs/
 ├── index.md                    主页 + 快速开始
 ├── guide.md                    快速开始
 └── guide/
     ├── architecture.md         架构设计
     ├── bundlers.md             打包器适配器
     ├── cli.md                  CLI 命令参考
-    ├── config.md               .devkitrc.ts 配置参考
+    ├── config.md               .bundlekitrc.ts 配置参考
     └── plugins.md              插件
 ```
 
 **安装心智的当前歧义点**
 
-1. `pnpm add -D @devkit/service @devkit/cli` 这条命令在新项目目录下要先 init package.json；用户读完不知道是在哪儿装。
+1. `pnpm add -D @bundlekit/service @bundlekit/cli` 这条命令在新项目目录下要先 init package.json；用户读完不知道是在哪儿装。
 2. 没有明确说"cli 是项目脚手架，不必在每个项目里装"。
 3. `dc add` 与 `dc create` 的关系没有用图清晰呈现。
 4. SSR / tools 是 change 2/3 落地后的新概念，老文档完全没提。
@@ -31,7 +31,7 @@ packages/devkit-docs/docs/
 
 **Goals**
 
-- 一句话回答"我要怎么开始用 bundle-devkit" — 推荐 `npx @devkit/cli create my-app`
+- 一句话回答"我要怎么开始用 bundle-bundlekit" — 推荐 `npx @bundlekit/cli create my-app`
 - 提供完整的"两条路径"说明：scaffold-first 与 manual-integration
 - 把 changes 1-4 的新行为完整落到文档（runtime prompt、tools、ssr、ink fallback）
 - 文档与代码间的"事实声明"一致，不留矛盾
@@ -54,7 +54,7 @@ packages/devkit-docs/docs/
 │  📖 docs/index.md                                            │
 │   ├─ Hero: 一句话价值主张                                     │
 │   ├─ Quick Start (推荐):                                     │
-│   │     npx @devkit/cli create my-app                        │
+│   │     npx @bundlekit/cli create my-app                        │
 │   ├─ 适合场景对照表：                                          │
 │   │     • 新项目 → scaffold                                  │
 │   │     • 已有项目 → manual-integration                      │
@@ -72,19 +72,19 @@ packages/devkit-docs/docs/
 - pnpm 8+ (推荐) / npm / yarn
 
 ## 方式一：脚手架创建（推荐）
-1. npx @devkit/cli create my-app
+1. npx @bundlekit/cli create my-app
 2. cd my-app && pnpm dev
    → 会被 prompt 选择 template / bundler
    → cli 自动写入 service + plugin + bundler 到 devDeps
 
 ## 方式二：现有项目接入
-1. pnpm add -D @devkit/service @devkit/plugin-react
+1. pnpm add -D @bundlekit/service @bundlekit/plugin-react
 2. dc add bundler-vite
-3. 创建 .devkitrc.ts
+3. 创建 .bundlekitrc.ts
 4. package.json scripts 加 "dev": "ds serve --bundler vite"
 
 ## 全局安装 cli（可选）
-pnpm add -g @devkit/cli
+pnpm add -g @bundlekit/cli
 dc create my-app
 
 ## 项目结构
@@ -123,7 +123,7 @@ dc create my-app
 
 ```
 :::info 当前版本
-@devkit/cli@0.x.y · @devkit/service@0.x.y · @devkit/bundler-*@0.x.y
+@bundlekit/cli@0.x.y · @bundlekit/service@0.x.y · @bundlekit/bundler-*@0.x.y
 :::
 ```
 

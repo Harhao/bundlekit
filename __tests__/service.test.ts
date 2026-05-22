@@ -17,9 +17,9 @@ vi.mock("execa", () => ({
     execa: vi.fn().mockResolvedValue({ stdout: "", stderr: "" }),
 }));
 
-import Service from "../packages/devkit-service/lib/Service";
-import type { IBuildConfig } from "../packages/devkit-shared-utils/lib/types/cli-service/config";
-import type { IBuildEnv } from "../packages/devkit-shared-utils/lib/types/cli-service/env";
+import Service from "../packages/bundlekit-service/lib/Service";
+import type { IBuildConfig } from "../packages/bundlekit-shared-utils/lib/types/cli-service/config";
+import type { IBuildEnv } from "../packages/bundlekit-shared-utils/lib/types/cli-service/env";
 
 function makeBaseConfig(): IBuildConfig {
     return {
@@ -43,11 +43,11 @@ describe("Service.getBundlerRegistry", () => {
         const service = new Service("/tmp");
         const registry = (service as any).getBundlerRegistry() as Record<string, string>;
 
-        expect(registry.webpack).toBe("@devkit/bundler-webpack");
-        expect(registry.vite).toBe("@devkit/bundler-vite");
-        expect(registry.rollup).toBe("@devkit/bundler-rollup");
-        expect(registry.rspack).toBe("@devkit/bundler-rspack");
-        expect(registry.rolldown).toBe("@devkit/bundler-rolldown");
+        expect(registry.webpack).toBe("@bundlekit/bundler-webpack");
+        expect(registry.vite).toBe("@bundlekit/bundler-vite");
+        expect(registry.rollup).toBe("@bundlekit/bundler-rollup");
+        expect(registry.rspack).toBe("@bundlekit/bundler-rspack");
+        expect(registry.rolldown).toBe("@bundlekit/bundler-rolldown");
     });
 
     it("returns exactly 5 entries", () => {
@@ -56,11 +56,11 @@ describe("Service.getBundlerRegistry", () => {
         expect(Object.keys(registry)).toHaveLength(5);
     });
 
-    it("all values are @devkit-scoped package names", () => {
+    it("all values are @bundlekit-scoped package names", () => {
         const service = new Service("/tmp");
         const registry = (service as any).getBundlerRegistry() as Record<string, string>;
         for (const pkg of Object.values(registry)) {
-            expect(pkg).toMatch(/^@devkit\/bundler-/);
+            expect(pkg).toMatch(/^@bundlekit\/bundler-/);
         }
     });
 });

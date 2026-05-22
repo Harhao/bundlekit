@@ -4,11 +4,11 @@
 The shared `PackageManager.runCommand` (and downstream `install` / `add`) SHALL detect whether the current working directory sits inside a `pnpm-workspace.yaml` tree but is NOT a workspace member. In that case, the command line passed to `pnpm` SHALL include `--ignore-workspace` so that pnpm treats the target as a standalone project.
 
 #### Scenario: cwd is a workspace member
-- **WHEN** PackageManager runs at `/repo/packages/devkit-cli/` (a directory listed in `pnpm-workspace.yaml`'s `packages:` glob)
+- **WHEN** PackageManager runs at `/repo/packages/bundlekit-cli/` (a directory listed in `pnpm-workspace.yaml`'s `packages:` glob)
 - **THEN** the resulting `pnpm install` command SHALL NOT include `--ignore-workspace`
 
 #### Scenario: cwd is non-member nested directory in monorepo
-- **WHEN** PackageManager runs at `/repo/packages/devkit-cli/test-app/` (inside the monorepo tree but not matched by any workspace glob)
+- **WHEN** PackageManager runs at `/repo/packages/bundlekit-cli/test-app/` (inside the monorepo tree but not matched by any workspace glob)
 - **THEN** the resulting `pnpm install` command SHALL include `--ignore-workspace`
 
 #### Scenario: cwd is fully outside any monorepo

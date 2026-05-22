@@ -1,20 +1,20 @@
 ## MODIFIED Requirements
 
 ### Requirement: Dependency mode resolution
-The `create` command SHALL always use npm registry mode for dependency resolution. The `@devkit/*` dependencies in the generated `package.json` SHALL use `^cliVersion` format (e.g., `^0.0.1`). The `link:` protocol SHALL NOT be used.
+The `create` command SHALL always use npm registry mode for dependency resolution. The `@bundlekit/*` dependencies in the generated `package.json` SHALL use `^cliVersion` format (e.g., `^0.0.1`). The `link:` protocol SHALL NOT be used.
 
 #### Scenario: npm mode used in monorepo
-- **WHEN** user runs `devkit-cli create my-app` inside a monorepo
-- **THEN** the generated `package.json` SHALL contain `@devkit/*` dependencies with `^cliVersion` format
+- **WHEN** user runs `bundlekit-cli create my-app` inside a monorepo
+- **THEN** the generated `package.json` SHALL contain `@bundlekit/*` dependencies with `^cliVersion` format
 - **AND** no `link:` protocol values SHALL appear in any dependency field
 
 #### Scenario: npm mode used outside monorepo
-- **WHEN** user runs `devkit-cli create my-app` outside any monorepo
-- **THEN** the generated `package.json` SHALL contain `@devkit/*` dependencies with `^cliVersion` format
+- **WHEN** user runs `bundlekit-cli create my-app` outside any monorepo
+- **THEN** the generated `package.json` SHALL contain `@bundlekit/*` dependencies with `^cliVersion` format
 
 #### Scenario: DEVKIT_DEP_MODE=link silently degrades
 - **WHEN** environment variable `DEVKIT_DEP_MODE=link` is set
-- **AND** user runs `devkit-cli create my-app`
+- **AND** user runs `bundlekit-cli create my-app`
 - **THEN** the system SHALL use npm registry mode (not link mode)
 - **AND** no error or warning SHALL be displayed
 

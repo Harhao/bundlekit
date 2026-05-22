@@ -12,8 +12,8 @@
     { "id": 10, "name": "Jack", "email": "jack@example.com", "avatar": "https://i.pravatar.cc/40?img=10", "role": "user" }
   ],
   "posts": [
-    { "id": 1, "title": "Hello Devkit", "body": "Getting started with bundle-devkit.", "userId": 1 },
-    { "id": 2, "title": "Webpack Guide", "body": "How to configure webpack with devkit.", "userId": 1 },
+    { "id": 1, "title": "Hello Devkit", "body": "Getting started with bundle-bundlekit.", "userId": 1 },
+    { "id": 2, "title": "Webpack Guide", "body": "How to configure webpack with bundlekit.", "userId": 1 },
     { "id": 3, "title": "Vite Tips", "body": "Speed up your dev workflow with Vite.", "userId": 2 },
     { "id": 4, "title": "Rspack Deep Dive", "body": "Rust-based bundler performance.", "userId": 2 },
     { "id": 5, "title": "CSS Modules", "body": "Scoped styles in React.", "userId": 3 },
@@ -28,9 +28,9 @@
     { "id": 14, "title": "Mock Plugins", "body": "Using json-server for mocking.", "userId": 7 },
     { "id": 15, "title": "Rollup Bundling", "body": "Library mode with rollup.", "userId": 8 },
     { "id": 16, "title": "Rolldown Intro", "body": "Next-gen Rust bundler.", "userId": 8 },
-    { "id": 17, "title": "Devkit Plugins", "body": "Writing custom devkit plugins.", "userId": 9 },
-    { "id": 18, "title": "Multi-page Apps", "body": "MPA configuration in devkit.", "userId": 9 },
-    { "id": 19, "title": "CI/CD Setup", "body": "Automating builds with devkit.", "userId": 10 },
+    { "id": 17, "title": "Devkit Plugins", "body": "Writing custom bundlekit plugins.", "userId": 9 },
+    { "id": 18, "title": "Multi-page Apps", "body": "MPA configuration in bundlekit.", "userId": 9 },
+    { "id": 19, "title": "CI/CD Setup", "body": "Automating builds with bundlekit.", "userId": 10 },
     { "id": 20, "title": "Production Tips", "body": "Optimizing for production bundles.", "userId": 10 }
   ]
 }

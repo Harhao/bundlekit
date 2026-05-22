@@ -1,5 +1,5 @@
 {
-    "name": "devkit-fixture-rolldown",
+    "name": "bundlekit-fixture-rolldown",
     "version": "0.0.0",
     "private": true,
     "dependencies": {
@@ -7,9 +7,9 @@
         "react-dom": "^18.3.0"
     },
     "devDependencies": {
-        "@devkit/service": "link:../../../../packages/devkit-service",
-        "@devkit/bundler-rolldown": "link:../../../../packages/devkit-bundler-rolldown",
-        "@devkit/shared-utils": "link:../../../../packages/devkit-shared-utils",
-        "@devkit/plugin-react": "link:../../../../packages/devkit-plugin-react"
+        "@bundlekit/service": "link:../../../../packages/bundlekit-service",
+        "@bundlekit/bundler-rolldown": "link:../../../../packages/bundlekit-bundler-rolldown",
+        "@bundlekit/shared-utils": "link:../../../../packages/bundlekit-shared-utils",
+        "@bundlekit/plugin-react": "link:../../../../packages/bundlekit-plugin-react"
     }
 }

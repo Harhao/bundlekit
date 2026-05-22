@@ -9,10 +9,10 @@
 ## What Changes
 
 - 新增 `__tests__/integration/` 目录，承载集成测试用例
-- 新增 `__tests__/integration/fixtures/` 目录，包含 5 套最小项目骨架（每个 bundler 一套，复用同一份源码 + 不同 `.devkitrc.ts`）
+- 新增 `__tests__/integration/fixtures/` 目录，包含 5 套最小项目骨架（每个 bundler 一套，复用同一份源码 + 不同 `.bundlekitrc.ts`）
 - 新增 `vitest` integration 配置（`vitest.integration.config.ts`），与现有 unit 测试并行但独立 reporter / timeout
 - 新增 5 个 build 测试套件：每个 bundler × {SPA build, Library build, SSR build}，断言产物文件存在 + 内容关键字 + `require()` 后导出形态
-- 新增 vite/webpack/rspack 三个 dev SSR 测试套件：起 `devkit-service serve --bundler X` 子进程，HTTP GET `localhost:<random-port>` 拿到注水 HTML，断言含 SSR 输出标记
+- 新增 vite/webpack/rspack 三个 dev SSR 测试套件：起 `bundlekit-service serve --bundler X` 子进程，HTTP GET `localhost:<random-port>` 拿到注水 HTML，断言含 SSR 输出标记
 - 新增 vite/webpack/rspack 三个 HMR 测试套件：用 Playwright 起浏览器，编辑 fixture 源文件后断言页面无刷新地更新
 - 新增 rollup/rolldown 两个 dev SSR 测试套件：起 watch + 单次 curl 验证基础渲染（不验 HMR）
 - 新增 `package.json` 根级 script：`test`（unit）/ `test:integration`（fixtures + HTTP）/ `test:e2e`（Playwright HMR）

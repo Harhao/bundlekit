@@ -1,6 +1,6 @@
 ---
-"@devkit/service": minor
-"@devkit/shared-utils": minor
+"@bundlekit/service": minor
+"@bundlekit/shared-utils": minor
 ---
 
 Add per-bundler escape hatch via `tools` field on `IBuildConfig`.

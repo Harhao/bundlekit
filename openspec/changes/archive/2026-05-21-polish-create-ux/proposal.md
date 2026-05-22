@@ -1,6 +1,6 @@
 ## Why
 
-`@devkit/cli` 在 `improve-cli-ux` 改造之后已切到 ink 渲染，但实际跑流程时仍有 4 处明显的体验粗糙点：
+`@bundlekit/cli` 在 `improve-cli-ux` 改造之后已切到 ink 渲染，但实际跑流程时仍有 4 处明显的体验粗糙点：
 
 1. 描述输入框（ink TextInput）一旦敲入字符就立刻跳到下一步，没有等回车，原因是 `CreateApp` 状态机用"value 是否为空"误代"用户是否提交"
 2. 项目模板的 `package.json` 同时生成 `dev`/`build` 与 `${bundler}:dev`/`${bundler}:prod`，后者完全是冗余的（bundler 已在 create 时锁定）
@@ -34,12 +34,12 @@
 ## Impact
 
 - **代码**：
-  - `packages/devkit-cli/index.tsx`：`create` 命令新增 `--pm` 选项
-  - `packages/devkit-cli/lib/ui/CreateApp.tsx`：状态机加 `descriptionSubmitted` 与 `pm` step
-  - `packages/devkit-cli/lib/ui/Select.tsx`：（可能）支持 disabled 项与"展开次菜单"的回调
-  - `packages/devkit-cli/lib/ui/Done.tsx`：根据 pm 渲染启动命令
-  - `packages/devkit-cli/lib/commands/create/actions.ts`：`installDeps` 增加 `pm` 参数透传
-  - `packages/devkit-plugin-react/templates/template-react-ts/package.json.ejs`、`template-react-js`、同 vue3 两个模板：删除 bundler 专属 scripts
+  - `packages/bundlekit-cli/index.tsx`：`create` 命令新增 `--pm` 选项
+  - `packages/bundlekit-cli/lib/ui/CreateApp.tsx`：状态机加 `descriptionSubmitted` 与 `pm` step
+  - `packages/bundlekit-cli/lib/ui/Select.tsx`：（可能）支持 disabled 项与"展开次菜单"的回调
+  - `packages/bundlekit-cli/lib/ui/Done.tsx`：根据 pm 渲染启动命令
+  - `packages/bundlekit-cli/lib/commands/create/actions.ts`：`installDeps` 增加 `pm` 参数透传
+  - `packages/bundlekit-plugin-react/templates/template-react-ts/package.json.ejs`、`template-react-js`、同 vue3 两个模板：删除 bundler 专属 scripts
 - **API**：`installDeps(targetDir, opts?: { pm?: 'pnpm'|'yarn'|'npm' })` 签名扩展（向后兼容）
 - **依赖**：无新 npm 包；继续使用 `enquirer` 与 `ink-select-input`
 - **环境变量**：新增 `DEVKIT_PM`

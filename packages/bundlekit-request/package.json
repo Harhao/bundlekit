@@ -1,0 +1,33 @@
+{
+  "name": "@bundlekit/request",
+  "version": "0.0.1",
+  "description": "HTTP client runtime library for bundlekit projects - axios/fetch dual engine",
+  "main": "./index.ts",
+  "type": "module",
+  "files": [
+    "index.ts",
+    "package.json"
+  ],
+  "scripts": {
+    "request:build": "echo 'request built successfully'"
+  },
+  "keywords": [
+    "request",
+    "http",
+    "axios",
+    "fetch",
+    "bundlekit"
+  ],
+  "author": "harhao@163.com",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.6.0"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "engines": {
+    "node": ">= 18.0.0"
+  }
+}

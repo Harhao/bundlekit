@@ -19,7 +19,7 @@ The `IBuildToolAdapter` interface SHALL expose an optional method `createSSRMidd
 
 ### Requirement: Service orchestrates SSR HTTP server
 
-When `devkit-service serve` runs with SSR enabled, the system SHALL start an HTTP server bound to `devServer.host:devServer.port`, mount the adapter-provided middleware chain, and serve all requests through the SSR pipeline.
+When `bundlekit-service serve` runs with SSR enabled, the system SHALL start an HTTP server bound to `devServer.host:devServer.port`, mount the adapter-provided middleware chain, and serve all requests through the SSR pipeline.
 
 #### Scenario: Dev SSR responds with rendered HTML
 - **WHEN** SSR dev server is running on port 3000

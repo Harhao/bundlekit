@@ -1,5 +1,5 @@
 {
-    "name": "devkit-fixture-vite",
+    "name": "bundlekit-fixture-vite",
     "version": "0.0.0",
     "private": true,
     "dependencies": {
@@ -7,9 +7,9 @@
         "react-dom": "^18.3.0"
     },
     "devDependencies": {
-        "@devkit/service": "link:../../../../packages/devkit-service",
-        "@devkit/bundler-vite": "link:../../../../packages/devkit-bundler-vite",
-        "@devkit/shared-utils": "link:../../../../packages/devkit-shared-utils",
-        "@devkit/plugin-react": "link:../../../../packages/devkit-plugin-react"
+        "@bundlekit/service": "link:../../../../packages/bundlekit-service",
+        "@bundlekit/bundler-vite": "link:../../../../packages/bundlekit-bundler-vite",
+        "@bundlekit/shared-utils": "link:../../../../packages/bundlekit-shared-utils",
+        "@bundlekit/plugin-react": "link:../../../../packages/bundlekit-plugin-react"
     }
 }

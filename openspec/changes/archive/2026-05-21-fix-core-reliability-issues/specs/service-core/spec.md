@@ -1,14 +1,14 @@
 ## MODIFIED Requirements
 
 ### Requirement: Resolve bundler adapter
-The system SHALL resolve bundler adapters by looking up `@devkit/bundler-{name}` packages via a typed registry mapping `IBuildTools` keys to package name strings, first checking local `node_modules`, then fetching from a remote registry URL with local cache fallback.
+The system SHALL resolve bundler adapters by looking up `@bundlekit/bundler-{name}` packages via a typed registry mapping `IBuildTools` keys to package name strings, first checking local `node_modules`, then fetching from a remote registry URL with local cache fallback.
 
 #### Scenario: Local bundler found
-- **WHEN** `@devkit/bundler-webpack` exists in local `node_modules`
+- **WHEN** `@bundlekit/bundler-webpack` exists in local `node_modules`
 - **THEN** the system SHALL use it directly without fetching from remote
 
 #### Scenario: Remote bundler fallback
-- **WHEN** `@devkit/bundler-webpack` is not found locally
+- **WHEN** `@bundlekit/bundler-webpack` is not found locally
 - **THEN** the system SHALL fetch the bundler mapping from the remote registry URL, install the package, and load it
 
 #### Scenario: Registry returns typed mapping

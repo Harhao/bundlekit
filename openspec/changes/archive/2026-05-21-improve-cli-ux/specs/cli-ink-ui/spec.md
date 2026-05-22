@@ -5,7 +5,7 @@
 When `process.stdout.isTTY` is `true` and `DEVKIT_NO_INK` is not set, all interactive cli commands (`create`, `add`, and any future commands requiring prompts) SHALL render their UI using `ink` components rather than direct `console.log` and `enquirer` prompts.
 
 #### Scenario: TTY launches ink
-- **WHEN** user runs `devkit-cli create my-app` in a TTY (interactive shell)
+- **WHEN** user runs `bundlekit-cli create my-app` in a TTY (interactive shell)
 - **THEN** the cli SHALL render an ink-based App component
 - **AND** the user SHALL see a banner, step-by-step prompts, animated spinner, and final success view
 
@@ -57,20 +57,20 @@ When any action (template render, install, generator) throws, the cli SHALL rend
 
 ### Requirement: ESM-only cli distribution
 
-The published `@devkit/cli` package SHALL provide only an ESM entry point. The `bin.devkit-cli` and `bin.dc` fields SHALL both reference `./dist/index.mjs`.
+The published `@bundlekit/cli` package SHALL provide only an ESM entry point. The `bin.bundlekit-cli` and `bin.dc` fields SHALL both reference `./dist/index.mjs`.
 
 #### Scenario: Inspect published manifest
-- **WHEN** inspecting the published `@devkit/cli` package's `package.json`
-- **THEN** the `bin.devkit-cli` field SHALL end in `.mjs`
+- **WHEN** inspecting the published `@bundlekit/cli` package's `package.json`
+- **THEN** the `bin.bundlekit-cli` field SHALL end in `.mjs`
 - **AND** the `bin.dc` field SHALL end in `.mjs`
 - **AND** there SHALL NOT be a `dist/index.cjs` entry (the cjs build is removed)
 
 ### Requirement: Generator API stability
 
-The `IGeneratorAPI` interface (`prompt`, `log`, etc.) SHALL remain unchanged so that existing plugin generators (`@devkit/plugin-react/generator`, `@devkit/plugin-vue/generator`, etc.) continue to work without modification.
+The `IGeneratorAPI` interface (`prompt`, `log`, etc.) SHALL remain unchanged so that existing plugin generators (`@bundlekit/plugin-react/generator`, `@bundlekit/plugin-vue/generator`, etc.) continue to work without modification.
 
 #### Scenario: Existing generator continues to work
-- **WHEN** an unmodified `@devkit/plugin-react/generator` is invoked from the new ink-powered cli
+- **WHEN** an unmodified `@bundlekit/plugin-react/generator` is invoked from the new ink-powered cli
 - **THEN** the generator SHALL receive the same `IGeneratorAPI` shape and produce identical results
 
 #### Scenario: prompt implementation behind facade

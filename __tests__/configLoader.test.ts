@@ -19,7 +19,7 @@ vi.mock("fs-extra", () => ({
     existsSync: () => false,
 }));
 
-import ConfigLoader from "../packages/devkit-service/lib/ConfigLoader";
+import ConfigLoader from "../packages/bundlekit-service/lib/ConfigLoader";
 
 const context = "/project/root";
 

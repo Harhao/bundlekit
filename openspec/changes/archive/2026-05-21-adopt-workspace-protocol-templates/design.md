@@ -1,8 +1,8 @@
 ## Context
 
-`@devkit/cli` 创建项目时使用 EJS 渲染模板生成 `package.json`，模板里硬编码了内部包的语义化版本号（`^0.0.1` / `^1.0.0`）。但：
+`@bundlekit/cli` 创建项目时使用 EJS 渲染模板生成 `package.json`，模板里硬编码了内部包的语义化版本号（`^0.0.1` / `^1.0.0`）。但：
 
-1. `@devkit/service` / `@devkit/plugin-*` / `@devkit/bundler-*` 至今未发布到 npm registry
+1. `@bundlekit/service` / `@bundlekit/plugin-*` / `@bundlekit/bundler-*` 至今未发布到 npm registry
 2. 模板版本号永远落后于本地 monorepo 实际版本
 3. 用户在 monorepo 内（contributors 调试 cli 时）和 monorepo 外（外部用户）的依赖处理需求不同
 4. 项目缺少完整的开发者贡献入口与发版流程文档
@@ -28,7 +28,7 @@
 ## Goals / Non-Goals
 
 **Goals:**
-- 4 个 EJS 模板的 `@devkit/*` 内部包改用 `workspace:^`
+- 4 个 EJS 模板的 `@bundlekit/*` 内部包改用 `workspace:^`
 - cli 在生成 `package.json` 后规范化 `workspace:^`：monorepo 内→`link:`，外→`^cliVersion`
 - `addBundlerToDevDeps` 行为同款一致
 - plugin-react / plugin-vue 版本归一到 `0.0.1`
@@ -46,14 +46,14 @@
 
 ## Decisions
 
-### D1：模板中 `@devkit/*` 内部包用 `workspace:^`
+### D1：模板中 `@bundlekit/*` 内部包用 `workspace:^`
 
 模板源码的 `package.json.ejs`：
 ```ejs
 "devDependencies": {
-    "@devkit/service": "workspace:^",
-    "@devkit/plugin-react": "workspace:^",
-    "@devkit/bundler-vite": "workspace:^",
+    "@bundlekit/service": "workspace:^",
+    "@bundlekit/plugin-react": "workspace:^",
+    "@bundlekit/bundler-vite": "workspace:^",
     "react": "^18.2.0",          ← 真实 npm 包保留 caret
     "rimraf": "^5.0.1"
 }
@@ -118,16 +118,16 @@ function resolveDepMode(cwd: string, cliVersion: string): IDepMode {
 
 `findMonorepoRoot` 双重判定（避免误判其他 monorepo）：
 - 存在 `pnpm-workspace.yaml`
-- 存在 `packages/devkit-service` 子目录
+- 存在 `packages/bundlekit-service` 子目录
 
 ### D4：plugin-react / plugin-vue 版本归一
 
 当前：
-- @devkit/cli, service, shared-utils, bundler-* 都是 `0.0.1`
-- @devkit/plugin-react, plugin-vue 是 `1.0.0`（早期写错）
-- @devkit/plugin-mock, request 各自版本
+- @bundlekit/cli, service, shared-utils, bundler-* 都是 `0.0.1`
+- @bundlekit/plugin-react, plugin-vue 是 `1.0.0`（早期写错）
+- @bundlekit/plugin-mock, request 各自版本
 
-把 plugin-react / plugin-vue 降到 `0.0.1`，跟其他包对齐。首次发版时由 changeset 一并 bump 到 `0.1.0`，对外用户看到的所有 `@devkit/*` 都是 `0.1.0`，符合预期。
+把 plugin-react / plugin-vue 降到 `0.0.1`，跟其他包对齐。首次发版时由 changeset 一并 bump 到 `0.1.0`，对外用户看到的所有 `@bundlekit/*` 都是 `0.1.0`，符合预期。
 
 风险：版本回退（1.0.0 → 0.0.1）不符合 semver，但这两个包从未发布过，无外部依赖，安全。
 
@@ -176,7 +176,7 @@ sidebar: {
    ```
 4. release.md 文档说明：
    - 维护者在 GitHub repo Settings → Secrets 加 `NPM_TOKEN`（npm Automation token）
-   - 维护者在 npm 上为 `@devkit` scope 配置 publish 权限
+   - 维护者在 npm 上为 `@bundlekit` scope 配置 publish 权限
    - 写 changeset：`pnpm changeset` 启交互式
    - 推到 master 后 changesets/action 自动创建 "Version Packages" PR
    - 合并 PR 后 action 自动 publish 到 npm
@@ -186,7 +186,7 @@ sidebar: {
 我们不在本 change 内自动跑 publish，但要把"发布前的版本统一动作"沉淀为一条可执行清单（在 release.md 里）：
 
 1. 全包版本统一为 `0.0.1`（本 change 内完成）
-2. `pnpm changeset` 写一条 minor changeset：`@devkit/*` minor → 触发 0.1.0 首发
+2. `pnpm changeset` 写一条 minor changeset：`@bundlekit/*` minor → 触发 0.1.0 首发
 3. master 分支等 changesets/action 创建 PR
 4. 维护者 review PR、merge、自动 publish
 
@@ -197,7 +197,7 @@ sidebar: {
 | 风险 | 缓解 |
 |---|---|
 | `workspace:^` 在用户最终 `package.json` 残留导致 install 失败 | normalizeDeps 步骤兜底；增加单测确保零残留 |
-| monorepo 检测误判（其他无关 monorepo 含同名 packages 目录） | 双重判定（`pnpm-workspace.yaml` + `packages/devkit-service`） |
+| monorepo 检测误判（其他无关 monorepo 含同名 packages 目录） | 双重判定（`pnpm-workspace.yaml` + `packages/bundlekit-service`） |
 | `link:/abs/path` 路径含中文 / 空格 | path.normalize + 测试覆盖 |
 | 生成的项目 `link:` 后用户复制到别的机器，路径失效 | docs 在 link 模式下输出警告；release.md 告诉用户"link 仅本地有效，发版后 normalize 自动切 npm 模式" |
 | plugin-react / plugin-vue 版本回退被人感知 | 这两个包从未发布到 npm，无外部依赖；changeset 注释说明"首发对齐版本号" |
@@ -231,7 +231,7 @@ sidebar: {
 1. `docs/contributing/` 6 个文件
 2. `.dumirc.ts` 导航 + sidebar
 3. `docs/guide.md` / `cli.md` 同步
-4. `pnpm --filter devkit-cli-docs run docs:build` 验证无 broken link
+4. `pnpm --filter bundlekit-cli-docs run docs:build` 验证无 broken link
 
 ### Phase 4：CI 配置
 
@@ -255,6 +255,6 @@ sidebar: {
 ## Open Questions
 
 - **首发版本号是 `0.1.0` 还是 `1.0.0`？** 0.1.0 表示 pre-1.0 不稳定，1.0.0 暗示 API 稳定。建议 `0.1.0`，给后续做 BREAKING 留余地
-- **npm scope `@devkit` 是否可用？** 需要去 npmjs.org 查，如果被占用要换成 `@bundle-devkit` 或 `@harhao-devkit`。本 change 假定可用，发版前需维护者确认
+- **npm scope `@bundlekit` 是否可用？** 需要去 npmjs.org 查，如果被占用要换成 `@bundle-bundlekit` 或 `@harhao-bundlekit`。本 change 假定可用，发版前需维护者确认
 - **GitHub Actions 用 `pnpm/action-setup@v4` 还是 `v2`？** 现 workflow 用 v4，保持
 - **release.md 是否包含 OpenSpec workflow？** 建议作为附录，让 contributors 知道每个新 feature 应该开 change

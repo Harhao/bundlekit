@@ -59,7 +59,7 @@ index.ts
 
 **约束**
 
-- 仅改 `@devkit/cli`，其他包零改动。
+- 仅改 `@bundlekit/cli`，其他包零改动。
 - 保留对 CI / 非 TTY 环境的支持。
 - 与 change 1 的 confirm 工具协同（service 在 service 包中改动；cli 也在 ink 形态下重新提供同语义的 confirm UI）。
 
@@ -77,7 +77,7 @@ index.ts
 
 - 不引入路由 / 多 tab 等复杂 ink pattern。
 - 不实现 cli 内的 file explorer 或图形菜单。
-- 不动 `@devkit/shared-utils` 的 Logger / Spinner（其他包仍在用）。
+- 不动 `@bundlekit/shared-utils` 的 Logger / Spinner（其他包仍在用）。
 - 不在 service 内引入 ink。
 
 ## Decisions
@@ -167,13 +167,13 @@ export async function runGenerator(pluginPkg, targetDir, api): Promise<{ hasPend
   "type": "module",
   "main": "./dist/index.mjs",
   "bin": {
-    "devkit-cli": "./dist/index.mjs",
+    "bundlekit-cli": "./dist/index.mjs",
     "dc":         "./dist/index.mjs"
   }
 }
 ```
 
-`require('@devkit/cli')` 的形态不再支持（cli 本就是 bin，没人 require）。砍掉 cjs 输出。
+`require('@bundlekit/cli')` 的形态不再支持（cli 本就是 bin，没人 require）。砍掉 cjs 输出。
 
 ### D7：rollup 配置改造
 

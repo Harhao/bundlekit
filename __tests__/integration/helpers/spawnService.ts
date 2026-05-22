@@ -26,17 +26,17 @@ export interface ISpawnedService {
 }
 
 /**
- * spawn devkit-service 子进程。等待指定日志后 resolve。
+ * spawn bundlekit-service 子进程。等待指定日志后 resolve。
  *
- * 实现使用 monorepo 的 pnpm exec devkit-service ...，cwd 是 fixture 临时目录。
- * pnpm 会通过 fixture 的 package.json deps 解析到 devkit-service。
+ * 实现使用 monorepo 的 pnpm exec bundlekit-service ...，cwd 是 fixture 临时目录。
+ * pnpm 会通过 fixture 的 package.json deps 解析到 bundlekit-service。
  */
 export async function spawnService(opts: ISpawnServiceOptions): Promise<ISpawnedService> {
     const timeout = opts.timeout ?? 30_000;
 
     const child = spawn(
         "pnpm",
-        ["exec", "devkit-service", ...opts.args],
+        ["exec", "bundlekit-service", ...opts.args],
         {
             cwd: opts.cwd,
             stdio: ["ignore", "pipe", "pipe"],

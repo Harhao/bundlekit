@@ -1,7 +1,7 @@
 ## 1. Package Setup
 
-- [x] 1.1 Create `@devkit/bundler-rolldown` package with `package.json`, `tsconfig.json`, rollup build scripts
-- [x] 1.2 Add `rolldown` dependency and `@devkit/shared-utils` workspace dependency
+- [x] 1.1 Create `@bundlekit/bundler-rolldown` package with `package.json`, `tsconfig.json`, rollup build scripts
+- [x] 1.2 Add `rolldown` dependency and `@bundlekit/shared-utils` workspace dependency
 - [x] 1.3 Set up `rollup:build` script mirroring other bundler adapters
 
 ## 2. Rolldown Adapter Implementation
@@ -14,14 +14,14 @@
 
 ## 3. Service Integration
 
-- [x] 3.1 Add `rolldown` to bundler map in `@devkit/service`
-- [x] 3.2 Add `@devkit/bundler-rolldown` as workspace dependency of `@devkit/service`
+- [x] 3.1 Add `rolldown` to bundler map in `@bundlekit/service`
+- [x] 3.2 Add `@bundlekit/bundler-rolldown` as workspace dependency of `@bundlekit/service`
 - [x] 4.1 Add `rolldown:dev` and `rolldown:prod` scripts to `exmaple/package.json`
-- [x] 4.2 Add `@devkit/bundler-rolldown` as devDependency of `exmaple`
+- [x] 4.2 Add `@bundlekit/bundler-rolldown` as devDependency of `exmaple`
 
 ## 5. Verification
 
 - [x] 5.1 `pnpm install` to link all dependencies
-- [x] 5.2 `pnpm --filter @devkit/bundler-rolldown run rollup:build` succeeds
+- [x] 5.2 `pnpm --filter @bundlekit/bundler-rolldown run rollup:build` succeeds
 - [x] 5.3 `pnpm --filter exmaple run rolldown:dev` starts dev server
 - [x] 5.4 `pnpm --filter exmaple run rolldown:prod` produces output

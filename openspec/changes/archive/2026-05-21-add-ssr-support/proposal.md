@@ -1,6 +1,6 @@
 ## Why
 
-当前 `bundle-devkit` 只能产出客户端 bundle（CSR）。`IEnvBuildConfig.target` 字段虽然有 `'web' | 'node'` 选项，但没有 SSR 流水线 — 即没有"客户端 bundle + 服务端 bundle"的双产物概念，没有 SSR 入口约定，也没有 dev SSR middleware。
+当前 `bundle-bundlekit` 只能产出客户端 bundle（CSR）。`IEnvBuildConfig.target` 字段虽然有 `'web' | 'node'` 选项，但没有 SSR 流水线 — 即没有"客户端 bundle + 服务端 bundle"的双产物概念，没有 SSR 入口约定，也没有 dev SSR middleware。
 
 用户需要在所有 5 个 bundler（webpack / vite / rspack / rollup / rolldown）上都能跑 SSR：
 - **build**：同时产出 client（注入 HTML）+ server（Node 可执行模块）
@@ -56,11 +56,11 @@
 - `@rspack/dev-server` 的 middleware mode 已自带（仅版本要求）
 
 **代码变更**（粗略文件级）
-- `packages/devkit-shared-utils/lib/types/cli-service/config.ts`：`ssr` 字段
-- `packages/devkit-shared-utils/lib/types/cli-service/adapter.ts`：`createSSRMiddleware?`
-- `packages/devkit-service/lib/Service.ts`：`startBuilder` SSR 分支 + dev SSR HTTP server orchestration
-- `packages/devkit-bundler-{webpack,vite,rspack,rollup,rolldown}/src/index.ts`：实现 SSR transform & middleware
-- `packages/devkit-plugin-{react,vue}/templates/`：新增 entry-client / entry-server 与 ssr-outlet HTML
+- `packages/bundlekit-shared-utils/lib/types/cli-service/config.ts`：`ssr` 字段
+- `packages/bundlekit-shared-utils/lib/types/cli-service/adapter.ts`：`createSSRMiddleware?`
+- `packages/bundlekit-service/lib/Service.ts`：`startBuilder` SSR 分支 + dev SSR HTTP server orchestration
+- `packages/bundlekit-bundler-{webpack,vite,rspack,rollup,rolldown}/src/index.ts`：实现 SSR transform & middleware
+- `packages/bundlekit-plugin-{react,vue}/templates/`：新增 entry-client / entry-server 与 ssr-outlet HTML
 
 **API**
 - `IEnvBuildConfig.ssr` 新公共字段（向后兼容，可选）

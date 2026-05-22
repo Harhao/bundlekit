@@ -2,12 +2,12 @@
 
 Rolldown (`rolldown` npm package) is a Rust-based JavaScript bundler with Rollup-compatible API. It exposes `rolldown()` / `rolldown.build()` / `rolldown.watch()` functions and accepts `RolldownOptions` similar to Rollup's `RollupOptions`. Unlike Rollup, Rolldown has built-in TypeScript/JSX/syntax-lowering transforms (like esbuild), so no extra loader plugins are needed.
 
-Current state: bundle-devkit has 4 bundler adapters (Webpack, Vite, Rollup, Rspack). The `@devkit/service` resolves bundlers dynamically from `@devkit/bundler-{name}` packages. The service has a default bundler map that needs a `rolldown` entry.
+Current state: bundle-bundlekit has 4 bundler adapters (Webpack, Vite, Rollup, Rspack). The `@bundlekit/service` resolves bundlers dynamically from `@bundlekit/bundler-{name}` packages. The service has a default bundler map that needs a `rolldown` entry.
 
 ## Goals / Non-Goals
 
 **Goals:**
-- Create `@devkit/bundler-rolldown` package implementing `IBuildToolAdapter`
+- Create `@bundlekit/bundler-rolldown` package implementing `IBuildToolAdapter`
 - Transform `IBuildConfig` → `RolldownOptions` (input, output, resolve, devServer for proxy)
 - Support `development` (watch) and `production` (build) modes
 - Register in service's bundler resolution and default map

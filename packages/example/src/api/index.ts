@@ -1,4 +1,4 @@
-import { createRequest } from "@devkit/request";
+import { createRequest } from "@bundlekit/request";
 
 const http = createRequest({
   engine: "axios",
