@@ -36,19 +36,26 @@ The `create` command SHALL support `--template` option to select a project templ
 - **AND** if enquirer is not feasible (no stdin), SHALL default to `react-ts` and proceed
 
 ### Requirement: Complete creation flow
-The `create` command SHALL execute the full flow: validate name → select template → select bundler → select package manager → enter description → generate files → write bundler to devDependencies → install dependencies (using selected PM) → invoke framework generator → print success message with PM-aware startup commands.
+The `create` command SHALL execute the full flow: validate name → select template → select bundler → select SSR → select package manager → enter description → generate files → write bundler to devDependencies → install dependencies (using selected PM) → invoke framework generator → print success message with PM-aware startup commands.
 
-#### Scenario: Full creation flow succeeds with pnpm
+#### Scenario: Full creation flow succeeds with SSR enabled
+- **WHEN** user runs `bundlekit-cli create my-app -t react-ts -b vite --ssr --pm pnpm`
+- **THEN** files SHALL be generated in `./my-app`
+- **AND** `entry-client.tsx` and `entry-server.tsx` SHALL be present
+- **AND** `index.tsx` SHALL NOT be present
+- **AND** `.bundlekitrc.ts` SHALL contain the `ssr` config block
+
+#### Scenario: Full creation flow succeeds with SSR disabled
 - **WHEN** user runs `bundlekit-cli create my-app -t react-ts -b vite --pm pnpm`
 - **THEN** files SHALL be generated in `./my-app`
-- **AND** `@bundlekit/bundler-vite` SHALL be added to `devDependencies`
-- **AND** dependencies SHALL be installed with pnpm
-- **AND** the success message SHALL include `cd my-app && pnpm dev`
+- **AND** `index.tsx` SHALL be present
+- **AND** `entry-client.tsx` and `entry-server.tsx` SHALL NOT be present
+- **AND** `.bundlekitrc.ts` SHALL NOT contain the `ssr` config block
 
 #### Scenario: Full creation flow with all interactive prompts
-- **WHEN** user runs `bundlekit-cli create my-app` and answers all prompts (template=react-ts, bundler=vite, pm=pnpm, description="demo")
+- **WHEN** user runs `bundlekit-cli create my-app` and answers all prompts (template=react-ts, bundler=vite, ssr=no, pm=pnpm, description="demo")
 - **THEN** the same outcome as the flag-driven scenario SHALL hold
-- **AND** the user SHALL have been prompted in order: template → bundler → pm → description
+- **AND** the user SHALL have been prompted in order: template → bundler → ssr → pm → description
 
 ### Requirement: Description input requires explicit submit
 The `create` command's interactive description step SHALL only advance to the next step when the user explicitly presses Enter; typing characters into the description input SHALL NOT cause step advancement, regardless of input value.

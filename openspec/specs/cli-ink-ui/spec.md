@@ -13,10 +13,10 @@ When `process.stdout.isTTY` is `true` and `DEVKIT_NO_INK` is not set, all intera
 - **AND** the user SHALL see a banner, step-by-step prompts, animated spinner, and final success view
 
 #### Scenario: Step-based create flow
-- **WHEN** the create command needs both `--template` and `--bundler`
-- **AND** neither is provided as a flag
-- **THEN** the cli SHALL render two sequential `<SelectInput>` steps: "模板" then "打包器"
-- **AND** the title bar SHALL show progress like "Step 1/4 · 模板"
+- **WHEN** the create command needs `--template`, `--bundler`, and `--ssr`
+- **AND** none are provided as flags
+- **THEN** the cli SHALL render five sequential `<SelectInput>` steps: "模板" then "打包器" then "SSR" then "包管理器" then "描述"
+- **AND** the title bar SHALL show progress like "Step 1/5 · 模板"
 
 #### Scenario: Spinner for long-running tasks
 - **WHEN** the create command renders templates, runs `pnpm install`, or invokes a generator
