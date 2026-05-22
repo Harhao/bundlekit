@@ -44,6 +44,10 @@ interface HtmlWriteConfig {
     filename: string;
     inject: "head" | "body";
     context: string;
+    /** 入口文件名（如 "index.js"），用于 ES 格式只注入入口 chunk */
+    entryFilename?: string;
+    /** 输出格式（es/cjs/umd 等），决定 script 标签是否使用 type="module" */
+    format?: string;
 }
 
 /** 根据配置生成并写入 index.html（显式写入磁盘，避免 emitFile 在 watch 模式下不可靠） */
@@ -56,8 +60,17 @@ function writeHtmlFile(opts: HtmlWriteConfig): void {
         cssFiles = files.filter((f) => f.endsWith(".css")         && !f.endsWith(".map"));
     } catch { /* outDir 不存在时静默跳过 */ }
 
+    // ES 格式 + code-splitting：只注入入口 chunk（其他 chunk 由 import() 动态加载）
+    const isESM = opts.format === "es";
+    if (isESM && opts.entryFilename) {
+        jsFiles = jsFiles.filter((f) => f === opts.entryFilename);
+    }
+
     const linkTags   = cssFiles.map((c) => `  <link rel="stylesheet" href="${c}">`).join("\n");
-    const scriptTags = jsFiles .map((s) => `  <script src="${s}"></script>`).join("\n");
+    const scriptTags = jsFiles .map((s) => isESM
+        ? `  <script type="module" src="${s}"></script>`
+        : `  <script src="${s}"></script>`
+    ).join("\n");
 
     let html: string;
     const tplPath = opts.template ? path.resolve(opts.context, opts.template) : null;
@@ -240,24 +253,6 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
             }),
         ];
 
-        // 应用模式：存储 HTML 写入配置（server pass 不需要）
-        if (!isLibrary && !isServerPass) {
-            const pages = rawEnvConfig.pages as Array<{
-                template?: string;
-                filename?: string;
-                inject?: "head" | "body";
-            }> | undefined;
-            const page = pages?.[0];
-
-            this.htmlWriteConfig = {
-                outDir:   resolvedOutDir,
-                template: page?.template,
-                filename: page?.filename || "index.html",
-                inject:   page?.inject   || "body",
-                context:  this.context,
-            };
-        }
-
         const external = isServerPass
             ? this.resolveServerExternals(rawEnvConfig)
             : (rawEnvConfig.externals || []);
@@ -307,10 +302,17 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
                     inlineDynamicImports: ["umd", "iife"].includes(rollupFmt as string),
                 };
             } else {
+                // 应用模式强制使用 ES 格式：UMD/IIFE 不支持 code-splitting（dynamic import）
+                const appFmt: OutputOptions["format"] = ["es", "cjs"].includes(rollupFmt as string)
+                    ? rollupFmt
+                    : "es";
+                if (appFmt !== rollupFmt) {
+                    this.logger.warn(`应用模式不支持 "${primaryFmt}" 格式（不支持 code-splitting），已自动切换为 "es"`, "rollup");
+                }
                 output = {
                     dir:                  resolvedOutDir,
                     entryFileNames:       singleFilename,
-                    format:               rollupFmt,
+                    format:               appFmt,
                     sourcemap:            rawEnvConfig.js?.sourcemap || false,
                 };
             }
@@ -325,6 +327,31 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
             outDir:  resolvedOutDir,
             library: isLibrary,
         };
+
+        // 应用模式：存储 HTML 写入配置（server pass 不需要）
+        if (!isLibrary && !isServerPass) {
+            const pages = rawEnvConfig.pages as Array<{
+                template?: string;
+                filename?: string;
+                inject?: "head" | "body";
+            }> | undefined;
+            const page = pages?.[0];
+
+            // 确定实际使用的输出格式（应用模式可能从 umd/iife 切换到 es）
+            const resolvedFormat = Array.isArray(output)
+                ? (output[0]?.format ?? "es")
+                : ((output as OutputOptions)?.format ?? "es");
+
+            this.htmlWriteConfig = {
+                outDir:         resolvedOutDir,
+                template:       page?.template,
+                filename:       page?.filename || "index.html",
+                inject:         page?.inject   || "body",
+                context:        this.context,
+                entryFilename:  singleFilename,
+                format:         resolvedFormat,
+            };
+        }
 
         return {
             input:    path.resolve(this.context, String(entry)),
@@ -433,12 +460,24 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
 
         await new Promise<void>((resolve) => {
             let serverStarted = false;
+            let buildHasError = false;
             watcher.on("event", async (event: any) => {
                 if (event.code === "START") {
+                    buildHasError = false;
                     this.logger.log("rollup 开始重新构建...", "rollup");
+                }
+                if (event.code === "ERROR") {
+                    buildHasError = true;
+                    this.logger.error(`rollup 构建错误: ${event.error}`, "rollup");
+                    if (!serverStarted) resolve();
                 }
                 if (event.code === "END") {
                     this.logger.done("rollup 构建完成", "rollup");
+                    // 构建有错误时跳过 HTML 写入和服务启动，避免空白页面
+                    if (buildHasError) {
+                        if (event.result) event.result.close();
+                        return;
+                    }
                     // 每次构建完成后写 HTML（保证 index.html 与 JS 同步）
                     if (this.htmlWriteConfig) {
                         try {
@@ -454,10 +493,6 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
                     } else {
                         server.reload();   // 后续构建：触发浏览器 livereload
                     }
-                }
-                if (event.code === "ERROR") {
-                    this.logger.error(`rollup 构建错误: ${event.error}`, "rollup");
-                    if (!serverStarted) resolve();
                 }
                 if (event.result) event.result.close();
             });
