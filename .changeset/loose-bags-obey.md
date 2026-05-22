@@ -1,0 +1,3 @@
+---
+"@bundlekit/bundler-rollup": patch
+---
