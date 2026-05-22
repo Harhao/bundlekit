@@ -1,6 +1,6 @@
 {
   "name": "@bundlekit/shared-utils",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "bundlekit shared utils is common tools for bundlekit",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
@@ -71,9 +71,17 @@
     "webpack": "*"
   },
   "peerDependenciesMeta": {
-    "@rspack/core": { "optional": true },
-    "rollup": { "optional": true },
-    "vite": { "optional": true },
-    "webpack": { "optional": true }
+    "@rspack/core": {
+      "optional": true
+    },
+    "rollup": {
+      "optional": true
+    },
+    "vite": {
+      "optional": true
+    },
+    "webpack": {
+      "optional": true
+    }
   }
 }

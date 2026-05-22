@@ -1,6 +1,6 @@
 {
   "name": "@bundlekit/plugin-react",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "React plugin for bundlekit - provides React build support and project templates",
   "main": "./index.ts",
   "type": "module",
