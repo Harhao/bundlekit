@@ -113,9 +113,9 @@ my-app/
 ├── tsconfig.json         # TypeScript 配置
 ├── package.json          # 项目依赖（含 service + plugin + 选中的 bundler）
 ├── src/
-│   ├── index.tsx         # 应用入口（CSR）
-│   ├── entry-client.tsx  # SSR 客户端入口（可选）
-│   ├── entry-server.tsx  # SSR 服务端入口（可选）
+│   ├── index.tsx         # 应用入口（CSR 模式，SSR 模式下不生成）
+│   ├── entry-client.tsx  # SSR 客户端入口（仅 SSR 模式生成）
+│   ├── entry-server.tsx  # SSR 服务端入口（仅 SSR 模式生成）
 │   └── api/
 │       └── index.ts      # HTTP 请求层（使用 @bundlekit/request）
 ├── public/

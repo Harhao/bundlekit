@@ -88,7 +88,7 @@ export default defineConfig({
 
 ## 文档
 
-完整文档请访问 [https://bundlekit.dev](https://bundlekit.dev)
+完整文档请访问 [https://bundlekit.harhao.workers.dev](https://bundlekit.harhao.workers.dev)
 
 ## License
 

@@ -29,7 +29,13 @@
     "@bundlekit/bundler-rspack"
   ],
   "author": "harhao@163.com",
-  "license": "ISC",
+  "license": "MIT",
+  "website": "https://bundlekit.harhao.workers.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Harhao/bundlekit.git",
+    "directory": "packages/bundlekit-bundler-rspack"
+  },
   "dependencies": {
     "@bundlekit/shared-utils": "workspace:*",
     "@rspack/core": "^1.3.4",

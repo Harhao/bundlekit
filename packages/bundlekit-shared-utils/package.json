@@ -32,7 +32,13 @@
     "@bundlekit/shared-utils"
   ],
   "author": "harhao@163.com",
-  "license": "ISC",
+  "license": "MIT",
+  "website": "https://bundlekit.harhao.workers.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Harhao/bundlekit.git",
+    "directory": "packages/bundlekit-shared-utils"
+  },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
     "access": "public"

@@ -1,5 +1,5 @@
 import path from "path";
-import { existsSync, readFileSync } from "fs";
+import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync } from "fs";
 import { rollup, watch, RollupOptions, OutputOptions, Plugin } from "rollup";
 import nodeResolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
@@ -37,71 +37,63 @@ const toRollupFormat = (fmt: string): OutputOptions["format"] => {
     return map[fmt] ?? "es";
 };
 
-// ─── 内联 HTML 生成插件（应用模式，无需额外依赖） ─────────────────────────────────────
-function htmlGeneratorPlugin(options: {
-    context: string;
+// ─── HTML 写入配置 ───────────────────────────────────────────────────────────────
+interface HtmlWriteConfig {
+    outDir: string;
     template?: string;
     filename: string;
     inject: "head" | "body";
-}): Plugin {
-    return {
-        name: "bundlekit-html",
-        generateBundle(_, bundle) {
-            // ── 收集 JS chunk 和 CSS asset ────────────────────────────────────
-            const scriptFiles = Object.keys(bundle)
-                .filter((k) => (bundle[k] as any).type === "chunk")
-                .map((k) => path.basename(k));
+    context: string;
+}
 
-            // postcss extract:true 会把 CSS 作为 rollup asset 写入 bundle
-            const cssFiles = Object.keys(bundle)
-                .filter((k) => (bundle[k] as any).type === "asset" && k.endsWith(".css"))
-                .map((k) => path.basename(k));
+/** 根据配置生成并写入 index.html（显式写入磁盘，避免 emitFile 在 watch 模式下不可靠） */
+function writeHtmlFile(opts: HtmlWriteConfig): void {
+    let jsFiles:  string[] = [];
+    let cssFiles: string[] = [];
+    try {
+        const files = readdirSync(opts.outDir);
+        jsFiles  = files.filter((f) => /\.(js|mjs|cjs)$/.test(f) && !f.endsWith(".map"));
+        cssFiles = files.filter((f) => f.endsWith(".css")         && !f.endsWith(".map"));
+    } catch { /* outDir 不存在时静默跳过 */ }
 
-            const linkTags   = cssFiles.map((c) => `  <link rel="stylesheet" href="${c}">`).join("\n");
-            const scriptTags = scriptFiles.map((s) => `  <script src="${s}"></script>`).join("\n");
+    const linkTags   = cssFiles.map((c) => `  <link rel="stylesheet" href="${c}">`).join("\n");
+    const scriptTags = jsFiles .map((s) => `  <script src="${s}"></script>`).join("\n");
 
-            // ── 生成 HTML ─────────────────────────────────────────────────────
-            let html: string;
-            const tplPath = options.template
-                ? path.resolve(options.context, options.template)
-                : null;
+    let html: string;
+    const tplPath = opts.template ? path.resolve(opts.context, opts.template) : null;
 
-            if (tplPath && existsSync(tplPath)) {
-                html = readFileSync(tplPath, "utf-8");
-                // CSS link 注入 <head>（无论 inject 选项）
-                if (linkTags) {
-                    html = html.includes("</head>")
-                        ? html.replace("</head>", `${linkTags}\n</head>`)
-                        : linkTags + "\n" + html;
-                }
-                // JS script 按 inject 选项注入
-                const closeTag = options.inject === "head" ? "</head>" : "</body>";
-                html = html.includes(closeTag)
-                    ? html.replace(closeTag, `${scriptTags}\n${closeTag}`)
-                    : html + scriptTags;
-            } else {
-                // 无模板：生成最简骨架，CSS 放 head，JS 放 body（符合最佳实践）
-                html = [
-                    "<!DOCTYPE html>",
-                    '<html lang="en">',
-                    "<head>",
-                    '  <meta charset="UTF-8">',
-                    '  <meta name="viewport" content="width=device-width, initial-scale=1.0">',
-                    "  <title>App</title>",
-                    ...(linkTags   ? [linkTags]   : []),
-                    ...(options.inject === "head" ? [scriptTags] : []),
-                    "</head>",
-                    "<body>",
-                    '  <div id="root"></div>',
-                    ...(options.inject !== "head" ? [scriptTags] : []),
-                    "</body>",
-                    "</html>",
-                ].join("\n");
-            }
+    if (tplPath && existsSync(tplPath)) {
+        html = readFileSync(tplPath, "utf-8");
+        if (linkTags) {
+            html = html.includes("</head>")
+                ? html.replace("</head>", `${linkTags}\n</head>`)
+                : linkTags + "\n" + html;
+        }
+        const closeTag = opts.inject === "head" ? "</head>" : "</body>";
+        html = html.includes(closeTag)
+            ? html.replace(closeTag, `${scriptTags}\n${closeTag}`)
+            : html + scriptTags;
+    } else {
+        html = [
+            "<!DOCTYPE html>",
+            '<html lang="en">',
+            "<head>",
+            '  <meta charset="UTF-8">',
+            '  <meta name="viewport" content="width=device-width, initial-scale=1.0">',
+            "  <title>App</title>",
+            ...(linkTags   ? [linkTags]   : []),
+            ...(opts.inject === "head" ? [scriptTags] : []),
+            "</head>",
+            "<body>",
+            '  <div id="root"></div>',
+            ...(opts.inject !== "head" ? [scriptTags] : []),
+            "</body>",
+            "</html>",
+        ].join("\n");
+    }
 
-            this.emitFile({ type: "asset", fileName: options.filename, source: html });
-        },
-    };
+    mkdirSync(opts.outDir, { recursive: true });
+    writeFileSync(path.join(opts.outDir, opts.filename), html, "utf-8");
 }
 
 // ─── rollup 合法 InputOptions 白名单（来自 rollup 错误提示）──────────────────────
@@ -138,6 +130,7 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
     private fse: FileManager;
     /** transformConfig 阶段存储，run 阶段使用 */
     private devServerConfig: StoredDevServerConfig | null = null;
+    private htmlWriteConfig: HtmlWriteConfig | null = null;
     public name: string = "@bundlekit/bundler-rollup";
 
     constructor(api: IService, mode: IBuildEnv) {
@@ -247,7 +240,7 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
             }),
         ];
 
-        // 应用模式：注入 HTML 生成插件（server pass 不需要）
+        // 应用模式：存储 HTML 写入配置（server pass 不需要）
         if (!isLibrary && !isServerPass) {
             const pages = rawEnvConfig.pages as Array<{
                 template?: string;
@@ -255,14 +248,14 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
                 inject?: "head" | "body";
             }> | undefined;
             const page = pages?.[0];
-            plugins.push(
-                htmlGeneratorPlugin({
-                    context:  this.context,
-                    template: page?.template,
-                    filename: page?.filename || "index.html",
-                    inject:   page?.inject   || "body",
-                }),
-            );
+
+            this.htmlWriteConfig = {
+                outDir:   resolvedOutDir,
+                template: page?.template,
+                filename: page?.filename || "index.html",
+                inject:   page?.inject   || "body",
+                context:  this.context,
+            };
         }
 
         const external = isServerPass
@@ -303,17 +296,24 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
             // 单格式（应用 / 单格式类库）
             const primaryFmt = fmtArr[0] ?? "es";
             const rollupFmt  = toRollupFormat(primaryFmt);
-            output = {
-                file:                 path.resolve(resolvedOutDir, isLibrary
-                    ? `${baseName}${FORMAT_SUFFIX[primaryFmt] ?? ".js"}`
-                    : singleFilename),
-                format:               rollupFmt,
-                sourcemap:            rawEnvConfig.js?.sourcemap || false,
-                name:                 ["umd", "iife"].includes(rollupFmt as string)
-                    ? (libraryName || path.basename(String(entry), path.extname(String(entry))))
-                    : undefined,
-                inlineDynamicImports: ["umd", "iife"].includes(rollupFmt as string),
-            };
+            if (isLibrary) {
+                output = {
+                    file:                 path.resolve(resolvedOutDir, `${baseName}${FORMAT_SUFFIX[primaryFmt] ?? ".js"}`),
+                    format:               rollupFmt,
+                    sourcemap:            rawEnvConfig.js?.sourcemap || false,
+                    name:                 ["umd", "iife"].includes(rollupFmt as string)
+                        ? (libraryName || path.basename(String(entry), path.extname(String(entry))))
+                        : undefined,
+                    inlineDynamicImports: ["umd", "iife"].includes(rollupFmt as string),
+                };
+            } else {
+                output = {
+                    dir:                  resolvedOutDir,
+                    entryFileNames:       singleFilename,
+                    format:               rollupFmt,
+                    sourcemap:            rawEnvConfig.js?.sourcemap || false,
+                };
+            }
         }
 
         // 存储 devServer 配置供 run() 使用（避免污染 RollupOptions）
@@ -439,6 +439,14 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
                 }
                 if (event.code === "END") {
                     this.logger.done("rollup 构建完成", "rollup");
+                    // 每次构建完成后写 HTML（保证 index.html 与 JS 同步）
+                    if (this.htmlWriteConfig) {
+                        try {
+                            writeHtmlFile(this.htmlWriteConfig);
+                        } catch (e: any) {
+                            this.logger.warn(`[bundlekit] 写入 HTML 失败: ${e.message}`);
+                        }
+                    }
                     if (!serverStarted) {
                         serverStarted = true;
                         await server.start();
@@ -466,6 +474,10 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
             : [safeConfig.output as OutputOptions];
         for (const out of outputs) {
             await bundle.write(out);
+        }
+        // 生产构建也写 HTML（应用模式）
+        if (this.htmlWriteConfig) {
+            writeHtmlFile(this.htmlWriteConfig);
         }
         this.logger.done("rollup 生产构建完成", "rollup");
         await bundle.close();

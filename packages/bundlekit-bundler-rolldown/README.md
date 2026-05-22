@@ -103,7 +103,7 @@ Rolldown 是 Rust 实现的打包器，API 兼容 Rollup，但性能更好：
 
 ## 文档
 
-完整文档请访问 [https://bundlekit.dev](https://bundlekit.dev)
+完整文档请访问 [https://bundlekit.harhao.workers.dev](https://bundlekit.harhao.workers.dev)
 
 ## License
 

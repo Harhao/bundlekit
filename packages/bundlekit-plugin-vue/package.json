@@ -19,7 +19,13 @@
     "bundlekit"
   ],
   "author": "harhao@163.com",
-  "license": "ISC",
+  "license": "MIT",
+  "website": "https://bundlekit.harhao.workers.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Harhao/bundlekit.git",
+    "directory": "packages/bundlekit-plugin-vue"
+  },
   "dependencies": {
     "@bundlekit/shared-utils": "workspace:*",
     "@vitejs/plugin-vue": "^5.2.0",

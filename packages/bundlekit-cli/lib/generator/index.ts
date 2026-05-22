@@ -33,8 +33,10 @@ export default class Generator {
         const entries = await fs.readdir(srcDir, { withFileTypes: true });
 
         for (const entry of entries) {
-            // SSR 文件过滤：当 ssr=false 时跳过 entry-server 文件
-            if (!this.context.ssr && entry.name.includes('entry-server')) {
+            if (!this.context.ssr && (entry.name.includes('entry-server') || entry.name.includes('entry-client'))) {
+                continue;
+            }
+            if (this.context.ssr && (entry.name === 'index.tsx' || entry.name === 'index.jsx' || entry.name === 'main.ts' || entry.name === 'main.js' || entry.name === 'index.tsx.ejs' || entry.name === 'index.jsx.ejs' || entry.name === 'main.ts.ejs' || entry.name === 'main.js.ejs')) {
                 continue;
             }
 

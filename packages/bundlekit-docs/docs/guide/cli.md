@@ -100,7 +100,19 @@ bundlekit-cli create <name> [options]
 | `-b, --bundler` | `string` | 默认构建工具，不传则交互选择 |
 | `-d, --description` | `string` | 项目描述 |
 | `--pm` | `string` | 包管理器（`pnpm` / `yarn` / `npm`），不传则交互选择 |
-| `--ssr` | `boolean` | 生成 SSR 骨架（含 `entry-client` / `entry-server` + `<!--ssr-outlet-->` 占位） |
+| `--ssr` | `boolean` | 启用 SSR 骨架（含 `entry-client` / `entry-server` + `<!--ssr-outlet-->` 占位）。不传则交互选择 |
+
+**交互式创建流程（TTY）：**
+
+```
+Step 1/5 · 模板        → 选择 React/Vue + TS/JS
+Step 2/5 · 打包器      → 选择 Vite/Webpack/Rspack 等
+Step 3/5 · SSR         → 选择是否启用服务端渲染（默认：否）
+Step 4/5 · 包管理器    → 选择 pnpm/yarn/npm
+Step 5/5 · 项目描述    → 可选，按回车跳过
+```
+
+> 当使用 `--ssr` 或 `--no-ssr` flag 时，跳过 SSR 交互步骤。非 TTY 环境（CI）下也跳过交互，使用 flag 值或默认值（CSR）。
 
 **支持模板：**
 

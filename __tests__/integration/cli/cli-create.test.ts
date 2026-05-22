@@ -172,33 +172,35 @@ describe("cli-create SSR file filtering", () => {
         return { files, code: result.status ?? -1 };
     }
 
-    it("generates entry-server.tsx when --ssr is used", async () => {
+    it("generates entry-server.tsx and entry-client.tsx when --ssr is used", async () => {
         const { files, code } = await createAndCheckFiles("ssr-true", "react-ts", true);
         expect(code).toBe(0);
         expect(files).toContain("entry-server.tsx");
         expect(files).toContain("entry-client.tsx");
-        expect(files).toContain("index.tsx");
+        expect(files).not.toContain("index.tsx");
     });
 
-    it("skips entry-server.tsx when --ssr is not used", async () => {
+    it("skips entry-server.tsx and entry-client.tsx when --ssr is not used", async () => {
         const { files, code } = await createAndCheckFiles("ssr-false", "react-ts", false);
         expect(code).toBe(0);
         expect(files).not.toContain("entry-server.tsx");
-        expect(files).toContain("entry-client.tsx");
+        expect(files).not.toContain("entry-client.tsx");
         expect(files).toContain("index.tsx");
     });
 
-    it("generates entry-server.ts for vue3 template with --ssr", async () => {
+    it("generates entry-server.ts and entry-client.ts for vue3 template with --ssr", async () => {
         const { files, code } = await createAndCheckFiles("ssr-vue", "vue3-ts", true);
         expect(code).toBe(0);
         expect(files).toContain("entry-server.ts");
         expect(files).toContain("entry-client.ts");
+        expect(files).not.toContain("main.ts");
     });
 
-    it("skips entry-server.ts for vue3 template without --ssr", async () => {
+    it("skips entry-server.ts and entry-client.ts for vue3 template without --ssr", async () => {
         const { files, code } = await createAndCheckFiles("ssr-vue-false", "vue3-ts", false);
         expect(code).toBe(0);
         expect(files).not.toContain("entry-server.ts");
-        expect(files).toContain("entry-client.ts");
+        expect(files).not.toContain("entry-client.ts");
+        expect(files).toContain("main.ts");
     });
 });

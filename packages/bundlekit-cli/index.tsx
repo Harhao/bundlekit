@@ -2,10 +2,13 @@ import React from "react";
 import { Command } from "commander";
 import Enquirer from "enquirer";
 import { render } from "ink";
+import { createRequire } from "module";
 import { Creator } from "./lib/commands/create/creator";
 import { AddCommand } from "./lib/commands/add";
 import { App } from "./lib/ui/App";
 import { detectAvailablePMs, PMName } from "./lib/commands/create/actions";
+
+const require = createRequire(import.meta.url);
 
 const program = new Command();
 
@@ -22,6 +25,11 @@ const BUNDLERS = [
     { name: "rspack", message: "Rspack" },
     { name: "rollup", message: "Rollup" },
     { name: "rolldown", message: "Rolldown" },
+];
+
+const SSR_CHOICES = [
+    { name: "no", message: "否 — 纯客户端渲染（推荐）" },
+    { name: "yes", message: "是 — 启用 SSR（需要服务端渲染）" },
 ];
 
 function isInkEnabled(): boolean {
@@ -62,6 +70,17 @@ async function legacyCreate(name: string, options: Record<string, any>) {
             choices: BUNDLERS,
         })) as { bundler: string };
         options.bundler = answer.bundler;
+    }
+
+    // SSR 选择：优先级 --ssr > 交互
+    if (options.ssr === undefined) {
+        const answer = (await enquirer.prompt({
+            type: "select",
+            name: "ssr",
+            message: "是否启用 SSR:",
+            choices: SSR_CHOICES,
+        })) as { ssr: string };
+        options.ssr = answer.ssr === "yes";
     }
 
     // PM 选择：优先级 --pm > DEVKIT_PM > 交互

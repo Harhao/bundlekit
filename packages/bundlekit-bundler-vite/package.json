@@ -38,7 +38,13 @@
     "@bundlekit/bundler-vite"
   ],
   "author": "harhao@163.com",
-  "license": "ISC",
+  "license": "MIT",
+  "website": "https://bundlekit.harhao.workers.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Harhao/bundlekit.git",
+    "directory": "packages/bundlekit-bundler-vite"
+  },
   "devDependencies": {
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-terser": "^0.4.4",

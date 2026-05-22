@@ -19,7 +19,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@bundlekit/service": "workspace:*",
     "@bundlekit/bundler-webpack": "workspace:*",

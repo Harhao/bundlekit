@@ -49,7 +49,7 @@ const PM_LABEL: Record<PMName, string> = {
     npm:  "npm   —— Node 内置",
 };
 
-type Step = "template" | "bundler" | "pm" | "description" | "tasks" | "done" | "error";
+type Step = "template" | "bundler" | "ssr" | "pm" | "description" | "tasks" | "done" | "error";
 
 export interface ICreateAppParams {
     name: string;
@@ -88,6 +88,7 @@ export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) =>
     const [template, setTemplate] = useState<string | undefined>(params.template);
     const [bundler, setBundler] = useState<string | undefined>(params.bundler);
     const [bundlerLevel, setBundlerLevel] = useState<"primary" | "secondary">("primary");
+    const [ssr, setSsr] = useState<boolean | undefined>(params.ssr !== undefined ? params.ssr : undefined);
 
     const availablePMs = useMemo(() => detectAvailablePMs(), []);
     const envPM = useMemo(() => readEnvPM(), []);
@@ -116,6 +117,8 @@ export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) =>
         currentStep = "template";
     } else if (!bundler) {
         currentStep = "bundler";
+    } else if (ssr === undefined) {
+        currentStep = "ssr";
     } else if (!pm) {
         currentStep = "pm";
     } else if (!descriptionSubmitted) {
@@ -163,7 +166,7 @@ export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) =>
                     projectName: params.name,
                     description,
                     bundler: bundler!,
-                    ssr: !!params.ssr,
+                    ssr,
                 });
                 updateTask("render", { status: "done" });
             } catch (err) {
@@ -241,7 +244,7 @@ export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) =>
                 return;
             }
         })();
-    }, [currentStep, tasks.length, template, bundler, pm, description, params, updateTask]);
+    }, [currentStep, tasks.length, template, bundler, pm, ssr, description, params, updateTask]);
 
     useEffect(() => {
         if (currentStep === "done") {
@@ -274,7 +277,7 @@ export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) =>
             <Banner />
 
             {currentStep === "template" && (
-                <StepFrame title="模板" step={1} total={4}>
+                <StepFrame title="模板" step={1} total={5}>
                     <Select
                         items={TEMPLATES}
                         initialValue={template}
@@ -284,7 +287,7 @@ export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) =>
             )}
 
             {currentStep === "bundler" && (
-                <StepFrame title="打包器" step={2} total={4}>
+                <StepFrame title="打包器" step={2} total={5}>
                     <Box marginBottom={1}>
                         <Text dimColor>已选模板：</Text>
                         <Text color="cyan"> {template}</Text>
@@ -317,8 +320,24 @@ export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) =>
                 </StepFrame>
             )}
 
+            {currentStep === "ssr" && (
+                <StepFrame title="SSR" step={3} total={5}>
+                    <Box marginBottom={1}>
+                        <Text dimColor>已选打包器：</Text>
+                        <Text color="cyan"> {bundler}</Text>
+                    </Box>
+                    <Select
+                        items={[
+                            { label: "否 — 纯客户端渲染（推荐）", value: "no" },
+                            { label: "是 — 启用 SSR（需要服务端渲染）", value: "yes" },
+                        ]}
+                        onSelect={(v) => setSsr(v === "yes")}
+                    />
+                </StepFrame>
+            )}
+
             {currentStep === "pm" && (
-                <StepFrame title="包管理器" step={3} total={4}>
+                <StepFrame title="包管理器" step={4} total={5}>
                     <Box marginBottom={1}>
                         <Text dimColor>用于安装项目依赖：</Text>
                     </Box>
@@ -327,7 +346,7 @@ export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) =>
             )}
 
             {currentStep === "description" && (
-                <StepFrame title="项目描述（可选，按回车跳过）" step={4} total={4}>
+                <StepFrame title="项目描述（可选，按回车跳过）" step={5} total={5}>
                     <TextInput
                         value={description}
                         placeholder="A demo app"
@@ -345,7 +364,7 @@ export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) =>
                     <Box marginBottom={1}>
                         <Text bold color="cyan">{"创建项目 "}</Text>
                         <Text bold>{params.name}</Text>
-                        <Text dimColor>{`  ${template} · ${bundler} · ${pm}`}</Text>
+                        <Text dimColor>{`  ${template} · ${bundler} · ${ssr ? "SSR" : "CSR"} · ${pm}`}</Text>
                     </Box>
                     <TaskList tasks={tasks} />
                 </Box>
