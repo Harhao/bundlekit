@@ -39,7 +39,7 @@ export async function startDevSSR(bundler: string): Promise<IDevSSRSession> {
             ],
             // service 启动后会 logger.done(... SSR dev server 就绪)
             waitForLog: /SSR dev server 就绪|SSR dev server ready|listening on/i,
-            timeout: 45_000,
+            timeout: 60_000,
         });
 
         // 等 HTTP 实际可达（waitForLog 已 ready 但 server 可能还在最后绑定）
