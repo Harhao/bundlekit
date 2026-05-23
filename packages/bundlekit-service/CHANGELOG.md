@@ -1,5 +1,19 @@
 # @bundlekit/service
 
+## 0.0.5
+
+### Patch Changes
+
+- Updated dependencies [b8f4151]
+- Updated dependencies [9f2f088]
+- Updated dependencies [3020202]
+  - @bundlekit/shared-utils@0.0.4
+  - @bundlekit/bundler-rollup@0.0.5
+  - @bundlekit/bundler-rolldown@0.0.4
+  - @bundlekit/bundler-rspack@0.0.4
+  - @bundlekit/bundler-vite@0.0.4
+  - @bundlekit/bundler-webpack@0.0.4
+
 ## 0.0.4
 
 ### Patch Changes
