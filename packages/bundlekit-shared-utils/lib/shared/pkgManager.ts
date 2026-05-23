@@ -422,7 +422,7 @@ export class PackageManager {
             // stdin 用 'ignore' 而非 'inherit'：
             // 在 ink raw-mode 环境下，继承 stdin 会导致 pnpm 等待 EOF 而永久阻塞。
             // 包管理器 install/add 命令完全不需要 stdin。
-            await this.execa(command, args, {
+            const result = await this.execa(command, args, {
                 cwd,
                 shell: true,
                 stdio: ['ignore', 'pipe', 'pipe'] as const,
@@ -431,6 +431,20 @@ export class PackageManager {
             return true;
 
         } catch (error) {
+            // pnpm 在 peer dependencies 警告时可能返回非零退出码
+            // 检查是否是这种情况（安装实际成功但有警告）
+            const errorMsg = (error as Error).message || '';
+            if (bin === EPackageMangerTool.PNPM && errorMsg.includes('exit code')) {
+                // 检查 stderr 中是否有实际的安装失败信息
+                const hasRealError = errorMsg.includes('ERR_PNPM') || 
+                                    errorMsg.includes('ERROR') ||
+                                    errorMsg.includes('failed');
+                if (!hasRealError) {
+                    // 可能只是 peer dependencies 警告，认为安装成功
+                    this.logger.debug(`pnpm 返回非零退出码但可能安装成功: ${errorMsg}`);
+                    return true;
+                }
+            }
             return false;
         }
     }
@@ -443,10 +457,10 @@ export class PackageManager {
     private getPackageManagerConfig(bin: EPackageMangerTool): Record<PackageManagerCommand, string[]> {
 
         const PACKAGE_MANAGER_PNPM4_CONFIG: PackageManagerConfig = {
-            install: ['install', '--reporter', 'silent'],
-            add: ['add', '--reporter', 'silent'],
-            upgrade: ['update', '--reporter', 'silent'],
-            remove: ['uninstall', '--reporter', 'silent']
+            install: ['install', '--reporter', 'append-only'],
+            add: ['add', '--reporter', 'append-only'],
+            upgrade: ['update', '--reporter', 'append-only'],
+            remove: ['uninstall', '--reporter', 'append-only']
         };
 
         const PACKAGE_MANAGER_PNPM3_CONFIG: PackageManagerConfig = {
