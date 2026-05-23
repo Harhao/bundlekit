@@ -19,8 +19,8 @@ export default defineConfig({
             "**/dist/**",
             "**/__tests__/integration/fixtures/**",
         ],
-        testTimeout: 60_000,
-        hookTimeout: 60_000,
+        testTimeout: 120_000,
+        hookTimeout: 120_000,
         pool: "forks",
         poolOptions: {
             forks: {

@@ -161,30 +161,47 @@ export class PackageManager {
      * @param options 命令选项
      * @returns 命令执行结果
      */
-    private async execa(command: string, args: string[], options?: SpawnOptions): Promise<{ stdout: string; stderr: string }> {
+    private async execa(command: string, args: string[], options?: SpawnOptions): Promise<{ stdout: string; stderr: string; exitCode: number }> {
 
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
 
-            const child = spawn(command, args, {
-                stdio: 'pipe',
+            const spawnOptions: SpawnOptions = {
                 shell: true,
                 ...(options || {})
-            });
+            };
+
+            // 如果没有指定 stdio，默认使用 pipe
+            if (!spawnOptions.stdio) {
+                spawnOptions.stdio = 'pipe';
+            }
+
+            const child = spawn(command, args, spawnOptions);
 
             let stdout: string = '';
             let stderr: string = '';
 
-            child.stdout.on('data', (data: Buffer) => {
-                stdout += data.toString();
-            });
-            child.stderr.on('data', (data: Buffer) => {
-                stderr += data.toString();
-            });
+            if (child.stdout) {
+                child.stdout.on('data', (data: Buffer) => {
+                    stdout += data.toString();
+                });
+            }
+
+            if (child.stderr) {
+                child.stderr.on('data', (data: Buffer) => {
+                    stderr += data.toString();
+                });
+            }
+
             child.on('close', (code: number) => {
-                resolve({ stdout, stderr });
+                if (code !== 0) {
+                    reject(new Error(`Command failed with exit code ${code}: ${command} ${args.join(' ')}\n${stderr}`));
+                } else {
+                    resolve({ stdout, stderr, exitCode: code });
+                }
             });
+
             child.on('error', (err: Error) => {
-                resolve({ stdout, stderr: err.message });
+                reject(err);
             });
         });
     }
@@ -426,15 +443,15 @@ export class PackageManager {
     private getPackageManagerConfig(bin: EPackageMangerTool): Record<PackageManagerCommand, string[]> {
 
         const PACKAGE_MANAGER_PNPM4_CONFIG: PackageManagerConfig = {
-            install: ['install', '--reporter', 'silent', '--shamefully-hoist'],
-            add: ['install', '--reporter', 'silent', '--shamefully-hoist'],
+            install: ['install', '--reporter', 'silent'],
+            add: ['add', '--reporter', 'silent'],
             upgrade: ['update', '--reporter', 'silent'],
             remove: ['uninstall', '--reporter', 'silent']
         };
 
         const PACKAGE_MANAGER_PNPM3_CONFIG: PackageManagerConfig = {
-            install: ['install', '--loglevel', 'error', '--shamefully-flatten'],
-            add: ['install', '--loglevel', 'error', '--shamefully-flatten'],
+            install: ['install', '--loglevel', 'error'],
+            add: ['add', '--loglevel', 'error'],
             upgrade: ['update', '--loglevel', 'error'],
             remove: ['uninstall', '--loglevel', 'error']
         };
@@ -465,10 +482,11 @@ export class PackageManager {
      * @param version 版本号
      * @returns boolean 表示是否存在pnpm命令
      */
-    private async hasPnpmVersionOrLater(version: string) {
+    private hasPnpmVersionOrLater(version: string): boolean {
         try {
-            const { stdout } = await this.execa('pnpm', ['--version']);
-            const pnpmVersion = stdout.trim() || '0.0.0';
+            const result = spawnSync('pnpm', ['--version'], { stdio: ['pipe', 'pipe', 'ignore'] });
+            if (result.status !== 0) return false;
+            const pnpmVersion = stripAnsi(result.stdout.toString().trim()) || '0.0.0';
             return semver.gte(pnpmVersion, version);
         } catch (e) {
             return false;
@@ -479,10 +497,10 @@ export class PackageManager {
      * 判断是否存在yarn命令
      * @returns boolean 表示是否存在yarn命令
      */
-    private async hasYarnCommand(): Promise<boolean> {
+    private hasYarnCommand(): boolean {
         try {
-            await this.execa('yarn', ['--version'], { stdio: 'ignore' });
-            return true;
+            const result = spawnSync('yarn', ['--version'], { stdio: 'ignore' });
+            return result.status === 0;
         } catch (e) {
             return false;
         }
@@ -528,12 +546,13 @@ export class PackageManager {
      * @returns boolean 表示是否存在pnpm.lock文件，存在则表示当前项目使用pnpm进行包管理
      */
     public hasProjectPnpm(context: string) {
-        if (this._registerToolsProjects.has(context)) {
-            return this.checkPnpm(this._registerToolsProjects.get(context));
+        const cacheKey = `${context}:pnpm`;
+        if (this._registerToolsProjects.has(cacheKey)) {
+            return this.checkPnpm(this._registerToolsProjects.get(cacheKey));
         }
         const lockFile = this.fse.getAbsolutePath("pnpm-lock.yaml");
         const result = this.fse.isFilePathExist(lockFile);
-        this._registerToolsProjects.set(context, result);
+        this._registerToolsProjects.set(cacheKey, result);
         return this.checkPnpm(result);
     }
 
@@ -543,12 +562,13 @@ export class PackageManager {
      * @returns boolean 是或否
      */
     public hasProjectNpm(context: string) {
-        if (this._registerToolsProjects.has(context)) {
-            return this._registerToolsProjects.get(context);
+        const cacheKey = `${context}:npm`;
+        if (this._registerToolsProjects.has(cacheKey)) {
+            return this._registerToolsProjects.get(cacheKey);
         }
         const lockFile = this.fse.getAbsolutePath("package-lock.json");
         const result = this.fse.isFilePathExist(lockFile);
-        this._registerToolsProjects.set(context, result);
+        this._registerToolsProjects.set(cacheKey, result);
         return result;
     }
 
@@ -556,17 +576,15 @@ export class PackageManager {
      * 检测本地是否已安装了pnpm3或以上版本
      * @returns boolean 表示是否存在pnpm
      */
-    private async hasPnpm3OrLater() {
-        let _pnpmVersion = '0.0.0';
+    private hasPnpm3OrLater(): boolean {
         try {
-            let { stdout } = await this.execa(
-                'pnpm',
-                ['--version'],
-                { stdio: ['pipe', 'pipe', 'ignore'] },
-            );
-            _pnpmVersion = stdout.trim();
-        } catch (e) { throw e; }
-        return semver.gt(_pnpmVersion, "3.0.0");
+            const result = spawnSync('pnpm', ['--version'], { stdio: ['pipe', 'pipe', 'ignore'] });
+            if (result.status !== 0) return false;
+            const pnpmVersion = stripAnsi(result.stdout.toString().trim()) || '0.0.0';
+            return semver.gte(pnpmVersion, '3.0.0');
+        } catch (e) {
+            return false;
+        }
     }
 
 
@@ -575,11 +593,11 @@ export class PackageManager {
      * @param result lru缓存结果
      * @returns boolean 表示是否存在pnpm
      */
-    private checkPnpm(result: boolean) {
+    private checkPnpm(result: boolean | undefined): boolean {
         if (result && !this.hasPnpm3OrLater()) {
-            return new Error("pnpm is not installed.");
+            return false;
         }
-        return result;
+        return !!result;
     }
 
     /**
@@ -588,12 +606,13 @@ export class PackageManager {
      * @returns boolean 表示是否存在yarn.lock文件，存在则表示当前项目使用yarn进行包管理
      */
     public hasProjectYarn(context: string) {
-        if (this._registerToolsProjects.has(context)) {
-            return this._registerToolsProjects.get(context);
+        const cacheKey = `${context}:yarn`;
+        if (this._registerToolsProjects.has(cacheKey)) {
+            return this._registerToolsProjects.get(cacheKey);
         }
         const lockFile = this.fse.getAbsolutePath("yarn.lock");
         const result = this.fse.isFilePathExist(lockFile);
-        this._registerToolsProjects.set(context, result);
+        this._registerToolsProjects.set(cacheKey, result);
         return result;
     }
 
