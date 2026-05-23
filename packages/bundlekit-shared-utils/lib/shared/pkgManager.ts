@@ -137,16 +137,20 @@ export class PackageManager {
         if (args.registry as string) {
             registry = args.registry
         } else {
+            const execOpts = { 
+                cwd: this.context,
+                env: { ...process.env, COREPACK_ENABLE_STRICT: '0' }
+            };
             try {
                 if (scope) {
-                    registry = (await this.execa(this.bin, ['config', 'get', scope + ':registry'])).stdout
+                    registry = (await this.execa(this.bin, ['config', 'get', scope + ':registry'], execOpts)).stdout
                 }
                 if (!registry || registry === 'undefined') {
-                    registry = (await this.execa(this.bin, ['config', 'get', 'registry'])).stdout
+                    registry = (await this.execa(this.bin, ['config', 'get', 'registry'], execOpts)).stdout
                 }
             } catch (e) {
                 // Yarn 2 uses `npmRegistryServer` instead of `registry`
-                registry = (await this.execa(this.bin, ['config', 'get', 'npmRegistryServer'])).stdout
+                registry = (await this.execa(this.bin, ['config', 'get', 'npmRegistryServer'], execOpts)).stdout
             }
         }
 
@@ -426,6 +430,10 @@ export class PackageManager {
                 cwd,
                 shell: true,
                 stdio: ['ignore', 'pipe', 'pipe'] as const,
+                env: {
+                    ...process.env,
+                    COREPACK_ENABLE_STRICT: '0',
+                },
             });
 
             return true;
