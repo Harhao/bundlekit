@@ -1,5 +1,13 @@
 # @bundlekit/service
 
+## 0.0.5
+
+### Patch Changes
+
+- Updated dependencies [9f2f088]
+- Updated dependencies [3020202]
+  - @bundlekit/bundler-rollup@0.0.5
+
 ## 0.0.4
 
 ### Patch Changes
