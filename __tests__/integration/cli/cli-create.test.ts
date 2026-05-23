@@ -85,8 +85,8 @@ describe("cli-create dep normalization", () => {
         const text = JSON.stringify(pkg);
 
         expect(text).not.toContain("workspace:");
-        expect(pkg.devDependencies["@bundlekit/service"]).toMatch(/^\^/);
-        expect(pkg.devDependencies["@bundlekit/plugin-vue"]).toMatch(/^\^/);
+        expect(pkg.devDependencies["@bundlekit/service"]).toBe("*");
+        expect(pkg.devDependencies["@bundlekit/plugin-vue"]).toBe("*");
         expect(pkg.devDependencies["@bundlekit/bundler-webpack"]).toMatch(/^\^/);
         // 防御：不含 ^1.0.0 死硬编码
         expect(text).not.toContain('"^1.0.0"');
