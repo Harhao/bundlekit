@@ -1,5 +1,12 @@
 # @bundlekit/bundler-rspack
 
+## 0.0.5
+
+### Patch Changes
+
+- Updated dependencies [09b8001]
+  - @bundlekit/shared-utils@0.0.5
+
 ## 0.0.4
 
 ### Patch Changes

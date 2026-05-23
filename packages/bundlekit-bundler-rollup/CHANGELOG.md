@@ -1,5 +1,12 @@
 # @bundlekit/bundler-rollup
 
+## 0.0.7
+
+### Patch Changes
+
+- Updated dependencies [09b8001]
+  - @bundlekit/shared-utils@0.0.5
+
 ## 0.0.6
 
 ### Patch Changes
