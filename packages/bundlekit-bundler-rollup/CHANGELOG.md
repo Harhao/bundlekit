@@ -1,5 +1,14 @@
 # @bundlekit/bundler-rollup
 
+## 0.0.6
+
+### Patch Changes
+
+- d6a3baf: Fix tslib dependency in rollup bundler and update template versions
+
+  - Move tslib from devDependencies to dependencies in @bundlekit/bundler-rollup to fix build error
+  - Update template package versions from workspace:^ to \* for automatic latest version installation
+
 ## 0.0.5
 
 ### Patch Changes
