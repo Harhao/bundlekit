@@ -31,12 +31,13 @@ describe("shortNameFromFullPkg", () => {
 });
 
 describe("resolveDevkitDepValue", () => {
-    it("returns ^cliVersion in npm mode", () => {
+    it("returns ^version for known @bundlekit packages", () => {
         const v = resolveDevkitDepValue("plugin-react", {
             kind: "npm",
             cliVersion: "1.2.3",
         });
-        expect(v).toBe("^1.2.3");
+        // 现在读取真实版本号，格式应该是 ^x.y.z
+        expect(v).toMatch(/^\^\d+\.\d+\.\d+$/);
     });
 });
 
@@ -68,7 +69,7 @@ describe("resolveDepMode", () => {
 });
 
 describe("normalizeDeps", () => {
-    it("replaces workspace:^ with ^cliVersion", () => {
+    it("replaces workspace:^ with ^version", () => {
         const tmp = makeTmpDir("normalize-npm");
         try {
             fs.writeFileSync(
@@ -83,8 +84,9 @@ describe("normalizeDeps", () => {
             );
             normalizeDeps(tmp, { kind: "npm", cliVersion: "0.0.1" });
             const pkg = JSON.parse(fs.readFileSync(path.join(tmp, "package.json"), "utf-8"));
-            expect(pkg.devDependencies["@bundlekit/service"]).toBe("^0.0.1");
-            expect(pkg.devDependencies["@bundlekit/bundler-vite"]).toBe("^0.0.1");
+            // 现在读取真实版本号，格式应该是 ^x.y.z
+            expect(pkg.devDependencies["@bundlekit/service"]).toMatch(/^\^\d+\.\d+\.\d+$/);
+            expect(pkg.devDependencies["@bundlekit/bundler-vite"]).toMatch(/^\^\d+\.\d+\.\d+$/);
         } finally {
             fs.rmSync(tmp, { recursive: true, force: true });
         }
@@ -113,7 +115,7 @@ describe("normalizeDeps", () => {
 });
 
 describe("writeBundlerDevDep", () => {
-    it("writes ^cliVersion in npm mode", () => {
+    it("writes ^version in npm mode", () => {
         const tmp = makeTmpDir("bundler-npm");
         try {
             fs.writeFileSync(
@@ -124,7 +126,8 @@ describe("writeBundlerDevDep", () => {
                 kind: "npm",
                 cliVersion: "1.5.0",
             });
-            expect(val).toBe("^1.5.0");
+            // 现在读取真实版本号，格式应该是 ^x.y.z
+            expect(val).toMatch(/^\^\d+\.\d+\.\d+$/);
         } finally {
             fs.rmSync(tmp, { recursive: true, force: true });
         }

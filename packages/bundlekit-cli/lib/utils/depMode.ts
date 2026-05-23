@@ -51,11 +51,86 @@ export function resolveDepMode(_cwd: string, cliVersion?: string): IDepMode {
 }
 
 /**
+ * 从 npm registry 读取包的最新版本号
+ */
+async function fetchLatestVersion(packageName: string): Promise<string | null> {
+    try {
+        const registry = 'https://registry.npmjs.org';
+        const url = `${registry}/${packageName}/latest`;
+        const res = await fetch(url, {
+            headers: { Accept: 'application/json' },
+        });
+        if (!res.ok) return null;
+        const pkg = await res.json() as { version?: string };
+        return pkg?.version || null;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * 读取指定 @bundlekit/* 包的版本号
+ *
+ * 实现策略：
+ *   1) require.resolve 解析（已发版 / monorepo 都适用）
+ *   2) 相对 import.meta.url 向上查找
+ *   3) 从 npm registry 读取最新版本号
+ *   4) readCliVersion() 兜底
+ */
+export function readPackageVersion(fullPkg: string): string {
+    // 1. 尝试 require.resolve
+    try {
+        const req = createRequire(import.meta.url);
+        const pkgJsonPath = req.resolve(`${fullPkg}/package.json`, {
+            paths: [process.cwd()],
+        });
+        const pkg = req(pkgJsonPath) as { version?: string };
+        if (pkg?.version) return pkg.version;
+    } catch {}
+
+    // 2. 尝试相对路径查找（monorepo 内）
+    try {
+        const dir = path.dirname(fileURLToPath(import.meta.url));
+        const shortName = fullPkg.replace("@bundlekit/", "bundlekit-");
+        const candidates = [
+            path.resolve(dir, `../../../${shortName}/package.json`),
+            path.resolve(dir, `../../../../packages/${shortName}/package.json`),
+        ];
+        for (const candidate of candidates) {
+            try {
+                const req = createRequire(import.meta.url);
+                const pkg = req(candidate) as { name?: string; version?: string };
+                if (pkg?.name === fullPkg && pkg?.version) return pkg.version;
+            } catch {}
+        }
+    } catch {}
+
+    // 3. 尝试从 npm registry 读取最新版本号（同步 fallback）
+    try {
+        const req = createRequire(import.meta.url);
+        // 使用 child_process 同步执行 fetch
+        const { execSync } = req('child_process') as typeof import('child_process');
+        const result = execSync(`npm view ${fullPkg} version --registry https://registry.npmjs.org`, {
+            encoding: 'utf-8',
+            stdio: ['pipe', 'pipe', 'pipe'],
+        }).trim();
+        if (result && /^\d+\.\d+\.\d+/.test(result)) {
+            return result;
+        }
+    } catch {}
+
+    // 4. fallback 到 CLI 版本
+    return readCliVersion();
+}
+
+/**
  * 给定 @bundlekit/* 短包名（如 "service" / "plugin-react" / "bundler-vite"），
- * 返回依赖版本字符串 "^{cliVersion}"
+ * 返回依赖版本字符串 "^{version}"，读取各包真实版本号
  */
 export function resolveDevkitDepValue(shortPkg: string, mode: IDepMode): string {
-    return `^${mode.cliVersion}`;
+    const fullPkg = `@bundlekit/${shortPkg}`;
+    const version = readPackageVersion(fullPkg);
+    return `^${version}`;
 }
 
 /**

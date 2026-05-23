@@ -4,11 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-patchedDependencies:
-  vite-plugin-html@3.2.2:
-    hash: 7b5ty3ufonqh4yr4agwguextvy
-    path: patches/vite-plugin-html@3.2.2.patch
-
 importers:
 
   .:
@@ -632,6 +627,40 @@ importers:
       rimraf:
         specifier: ^5.0.1
         version: 5.0.10
+
+  test-app:
+    dependencies:
+      react:
+        specifier: ^18.2.0
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.3.1(react@18.3.1)
+    devDependencies:
+      '@bundlekit/bundler-rspack':
+        specifier: ^0.0.4
+        version: link:../packages/bundlekit-bundler-rspack
+      '@bundlekit/bundler-webpack':
+        specifier: workspace:^
+        version: link:../packages/bundlekit-bundler-webpack
+      '@bundlekit/plugin-react':
+        specifier: ^0.0.5
+        version: link:../packages/bundlekit-plugin-react
+      '@bundlekit/service':
+        specifier: ^0.0.6
+        version: link:../packages/bundlekit-service
+      '@types/react':
+        specifier: ^18.2.0
+        version: 18.3.28
+      '@types/react-dom':
+        specifier: ^18.2.0
+        version: 18.3.7(@types/react@18.3.28)
+      rimraf:
+        specifier: ^5.0.1
+        version: 5.0.10
+      typescript:
+        specifier: ^5.8.0
+        version: 5.9.3
 
 packages:
 
