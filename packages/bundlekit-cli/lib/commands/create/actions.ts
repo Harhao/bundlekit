@@ -126,7 +126,10 @@ export async function installDeps(
         context: targetDir,
         forcePackageManager: forced,
     });
-    await pm.install();
+    const success = await pm.install();
+    if (!success) {
+        throw new Error(`依赖安装失败，请检查网络连接或包管理器配置`);
+    }
 }
 
 /** 同步检测系统 PATH 上可用的包管理器 */
