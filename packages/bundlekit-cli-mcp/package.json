@@ -1,0 +1,62 @@
+{
+  "name": "@bundlekit/cli-mcp",
+  "version": "0.0.1",
+  "description": "BundleKit CLI 的 MCP 服务器，暴露项目创建和插件管理工具",
+  "type": "module",
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "types": "./dist/types/index.d.ts"
+    }
+  },
+  "bin": {
+    "bundlekit-cli-mcp": "./dist/index.mjs"
+  },
+  "scripts": {
+    "clean": "rimraf -rf dist",
+    "build": "pnpm run clean && rollup -c ./scripts/rollup.config.js",
+    "dev": "tsx ./src/index.ts"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "bundlekit",
+    "mcp",
+    "model-context-protocol",
+    "@bundlekit/cli-mcp"
+  ],
+  "author": "harhao@163.com",
+  "license": "MIT",
+  "website": "https://bundlekit.harhao.workers.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Harhao/bundlekit.git",
+    "directory": "packages/bundlekit-mcp"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "dependencies": {
+    "@mastra/mcp": "latest",
+    "@mastra/core": "latest",
+    "@bundlekit/cli": "workspace:*",
+    "@bundlekit/shared-utils": "workspace:*",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^11.1.6",
+    "rimraf": "^5.0.1",
+    "rollup": "^4.13.0",
+    "tslib": "^2.6.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.8.2"
+  }
+}

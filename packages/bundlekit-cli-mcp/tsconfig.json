@@ -1,0 +1,32 @@
+{
+    "compilerOptions": {
+        "target": "es2020",
+        "module": "esnext",
+        "outDir": "dist",
+        "rootDir": "src",
+        "preserveConstEnums": true,
+        "removeComments": false,
+        "sourceMap": false,
+        "moduleResolution": "node",
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "resolveJsonModule": true,
+        "importHelpers": true,
+        "declaration": true,
+        "declarationDir": "dist/types",
+        "declarationMap": false,
+        "paths": {
+            "@bundlekit/cli": ["../bundlekit-cli/index.tsx"],
+            "@bundlekit/cli/*": ["../bundlekit-cli/*"],
+            "@bundlekit/shared-utils": ["../bundlekit-shared-utils/lib/index.ts"]
+        }
+    },
+    "include": [
+        "src/**/*.ts"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist",
+        "scripts"
+    ]
+}
