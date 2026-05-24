@@ -17,7 +17,8 @@
   "scripts": {
     "clean": "rimraf -rf dist",
     "build": "pnpm run clean && rollup -c ./scripts/rollup.config.js",
-    "dev": "tsx ./src/index.ts"
+    "dev": "tsx ./src/index.ts",
+    "prepublishOnly": "pnpm run build"
   },
   "files": [
     "dist"
