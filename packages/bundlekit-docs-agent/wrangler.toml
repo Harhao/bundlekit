@@ -13,7 +13,7 @@ VECTORIZE_INDEX_NAME = "bundlekit-docs"
 [ai]
 binding = "AI"
 
-[vectorize]
+[[vectorize]]
 binding = "VECTORIZE"
 index_name = "bundlekit-docs"
 
