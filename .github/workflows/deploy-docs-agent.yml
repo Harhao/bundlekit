@@ -32,7 +32,7 @@ jobs:
         with:
           node-version: 22
           cache: 'pnpm'
-          cache-dependency-path: packages/bundlekit-docs-agent/pnpm-lock.yaml
+          cache-dependency-path: pnpm-lock.yaml
 
       # 4. 安装依赖
       - name: Install dependencies
