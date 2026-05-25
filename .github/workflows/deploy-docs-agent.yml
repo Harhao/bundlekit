@@ -88,7 +88,8 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_AI_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           packageManager: pnpm
-          command: deploy --name=bundlekit-docs-agent --compatibility-date=2024-09-23
+          workingDirectory: packages/bundlekit-docs-agent
+          command: deploy --name=bundlekit-docs-agent --compatibility-date=2026-05-25
 
       # 10. 通知部署结果
       - name: Deployment Summary
