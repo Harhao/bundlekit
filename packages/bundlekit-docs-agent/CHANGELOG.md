@@ -1,5 +1,11 @@
 # @bundlekit/docs-agent
 
+## 0.0.3
+
+### Patch Changes
+
+- 4607191: fix: add workingDirectory to wrangler-action to resolve monorepo deployment error
+
 ## 0.0.2
 
 ### Patch Changes
