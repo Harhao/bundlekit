@@ -1,0 +1,80 @@
+{
+  "name": "@bundlekit/docs-agent",
+  "version": "0.0.1",
+  "description": "Documentation query agent for bundlekit-docs using Mastra",
+  "type": "module",
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "private": true,
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "bin": {
+    "bundlekit-docs-agent": "./dist/index.mjs"
+  },
+  "scripts": {
+    "clean": "rimraf -rf dist",
+    "dev": "tsx watch ./src/index.ts",
+    "build": "pnpm run clean && tsc",
+    "build:worker": "scripts/build-worker.sh",
+    "start": "node ./dist/index.js",
+    "ingest": "tsx ./src/ingest.ts",
+    "agent": "tsx test/interactive-agent.ts",
+    "test": "vitest run",
+    "test:cloudflare": "tsx test/test-permissions.ts",
+    "test:worker": "test/test-worker.sh",
+    "deploy": "scripts/deploy.sh",
+    "deploy:ci": "scripts/ci-deploy.sh",
+    "deploy:worker": "wrangler deploy"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "keywords": [
+    "bundlekit",
+    "docs",
+    "agent",
+    "mastra",
+    "rag"
+  ],
+  "author": "harhao@163.com",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Harhao/bundlekit.git",
+    "directory": "packages/bundlekit-docs-agent"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "dependencies": {
+    "@mastra/core": "^1.36.0",
+    "@mastra/rag": "^0.1.23",
+    "@mastra/vectorize": "^0.1.0",
+    "ai": "^3.4.33",
+    "dotenv": "^17.4.2",
+    "fs-extra": "^11.1.0",
+    "glob": "^10.3.0",
+    "gray-matter": "^4.0.3",
+    "workers-ai-provider": "^0.1.0",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240919.0",
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^22.13.10",
+    "esbuild": "^0.20.2",
+    "rimraf": "^5.0.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.8.2",
+    "vitest": "^2.1.9"
+  },
+  "engines": {
+    "node": ">= 18.0.0"
+  }
+}

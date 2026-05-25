@@ -1,0 +1,106 @@
+name: deploy-docs-agent
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'packages/bundlekit-docs-agent/**'
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/bundlekit-docs-agent
+    
+    steps:
+      # 1. 拉取代码
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. 设置 pnpm 环境
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+
+      # 3. 设置 Node.js 环境并开启 pnpm 缓存
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+          cache-dependency-path: packages/bundlekit-docs-agent/pnpm-lock.yaml
+
+      # 4. 安装依赖
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      # 5. 验证环境变量
+      - name: Check Environment Variables
+        run: |
+          echo "Checking Cloudflare environment variables..."
+          if [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "❌ CLOUDFLARE_ACCOUNT_ID is not set"
+            exit 1
+          else
+            echo "✅ CLOUDFLARE_ACCOUNT_ID is set (${#CLOUDFLARE_ACCOUNT_ID} chars)"
+          fi
+          
+          if [ -z "$CLOUDFLARE_API_AI_TOKEN" ]; then
+            echo "❌ CLOUDFLARE_API_AI_TOKEN is not set"
+            exit 1
+          else
+            echo "✅ CLOUDFLARE_API_AI_TOKEN is set (${#CLOUDFLARE_API_AI_TOKEN} chars)"
+          fi
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_AI_TOKEN: ${{ secrets.CLOUDFLARE_API_AI_TOKEN }}
+
+      # 6. 构建项目
+      - name: Build project
+        run: pnpm build
+
+      # 7. 测试 Cloudflare 连接
+      - name: Test Cloudflare Connection
+        run: pnpm test:cloudflare
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_AI_TOKEN: ${{ secrets.CLOUDFLARE_API_AI_TOKEN }}
+
+      # 8. 索引文档（如果 Vectorize 索引不存在）
+      - name: Index Documentation
+        run: |
+          echo "Checking if Vectorize index exists..."
+          # 这里可以添加检查索引是否存在的逻辑
+          # 如果不存在，则运行 pnpm ingest
+          echo "For now, skipping ingestion (index should be created manually)"
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_AI_TOKEN: ${{ secrets.CLOUDFLARE_API_AI_TOKEN }}
+
+      # 9. 部署到 Cloudflare Workers
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_AI_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          packageManager: pnpm
+          command: deploy --name=bundlekit-docs-agent --compatibility-date=2024-09-23
+
+      # 10. 通知部署结果
+      - name: Deployment Summary
+        run: |
+          echo "✅ Deployment completed successfully!"
+          echo "📋 Summary:"
+          echo "   - Project: bundlekit-docs-agent"
+          echo "   - Branch: ${{ github.ref }}"
+          echo "   - Commit: ${{ github.sha }}"
+          echo "   - Environment: ${{ github.ref == 'refs/heads/master' && 'production' || 'development' }}"
+          echo ""
+          echo "🔧 Next Steps:"
+          echo "   - Test the agent locally: pnpm agent"
+          echo "   - Check logs for any issues"
+          echo "   - Monitor performance"
