@@ -1,6 +1,7 @@
 name = "bundlekit-docs-agent"
 main = "dist/worker-rag.js"
 compatibility_date = "2026-05-25"
+account_id = "b3c9a069af240ddf33b0f226d2aea9ca"  # 替换为你的 Cloudflare Account ID
 
 # 环境变量
 [vars]
