@@ -1,5 +1,12 @@
 # @bundlekit/docs-agent
 
+## 0.0.3
+
+### Patch Changes
+
+- 2cf56d9: fix: vectorize config should use array syntax [[vectorize]] in wrangler.toml
+- 4607191: fix: add workingDirectory to wrangler-action to resolve monorepo deployment error
+
 ## 0.0.2
 
 ### Patch Changes
