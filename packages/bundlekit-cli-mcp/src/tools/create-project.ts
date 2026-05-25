@@ -37,8 +37,8 @@ export const createProjectTool = createTool({
       else args.push('--pm', 'npm'); // 默认使用 npm，避免交互式提示
       if (ssr) args.push('--ssr');
 
-      // 使用 bundlekit-cli 命令
-      const result = spawnSync('bundlekit-cli', args, {
+      // 使用 npx @bundlekit/cli 命令
+      const result = spawnSync('npx', ['@bundlekit/cli', ...args], {
         cwd: cwd || process.cwd(),
         env: {
           ...process.env,
