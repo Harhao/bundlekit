@@ -1,5 +1,14 @@
 # @bundlekit/docs-agent
 
+## 0.0.4
+
+### Patch Changes
+
+- 0da93ee: fix: add account_id to wrangler.toml to resolve Cloudflare authentication error
+
+  - Added account_id field to wrangler.toml configuration
+  - Fixes authentication error [code: 10000] when deploying to Cloudflare Workers
+
 ## 0.0.3
 
 ### Patch Changes
