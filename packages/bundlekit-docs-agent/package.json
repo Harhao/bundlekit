@@ -1,6 +1,6 @@
 {
   "name": "@bundlekit/docs-agent",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Documentation query agent for bundlekit-docs using Mastra",
   "type": "module",
   "main": "./dist/index.mjs",
