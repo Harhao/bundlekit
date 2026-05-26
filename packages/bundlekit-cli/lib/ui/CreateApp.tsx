@@ -39,6 +39,7 @@ const BUNDLERS_SECONDARY: ISelectItem[] = [
     { label: "Rollup    —— 适合库构建",       value: "rollup" },
     { label: "Rolldown  —— 实验性",           value: "rolldown" },
     { label: "Parcel    —— 零配置",           value: "parcel" },
+    { label: "esbuild   —— 极速编译",         value: "esbuild" },
     { label: "← 返回",                        value: "__back__" },
 ];
 

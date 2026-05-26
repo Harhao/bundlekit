@@ -17,7 +17,9 @@
     "rolldown:dev": "npm run clean && bundlekit-service serve --bundler rolldown --mode development",
     "rolldown:prod": "npm run clean && bundlekit-service build --bundler rolldown --mode production",
     "parcel:dev": "npm run clean && bundlekit-service serve --bundler parcel --mode development",
-    "parcel:prod": "npm run clean && bundlekit-service build --bundler parcel --mode production"
+    "parcel:prod": "npm run clean && bundlekit-service build --bundler parcel --mode production",
+    "esbuild:dev": "npm run clean && bundlekit-service serve --bundler esbuild --mode development",
+    "esbuild:prod": "npm run clean && bundlekit-service build --bundler esbuild --mode production"
   },
   "keywords": [],
   "author": "",
@@ -30,6 +32,7 @@
     "@bundlekit/bundler-vite": "workspace:*",
     "@bundlekit/bundler-rolldown": "workspace:*",
     "@bundlekit/bundler-parcel": "workspace:*",
+    "@bundlekit/bundler-esbuild": "workspace:*",
     "@bundlekit/plugin-react": "workspace:*",
     "@bundlekit/plugin-mock": "workspace:*",
     "@types/react": "^18.2.0",

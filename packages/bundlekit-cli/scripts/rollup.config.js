@@ -52,6 +52,7 @@ const commonConfig = {
         '@bundlekit/bundler-rspack',
         '@bundlekit/bundler-rolldown',
         '@bundlekit/bundler-parcel',
+        '@bundlekit/bundler-esbuild',
         // ink + react: ESM-only，runtime 由 npm 安装
         'react',
         'react/jsx-runtime',

@@ -3,7 +3,7 @@ import type { IBuildTools } from "../cli-service/adapter";
 export interface init {}
 
 /**
- * 6 个内置 bundler 的短名 → npm 包名映射
+ * 7 个内置 bundler 的短名 → npm 包名映射
  * 供 cli (create / add) 与 service (运行时缺失提示) 共享
  */
 export const BUNDLER_PACKAGE_MAP: Record<IBuildTools, string> = {
@@ -13,6 +13,7 @@ export const BUNDLER_PACKAGE_MAP: Record<IBuildTools, string> = {
     rollup:   "@bundlekit/bundler-rollup",
     rolldown: "@bundlekit/bundler-rolldown",
     parcel:   "@bundlekit/bundler-parcel",
+    esbuild:  "@bundlekit/bundler-esbuild",
 };
 
 /** bundler 短名（同 IBuildTools） */

@@ -26,6 +26,7 @@ const BUNDLERS = [
     { name: "rollup", message: "Rollup" },
     { name: "rolldown", message: "Rolldown" },
     { name: "parcel", message: "Parcel" },
+    { name: "esbuild", message: "esbuild" },
 ];
 
 const SSR_CHOICES = [
@@ -117,7 +118,7 @@ program
     .command("create <name>")
     .description("create a new project powered by bundlekit-service")
     .option("-t, --template <template>", "模板类型 (react-ts, react-js, vue3-ts, vue3-js)")
-    .option("-b, --bundler <bundler>", "默认构建工具 (vite, webpack, rspack, rollup, rolldown, parcel)")
+    .option("-b, --bundler <bundler>", "默认构建工具 (vite, webpack, rspack, rollup, rolldown, parcel, esbuild)")
     .option("-d, --description <desc>", "项目描述")
     .option("--pm <pm>", "包管理器 (pnpm, yarn, npm)")
     .option("--ssr", "启用 SSR：模板生成 entry-client/entry-server + .bundlekitrc.ts 加 ssr 配置块", false)
