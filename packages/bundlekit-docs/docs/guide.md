@@ -5,7 +5,7 @@ order: 1
 
 # 快速开始
 
-bundlekit 是前端多打包器构建工具集，让你用一套配置驱动 Webpack、Vite、Rollup、Rspack、Rolldown 五种主流打包器。
+bundlekit 是前端多打包器构建工具集，让你用一套配置驱动 Webpack、Vite、Rollup、Rspack、Rolldown、Parcel、esbuild 七种主流打包器。
 
 ## 你需要什么
 
@@ -36,7 +36,7 @@ bc create my-app
 cli 会引导你完成以下步骤（TTY 终端使用 ink 渲染 banner + 步骤选择）：
 
 1. 选择模板：`react-ts` / `react-js` / `vue3-ts` / `vue3-js`
-2. 选择默认 bundler：`vite` / `webpack` / `rspack` / `rollup` / `rolldown`
+2. 选择默认 bundler：`vite` / `webpack` / `rspack` / `rollup` / `rolldown` / `parcel` / `esbuild`
 3. 输入项目描述（可选）
 4. 选择包管理器：`pnpm`（推荐）/ `yarn` / `npm`
 
@@ -149,7 +149,7 @@ ds build --bundler vite --mode staging
 
 ## SSR 构建
 
-bundlekit 5 个 bundler 都支持 build SSR 双产物（client + server）。在 `.bundlekitrc.ts` 加 `ssr` 字段即可：
+bundlekit 7 个 bundler 都支持 build SSR 双产物（client + server）。在 `.bundlekitrc.ts` 加 `ssr` 字段即可：
 
 ```ts
 config: {
@@ -185,7 +185,7 @@ bc --help
 
 - [CLI 命令](/guide/cli) — `bc create` / `bc add` / `ds serve` / `ds build`
 - [配置参考](/guide/config) — `.bundlekitrc.ts` 全字段（含 `tools` 逃生舱与 `ssr`）
-- [打包器适配器](/guide/bundlers) — 5 个 bundler 的特性差异 + SSR 支持矩阵
+- [打包器适配器](/guide/bundlers) — 7 个 bundler 的特性差异 + SSR 支持矩阵
 - [SSR 指南](/guide/ssr) — 双产物构建 + dev SSR middleware
 - [架构设计](/guide/architecture) — 模块依赖、设计原则
 - [贡献指南](/contributing) — 环境搭建、运行测试、新增 bundler / plugin、发版流程
