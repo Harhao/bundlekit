@@ -36,6 +36,10 @@ describe("tools type inference", () => {
                     // rolldown 类型为 unknown，需用户自己断言
                     void (config as any).input;
                 },
+                parcel(config, ctx) {
+                    // parcel 类型为 unknown，需用户自己断言
+                    void (config as any).entries;
+                },
             },
             config: {
                 development: {

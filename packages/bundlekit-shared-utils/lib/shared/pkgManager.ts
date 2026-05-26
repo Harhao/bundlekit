@@ -529,8 +529,12 @@ export class PackageManager {
      */
     private hasPnpmVersionOrLater(version: string): boolean {
         try {
-            const result = spawnSync('pnpm', ['--version'], { stdio: ['pipe', 'pipe', 'ignore'] });
-            if (result.status !== 0) return false;
+            const result = spawnSync('pnpm', ['--version'], {
+                stdio: ['pipe', 'pipe', 'ignore'],
+                // 同 detectAvailablePMs：禁用 corepack strict，防止版本不匹配时非零退出
+                env: { ...process.env, COREPACK_ENABLE_STRICT: '0' },
+            });
+            if (result.status !== 0 || result.error) return false;
             const pnpmVersion = stripAnsi(result.stdout.toString().trim()) || '0.0.0';
             return semver.gte(pnpmVersion, version);
         } catch (e) {
@@ -624,8 +628,11 @@ export class PackageManager {
      */
     private hasPnpm3OrLater(): boolean {
         try {
-            const result = spawnSync('pnpm', ['--version'], { stdio: ['pipe', 'pipe', 'ignore'] });
-            if (result.status !== 0) return false;
+            const result = spawnSync('pnpm', ['--version'], {
+                stdio: ['pipe', 'pipe', 'ignore'],
+                env: { ...process.env, COREPACK_ENABLE_STRICT: '0' },
+            });
+            if (result.status !== 0 || result.error) return false;
             const pnpmVersion = stripAnsi(result.stdout.toString().trim()) || '0.0.0';
             return semver.gte(pnpmVersion, '3.0.0');
         } catch (e) {

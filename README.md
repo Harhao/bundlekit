@@ -12,7 +12,7 @@
 
 ## 中文
 
-前端多打包器构建工具集 —— 一套 `.bundlekitrc.ts` 配置，驱动 Webpack / Vite / Rollup / Rspack / Rolldown 五种主流打包器。
+前端多打包器构建工具集 —— 一套 `.bundlekitrc.ts` 配置，驱动 Webpack / Vite / Rollup / Rspack / Rolldown / Parcel 六种主流打包器。
 
 ### 架构概览
 
@@ -39,6 +39,7 @@ IBuildConfig（抽象配置）
 | `@bundlekit/bundler-rollup` | Rollup 4 适配器 |
 | `@bundlekit/bundler-rspack` | Rspack 适配器（Rust 实现，极速） |
 | `@bundlekit/bundler-rolldown` | Rolldown 适配器（实验性） |
+| `@bundlekit/bundler-parcel` | Parcel 2 适配器（零配置） |
 | `@bundlekit/plugin-react` | React 构建插件 |
 | `@bundlekit/plugin-vue` | Vue 3 构建插件 |
 | `@bundlekit/plugin-mock` | Mock API 插件 |
@@ -136,6 +137,7 @@ pnpm build:webpack   # bundler-webpack
 pnpm build:vite      # bundler-vite
 pnpm build:rollup    # bundler-rollup
 pnpm build:rspack    # bundler-rspack
+pnpm build:parcel    # bundler-parcel
 ```
 
 ### 文档
@@ -153,7 +155,7 @@ pnpm install && pnpm start
 
 ## English
 
-A frontend multi-bundler toolkit — one `.bundlekitrc.ts` config drives Webpack / Vite / Rollup / Rspack / Rolldown.
+A frontend multi-bundler toolkit — one `.bundlekitrc.ts` config drives Webpack / Vite / Rollup / Rspack / Rolldown / Parcel.
 
 ### Architecture
 
@@ -180,6 +182,7 @@ Build output
 | `@bundlekit/bundler-rollup` | Rollup 4 adapter |
 | `@bundlekit/bundler-rspack` | Rspack adapter (Rust-based, ultra-fast) |
 | `@bundlekit/bundler-rolldown` | Rolldown adapter (experimental) |
+| `@bundlekit/bundler-parcel` | Parcel 2 adapter (zero-config) |
 | `@bundlekit/plugin-react` | React build plugin |
 | `@bundlekit/plugin-vue` | Vue 3 build plugin |
 | `@bundlekit/plugin-mock` | Mock API plugin |
@@ -269,6 +272,7 @@ pnpm build:webpack   # bundler-webpack
 pnpm build:vite      # bundler-vite
 pnpm build:rollup    # bundler-rollup
 pnpm build:rspack    # bundler-rspack
+pnpm build:parcel    # bundler-parcel
 ```
 
 ### Documentation
