@@ -1,5 +1,14 @@
 # @bundlekit/cli
 
+## 0.0.7
+
+### Patch Changes
+
+- Updated dependencies [a19cb50]
+  - @bundlekit/shared-utils@0.0.6
+  - @bundlekit/plugin-react@0.0.7
+  - @bundlekit/plugin-vue@0.0.7
+
 ## 0.0.6
 
 ### Patch Changes

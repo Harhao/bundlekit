@@ -65,19 +65,14 @@ export class PackageManager {
 
         if (forcePackageManager) {
             this.bin = forcePackageManager;
-        } else if (context) {
-            if (this.hasProjectYarn(context)) {
-                this.bin = EPackageMangerTool.YARN;
-            } else if (this.hasProjectPnpm(context)) {
-                this.bin = EPackageMangerTool.PNPM;
-            } else if (this.hasProjectNpm(context)) {
-                this.bin = EPackageMangerTool.NPM;
-            }
+        } else {
+            // 从 context 向上逐级查找锁文件，以正确识别 monorepo 中的包管理器
+            this.bin = this.detectPackageManagerFromLockFile(this.context);
         }
 
         if (!this.bin) {
-            this.bin = this.hasYarnCommand() ? EPackageMangerTool.YARN :
-                this.hasPnpmVersionOrLater('3.0.0') ? EPackageMangerTool.PNPM :
+            this.bin = this.hasPnpmVersionOrLater('3.0.0') ? EPackageMangerTool.PNPM :
+                this.hasYarnCommand() ? EPackageMangerTool.YARN :
                     EPackageMangerTool.NPM;
         }
 
@@ -497,6 +492,32 @@ export class PackageManager {
         };
 
         return PACKAGE_MANAGER_CONFIG[bin];
+    }
+
+    /**
+     * 从指定目录向上逐级查找锁文件，识别 monorepo 使用的包管理器。
+     * 查找顺序：pnpm-lock.yaml → yarn.lock → package-lock.json。
+     * 在未找到任何锁文件时返回 null，由调用方继续探测。
+     * @param startDir 起始目录
+     * @returns EPackageMangerTool | null
+     */
+    private detectPackageManagerFromLockFile(startDir: string): EPackageMangerTool | null {
+        let current = startDir;
+        while (true) {
+            if (fs.existsSync(path.join(current, 'pnpm-lock.yaml'))) {
+                return EPackageMangerTool.PNPM;
+            }
+            if (fs.existsSync(path.join(current, 'yarn.lock'))) {
+                return EPackageMangerTool.YARN;
+            }
+            if (fs.existsSync(path.join(current, 'package-lock.json'))) {
+                return EPackageMangerTool.NPM;
+            }
+            const parent = path.dirname(current);
+            if (parent === current) break; // 已到达文件系统根目录
+            current = parent;
+        }
+        return null;
     }
 
     /**

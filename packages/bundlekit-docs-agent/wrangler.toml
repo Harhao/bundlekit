@@ -1,0 +1,12 @@
+name = "bundlekit-docs-agent"
+main = "dist/worker-rag.js"
+compatibility_date = "2026-05-03"
+
+[vars]
+VECTORIZE_INDEX_NAME = "bundlekit-docs"
+EMBEDDING_MODEL = "@cf/baai/bge-base-en-v1.5"
+CHAT_MODEL = "@cf/meta/llama-3.1-8b-instruct"
+CLOUDFLARE_ACCOUNT_ID = "b3c9a069af240ddf33b0f226d2aea9ca"
+
+# 敏感变量需要通过 wrangler secret set 设置
+# CLOUDFLARE_API_AI_TOKEN = "必须通过 secret 设置"
