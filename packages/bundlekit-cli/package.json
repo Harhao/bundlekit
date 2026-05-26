@@ -1,6 +1,6 @@
 {
   "name": "@bundlekit/cli",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "a cli tool serve for generate frontend project",
   "type": "module",
   "main": "./dist/index.mjs",
