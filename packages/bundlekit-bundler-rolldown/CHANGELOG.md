@@ -1,5 +1,13 @@
 # @bundlekit/bundler-rolldown
 
+## 0.0.6
+
+### Patch Changes
+
+- Updated dependencies [adbfb8f]
+- Updated dependencies [a19cb50]
+  - @bundlekit/shared-utils@0.0.6
+
 ## 0.0.5
 
 ### Patch Changes
