@@ -6,6 +6,8 @@
 
 [English](#english) | [中文](#chinese)
 
+<a href="https://llm-chat-app.harhao.workers.dev" target="_blank">bundlekit docs agent</a>
+
 ---
 
 <a name="chinese"></a>
