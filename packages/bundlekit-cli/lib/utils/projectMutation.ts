@@ -1,44 +1,8 @@
 import path from "path";
-import { createRequire } from "module";
-import { fileURLToPath } from "url";
 import { FileManager, BUNDLER_PACKAGE_MAP, resolveBundlerName } from "@bundlekit/shared-utils";
 import type { IBundlerName } from "@bundlekit/shared-utils";
-
-/**
- * 读取 @bundlekit/cli 自身的版本号
- *
- * 实现策略：
- * 1) 优先用 require.resolve 解析 cli 包的 package.json（已发版 / monorepo 都适用）
- * 2) 兜底：相对 import.meta.url 向上查找
- * 3) 最终兜底：返回 "*"
- */
-export function readCliVersion(): string {
-    try {
-        const require = createRequire(import.meta.url);
-        const pkgJsonPath = require.resolve("@bundlekit/cli/package.json", {
-            paths: [process.cwd()],
-        });
-        const pkg = require(pkgJsonPath) as { version?: string };
-        if (pkg?.version) return pkg.version;
-    } catch {}
-
-    try {
-        const dir = path.dirname(fileURLToPath(import.meta.url));
-        const candidatePaths = [
-            path.resolve(dir, "../package.json"),
-            path.resolve(dir, "../../package.json"),
-        ];
-        for (const candidate of candidatePaths) {
-            try {
-                const require = createRequire(import.meta.url);
-                const pkg = require(candidate) as { name?: string; version?: string };
-                if (pkg?.name === "@bundlekit/cli" && pkg?.version) return pkg.version;
-            } catch {}
-        }
-    } catch {}
-
-    return "*";
-}
+// 【低8】readCliVersion 已在 depMode.ts 实现，避免重复定义
+import { readCliVersion } from "./depMode";
 
 /**
  * 将选中的 bundler 写入 targetDir/package.json 的 devDependencies

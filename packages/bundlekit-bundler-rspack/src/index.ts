@@ -9,6 +9,7 @@ import {
     validateBuildConfig,
     createSSRRequestHandler,
     buildSSRView,
+    resolveSSRExternalsForWebpack,
 } from "@bundlekit/shared-utils";
 import type {
     IBuildConfig,
@@ -206,32 +207,10 @@ export default class RspackBundler implements IBuildToolAdapter<RspackOptions> {
     }
 
     /**
-     * SSR server pass externals
+     * SSR server pass externals — 委托给 shared-utils 统一实现（webpack/rspack callback 格式）
      */
     private resolveServerExternals(rawEnvConfig: any): any {
-        const ssrExternals = rawEnvConfig.ssr?.externals;
-        if (Array.isArray(ssrExternals)) return ssrExternals;
-        // 默认 'auto'
-        const externalNames = new Set<string>();
-        try {
-            const pkgPath = path.join(this.context, "package.json");
-            if (require("fs").existsSync(pkgPath)) {
-                const pkg = require(pkgPath) as Record<string, any>;
-                Object.keys(pkg.dependencies || {}).forEach((k) => externalNames.add(k));
-                Object.keys(pkg.peerDependencies || {}).forEach((k) => externalNames.add(k));
-            }
-        } catch {}
-        return ({ request }: any, callback: any) => {
-            if (!request) return callback();
-            if (request.startsWith("node:")) return callback(null, "commonjs " + request);
-            if (request.startsWith(".") || path.isAbsolute(request)) return callback();
-            for (const name of externalNames) {
-                if (request === name || request.startsWith(name + "/")) {
-                    return callback(null, "commonjs " + request);
-                }
-            }
-            return callback();
-        };
+        return resolveSSRExternalsForWebpack(rawEnvConfig.ssr, this.context);
     }
 
     public validateConfig(config: RspackOptions, buildConfig?: IBuildConfig) {
@@ -260,7 +239,7 @@ export default class RspackBundler implements IBuildToolAdapter<RspackOptions> {
                     compiler.run((err: any, stats: any) => {
                         if (err) {
                             this.logger.error(`打包失败, 错误信息: ${err}`);
-                            process.exit(1);
+                            throw err;
                         }
                         if (stats) {
                             process.stdout.write(stats.toString({ colors: true }) + "\n");

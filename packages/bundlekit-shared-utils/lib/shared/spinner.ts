@@ -26,17 +26,18 @@ export class Spinner {
             symbol = chalk.green('✔');
         }
         if (this.lastMsg) {
-            this.spinner?.stopAndPersist({
+            this.spinner.stopAndPersist({
                 symbol: this.lastMsg.symbol,
                 text: msg
             });
         }
-        this.spinner!!.text = " " + msg;
+        // 统一使用可选链，避免与 !! 非空断言混用
+        this.spinner.text = " " + msg;
         this.lastMsg = {
             symbol: symbol + " ",
             text: msg
         };
-        this.spinner?.start();
+        this.spinner.start();
     }
 
     /**

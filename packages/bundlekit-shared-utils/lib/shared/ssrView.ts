@@ -93,3 +93,35 @@ export function resolveSSRExternals(
 
     return [];
 }
+
+/**
+ * webpack / rspack 格式的 SSR externals 包装器
+ *
+ * webpack externals 函数签名为 ({ request }, callback) 形式，
+ * 本函数将 resolveSSRExternals 的通用解析结果适配为该格式。
+ */
+export function resolveSSRExternalsForWebpack(
+    ssrConfig: ISSRConfig | undefined,
+    projectRoot: string,
+): (ctx: { request?: string }, callback: (err?: any, result?: string) => void) => void {
+    const resolver = resolveSSRExternals(ssrConfig, projectRoot);
+    return ({ request }: { request?: string }, callback: (err?: any, result?: string) => void) => {
+        if (!request) return callback();
+        if (Array.isArray(resolver)) {
+            for (const pattern of resolver) {
+                if (typeof pattern === "string" && (request === pattern || request.startsWith(pattern + "/"))) {
+                    return callback(null, "commonjs " + request);
+                }
+                if (pattern instanceof RegExp && pattern.test(request)) {
+                    return callback(null, "commonjs " + request);
+                }
+            }
+            return callback();
+        }
+        // 函数型 resolver（auto 模式）
+        if ((resolver as (id: string) => boolean)(request)) {
+            return callback(null, "commonjs " + request);
+        }
+        return callback();
+    };
+}

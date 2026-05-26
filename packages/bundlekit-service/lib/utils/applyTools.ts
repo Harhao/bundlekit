@@ -8,16 +8,18 @@ import type { IBuildConfig, IBuildTools, IToolsCtx } from "@bundlekit/shared-uti
  *   - hook 返回新对象           → 用新对象替换
  *
  * hook 抛错 / Promise reject 时不吞掉，由调用方上层 try/catch 处理。
+ *
+ * 【低11】第一个参数改为只接收 tools 字段，避免传入整个 buildConfig
  */
 export async function applyTools(
-    buildConfig: IBuildConfig | null,
+    tools: IBuildConfig["tools"] | undefined | null,
     bundlerName: IBuildTools,
     rawConfig: unknown,
     ctx: IToolsCtx,
 ): Promise<unknown> {
-    if (!buildConfig?.tools) return rawConfig;
+    if (!tools) return rawConfig;
 
-    const hook = (buildConfig.tools as Record<string, any>)[bundlerName];
+    const hook = (tools as Record<string, any>)[bundlerName];
     if (typeof hook !== "function") return rawConfig;
 
     const result = await hook(rawConfig, ctx);

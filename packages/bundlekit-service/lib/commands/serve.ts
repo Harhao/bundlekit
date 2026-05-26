@@ -50,7 +50,7 @@ export default {
             }
 
             api.service.setBuildConfig(buildConfig);
-            api.service.startBuilder();
+            await api.service.startBuilder();
         });
     }
 };

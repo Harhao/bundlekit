@@ -9,28 +9,15 @@ export default {
         const logger = new Logger();
         const commands = api.service.commands;
 
-        function printHelp() {
-            // 打印帮助信息
-            for(const command in commands) {
-                if (command === "help") {
-                    logger.done("使用方法:", command);
-                    const { opts } = commands[command] as IRegisterCommandItem;
-                    if (typeof opts !== "function") {
-                        logger.printRecord(opts.options);
-                    }
-                }
-            }
-        }
-
-        function printAllCommandUsage() {
-
-            for(const command in commands) {
-                if (command !== "help") {
-                    logger.done("使用方法:", command);
-                    const { opts } = commands[command] as IRegisterCommandItem;
-                    if (typeof opts !== "function") {
-                        logger.printRecord(opts.options);
-                    }
+        /** 打印命令用法；filterOnly 为 true 时只打印该命令，否则打印其他所有命令 */
+        function printCommandUsage(targetCommand?: string) {
+            for (const command in commands) {
+                const shouldPrint = targetCommand ? command === targetCommand : command !== "help";
+                if (!shouldPrint) continue;
+                logger.done("使用方法:", command);
+                const { opts } = commands[command] as IRegisterCommandItem;
+                if (typeof opts !== "function") {
+                    logger.printRecord(opts.options);
                 }
             }
         }
@@ -47,9 +34,8 @@ export default {
             },
             async (args: Record<string, unknown>, rawArgv: string[] = []) => {
                 // 打印帮助信息
-                const command = args._[0] as string;
-                console.log("args", args, rawArgv);
-                !command ? printAllCommandUsage() : printHelp();
+                const command = (args._ as string[])?.[0];
+                !command ? printCommandUsage() : printCommandUsage("help");
             });
     }
 };

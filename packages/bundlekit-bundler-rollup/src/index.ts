@@ -10,7 +10,7 @@ import json from "@rollup/plugin-json";
 import replace from "@rollup/plugin-replace";
 import postcss from "rollup-plugin-postcss";
 
-import { Logger, validateBuildConfig, FileManager, createSSRRequestHandler, buildSSRView } from "@bundlekit/shared-utils";
+import { Logger, validateBuildConfig, FileManager, createSSRRequestHandler, buildSSRView, resolveSSRExternals } from "@bundlekit/shared-utils";
 import type { IBuildConfig, IBuildToolAdapter, IService, IBuildEnv, IRequestHandler, ISSRMiddlewareCtx } from "@bundlekit/shared-utils";
 import { DevServer } from "./DevServer";
 
@@ -367,30 +367,10 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
     }
 
     /**
-     * SSR server pass externals
+     * SSR server pass externals — 委托给 shared-utils 统一实现
      */
     private resolveServerExternals(rawEnvConfig: any): any[] | ((id: string) => boolean) {
-        const ssrExternals = rawEnvConfig.ssr?.externals;
-        if (Array.isArray(ssrExternals)) return ssrExternals;
-        // 默认 'auto'
-        const externalNames = new Set<string>();
-        try {
-            const pkgPath = path.join(this.context, "package.json");
-            if (existsSync(pkgPath)) {
-                const pkg = JSON.parse(readFileSync(pkgPath, "utf-8")) as Record<string, any>;
-                Object.keys(pkg.dependencies || {}).forEach((k) => externalNames.add(k));
-                Object.keys(pkg.peerDependencies || {}).forEach((k) => externalNames.add(k));
-            }
-        } catch {}
-        return (id: string): boolean => {
-            if (id.startsWith("node:")) return true;
-            if (id.startsWith(".") || path.isAbsolute(id)) return false;
-            if (externalNames.has(id)) return true;
-            for (const name of externalNames) {
-                if (id === name || id.startsWith(name + "/")) return true;
-            }
-            return false;
-        };
+        return resolveSSRExternals(rawEnvConfig.ssr, this.context) as any[] | ((id: string) => boolean);
     }
 
     public async run(config: RollupOptions) {

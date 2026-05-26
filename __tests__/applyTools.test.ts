@@ -24,14 +24,15 @@ describe("applyTools", () => {
     it("returns rawConfig unchanged when no tools field", async () => {
         const buildConfig = makeConfig(undefined);
         const raw = { entry: "./src/index.ts" };
-        const result = await applyTools(buildConfig, "webpack", raw, baseCtx);
+        // 【低11】新签名：第一参数传 tools 字段
+        const result = await applyTools(buildConfig.tools, "webpack", raw, baseCtx);
         expect(result).toBe(raw);
     });
 
     it("returns rawConfig when bundler hook is missing", async () => {
         const buildConfig = makeConfig({ vite: () => {} });
         const raw = { entry: "./src/index.ts" };
-        const result = await applyTools(buildConfig, "webpack", raw, baseCtx);
+        const result = await applyTools(buildConfig.tools, "webpack", raw, baseCtx);
         expect(result).toBe(raw);
     });
 
@@ -41,7 +42,7 @@ describe("applyTools", () => {
         });
         const buildConfig = makeConfig({ webpack: hook });
         const raw: any = { entry: "./src/index.ts" };
-        const result = await applyTools(buildConfig, "webpack", raw, baseCtx);
+        const result = await applyTools(buildConfig.tools, "webpack", raw, baseCtx);
         expect(hook).toHaveBeenCalledTimes(1);
         expect(result).toBe(raw);
         expect((result as any).touched).toBe(true);
@@ -51,7 +52,7 @@ describe("applyTools", () => {
         const replacement = { entry: "./src/replaced.ts" };
         const buildConfig = makeConfig({ webpack: () => replacement });
         const raw = { entry: "./src/index.ts" };
-        const result = await applyTools(buildConfig, "webpack", raw, baseCtx);
+        const result = await applyTools(buildConfig.tools, "webpack", raw, baseCtx);
         expect(result).toBe(replacement);
     });
 
@@ -63,7 +64,7 @@ describe("applyTools", () => {
                 return replacement;
             },
         });
-        const result = await applyTools(buildConfig, "webpack", { foo: 0 }, baseCtx);
+        const result = await applyTools(buildConfig.tools, "webpack", { foo: 0 }, baseCtx);
         expect(result).toBe(replacement);
     });
 
@@ -73,7 +74,7 @@ describe("applyTools", () => {
                 throw new Error("bad hook");
             },
         });
-        await expect(applyTools(buildConfig, "webpack", {}, baseCtx)).rejects.toThrow(
+        await expect(applyTools(buildConfig.tools, "webpack", {}, baseCtx)).rejects.toThrow(
             "bad hook",
         );
     });
@@ -84,7 +85,7 @@ describe("applyTools", () => {
                 throw new Error("async bad");
             },
         });
-        await expect(applyTools(buildConfig, "webpack", {}, baseCtx)).rejects.toThrow(
+        await expect(applyTools(buildConfig.tools, "webpack", {}, baseCtx)).rejects.toThrow(
             "async bad",
         );
     });
@@ -93,7 +94,7 @@ describe("applyTools", () => {
         const hook = vi.fn();
         const buildConfig = makeConfig({ vite: hook });
         const ctx: IToolsCtx = { mode: "test", command: "serve", env: "server", bundler: "vite" };
-        await applyTools(buildConfig, "vite", { plugins: [] }, ctx);
+        await applyTools(buildConfig.tools, "vite", { plugins: [] }, ctx);
         expect(hook).toHaveBeenCalledWith({ plugins: [] }, ctx);
     });
 });

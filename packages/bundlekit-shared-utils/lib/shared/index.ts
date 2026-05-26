@@ -8,3 +8,4 @@ export * from "./addPluginToConfig";
 export * from "./confirm";
 export * from "./ssrRender";
 export * from "./ssrView";
+export * from "./DevServer";
