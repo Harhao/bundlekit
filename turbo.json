@@ -17,7 +17,8 @@
         "^rollup:build",
         "^rspack:build",
         "^rolldown:build",
-        "^parcel:build"
+        "^parcel:build",
+        "^esbuild:build"
       ],
       "outputs": ["dist/**"]
     },
@@ -58,6 +59,10 @@
       "outputs": ["dist/**"]
     },
     "parcel:build": {
+      "dependsOn": ["^shared:build"],
+      "outputs": ["dist/**"]
+    },
+    "esbuild:build": {
       "dependsOn": ["^shared:build"],
       "outputs": ["dist/**"]
     },

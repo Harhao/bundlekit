@@ -1,0 +1,56 @@
+{
+  "name": "@bundlekit/bundler-esbuild",
+  "version": "0.0.1",
+  "description": "esbuild bundler adapter for @bundlekit/service",
+  "types": "./dist/index.d.ts",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "cjs": "./dist/index.cjs",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "package.json"
+  ],
+  "scripts": {
+    "clean": "rimraf ./dist",
+    "esbuild:build": "pnpm run clean && rollup -c ./scripts/rollup.config.js"
+  },
+  "dependencies": {
+    "@bundlekit/shared-utils": "workspace:*",
+    "esbuild": "^0.20.0"
+  },
+  "devDependencies": {
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^12.1.2",
+    "rimraf": "^5.0.1",
+    "rollup": "^4.40.0",
+    "tslib": "^2.6.2"
+  },
+  "keywords": [
+    "esbuild",
+    "bundlekit-bundler",
+    "bundlekit"
+  ],
+  "author": "harhao@163.com",
+  "license": "MIT",
+  "website": "https://bundlekit.harhao.workers.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Harhao/bundlekit.git",
+    "directory": "packages/bundlekit-bundler-esbuild"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "engines": {
+    "node": ">= 18.0.0"
+  }
+}

@@ -36,6 +36,7 @@ export type IBundlerConfigMap = {
     rollup: import("rollup").RollupOptions;
     rolldown: unknown;
     parcel: unknown;
+    esbuild: unknown;
 };
 
 /**

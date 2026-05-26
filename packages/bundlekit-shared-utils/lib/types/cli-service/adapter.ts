@@ -32,4 +32,4 @@ export interface IBuildToolAdapter<T = any> {
     ) => Promise<IRequestHandler | IRequestHandler[]>;
 };
   
-export type IBuildTools = "vite" | "webpack" | "rollup" | "rspack" | "rolldown" | "parcel";
+export type IBuildTools = "vite" | "webpack" | "rollup" | "rspack" | "rolldown" | "parcel" | "esbuild";

@@ -40,6 +40,10 @@ describe("tools type inference", () => {
                     // parcel 类型为 unknown，需用户自己断言
                     void (config as any).entries;
                 },
+                esbuild(config, ctx) {
+                    // esbuild 类型为 unknown，需用户自己断言
+                    void (config as any).entryPoints;
+                },
             },
             config: {
                 development: {
