@@ -425,32 +425,36 @@ export class PackageManager {
             // 包管理器 install/add 命令完全不需要 stdin。
             const result = await this.execa(command, args, {
                 cwd,
-                shell: true,
+                // shell: true 在 macOS/Linux + corepack 管理的 pnpm 11.x 下，
+                // Node.js v20 会触发 ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING。
+                // Windows 需要 shell 才能在 PATH 中找到 .cmd/.bat；其他平台直接执行即可。
+                shell: process.platform === 'win32',
                 stdio: ['ignore', 'pipe', 'pipe'] as const,
                 env: {
                     ...process.env,
                     COREPACK_ENABLE_STRICT: '0',
+                    // 禁止 corepack 自动把 packageManager 字段 pin 到 11.x（dynamic import 不兼容）
+                    COREPACK_ENABLE_AUTO_PIN: '0',
                 },
             });
 
             return true;
 
         } catch (error) {
-            // pnpm 在 peer dependencies 警告时可能返回非零退出码
-            // 检查是否是这种情况（安装实际成功但有警告）
             const errorMsg = (error as Error).message || '';
+            // pnpm 在 peer dependencies 警告时可能返回非零退出码，但安装实际成功
+            // 仅当确实没有任何 ERR_PNPM / ERROR 标志时，才视为无害警告
             if (bin === EPackageMangerTool.PNPM && errorMsg.includes('exit code')) {
-                // 检查 stderr 中是否有实际的安装失败信息
-                const hasRealError = errorMsg.includes('ERR_PNPM') || 
-                                    errorMsg.includes('ERROR') ||
-                                    errorMsg.includes('failed');
+                const hasRealError =
+                    errorMsg.includes('ERR_PNPM') ||
+                    errorMsg.includes('ERROR');
                 if (!hasRealError) {
-                    // 可能只是 peer dependencies 警告，认为安装成功
-                    this.logger.debug(`pnpm 返回非零退出码但可能安装成功: ${errorMsg}`);
+                    this.logger.debug(`pnpm 返回非零退出码但无真实错误标志，视为成功: ${errorMsg}`);
                     return true;
                 }
             }
-            return false;
+            // 真实安装失败：向上抛出原始错误（含 stderr），让调用方展示给用户
+            throw error;
         }
     }
 
