@@ -1,5 +1,12 @@
 # @bundlekit/plugin-react
 
+## 0.0.7
+
+### Patch Changes
+
+- Updated dependencies [adbfb8f]
+  - @bundlekit/shared-utils@0.0.6
+
 ## 0.0.6
 
 ### Patch Changes
