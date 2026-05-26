@@ -31,6 +31,9 @@
   ],
   "author": "harhao@163.com",
   "license": "MIT",
+  "engines": {
+    "node": ">=22.13.0"
+  },
   "website": "https://bundlekit.harhao.workers.dev",
   "repository": {
     "type": "git",
