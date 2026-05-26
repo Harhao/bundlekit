@@ -7,26 +7,19 @@
         "preserveConstEnums": true,
         "removeComments": false,
         "sourceMap": false,
-        "moduleResolution": "bundler",
+        "moduleResolution": "node",
         "esModuleInterop": true,
         "resolveJsonModule": true,
-        "skipLibCheck": true,
-        "jsx": "react-jsx",
-        "jsxImportSource": "react"
+        "declaration": true,
+        "declarationDir": "./dist",
+        "skipLibCheck": true
     },
     "include": [
-        "index.tsx",
-        "lib/**/*.ts",
-        "lib/**/*.tsx",
-        "types/**/*.ts"
-     ],
+        "src/**/*.ts"
+    ],
     "exclude": [
         "node_modules",
-        "package.json",
-        "scripts",
         "dist",
-        "tsconfig.json",
-        "test-app",
-        "**/test-app/**"
+        "scripts"
     ]
 }

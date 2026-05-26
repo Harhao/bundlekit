@@ -3,106 +3,67 @@
   "tasks": {
     "shared:build": {
       "dependsOn": [],
-      "outputs": [
-        "packages/bundlekit-shared-utils/dist/**"
-      ]
+      "outputs": ["dist/**"]
     },
     "cli:build": {
-      "dependsOn": [
-        "shared:build"
-      ],
-      "outputs": [
-        "packages/bundlekit-cli/dist/**"
-      ]
+      "dependsOn": ["^shared:build"],
+      "outputs": ["dist/**"]
     },
     "service:build": {
       "dependsOn": [
-        "shared:build",
-        "webpack:build",
-        "vite:build",
-        "rollup:build",
-        "rspack:build",
-        "rolldown:build"
+        "^shared:build",
+        "^webpack:build",
+        "^vite:build",
+        "^rollup:build",
+        "^rspack:build",
+        "^rolldown:build",
+        "^parcel:build"
       ],
-      "outputs": [
-        "packages/bundlekit-service/dist/**"
-      ]
+      "outputs": ["dist/**"]
     },
     "webpack:build": {
-      "dependsOn": [
-        "shared:build"
-      ],
-      "outputs": [
-        "packages/bundlekit-bundler-webpack/dist/**"
-      ]
+      "dependsOn": ["^shared:build"],
+      "outputs": ["dist/**"]
     },
     "vite:build": {
-      "dependsOn": [
-        "shared:build"
-      ],
-      "outputs": [
-        "packages/bundlekit-bundler-vite/dist/**"
-      ]
+      "dependsOn": ["^shared:build"],
+      "outputs": ["dist/**"]
     },
     "rollup:build": {
-      "dependsOn": [
-        "shared:build"
-      ],
-      "outputs": [
-        "packages/bundlekit-bundler-rollup/dist/**"
-      ]
+      "dependsOn": ["^shared:build"],
+      "outputs": ["dist/**"]
     },
     "rspack:build": {
-      "dependsOn": [
-        "shared:build"
-      ],
-      "outputs": [
-        "packages/bundlekit-bundler-rspack/dist/**"
-      ]
+      "dependsOn": ["^shared:build"],
+      "outputs": ["dist/**"]
     },
     "plugin:mock:build": {
-      "dependsOn": [
-        "shared:build"
-      ],
-      "outputs": [
-        "packages/bundlekit-plugin-mock/dist/**"
-      ]
+      "dependsOn": ["^shared:build"],
+      "outputs": []
     },
     "request:build": {
       "dependsOn": [],
-      "outputs": [
-        "packages/bundlekit-request/dist/**"
-      ]
+      "outputs": []
     },
     "plugin:react:build": {
-      "dependsOn": [
-        "shared:build"
-      ],
-      "outputs": [
-        "packages/bundlekit-plugin-react/dist/**"
-      ]
+      "dependsOn": ["^shared:build"],
+      "outputs": []
     },
     "plugin:vue:build": {
-      "dependsOn": [
-        "shared:build"
-      ],
-      "outputs": [
-        "packages/bundlekit-plugin-vue/dist/**"
-      ]
+      "dependsOn": ["^shared:build"],
+      "outputs": []
     },
     "rolldown:build": {
-      "dependsOn": [
-        "shared:build"
-      ],
-      "outputs": [
-        "packages/bundlekit-bundler-rolldown/dist/**"
-      ]
+      "dependsOn": ["^shared:build"],
+      "outputs": ["dist/**"]
+    },
+    "parcel:build": {
+      "dependsOn": ["^shared:build"],
+      "outputs": ["dist/**"]
     },
     "docs:build": {
       "dependsOn": [],
-      "outputs": [
-        "packages/bundlekit-docs/dist/**"
-      ]
+      "outputs": ["dist/**"]
     }
   }
 }

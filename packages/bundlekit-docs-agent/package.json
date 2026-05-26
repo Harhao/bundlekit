@@ -23,7 +23,6 @@
     "start": "node ./dist/index.js",
     "ingest": "tsx ./src/ingest.ts",
     "agent": "tsx test/interactive-agent.ts",
-    "test": "vitest run",
     "test:cloudflare": "tsx test/test-permissions.ts",
     "test:worker": "test/test-worker.sh",
     "deploy": "scripts/deploy.sh",
@@ -71,8 +70,7 @@
     "esbuild": "^0.20.2",
     "rimraf": "^5.0.1",
     "tsx": "^4.19.2",
-    "typescript": "^5.8.2",
-    "vitest": "^2.1.9"
+    "typescript": "^5.8.2"
   },
   "engines": {
     "node": ">= 18.0.0"

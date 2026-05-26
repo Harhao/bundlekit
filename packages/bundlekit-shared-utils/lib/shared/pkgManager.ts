@@ -50,6 +50,8 @@ export class PackageManager {
     private metadataCache = new LRU({
         max: 200,
     });
+    // 【中4】注册表环境变量只需设置一次，缓存标记避免每次 runCommand 都触发子进程
+    private _registryEnvsReady: boolean = false;
 
     private logger = new Logger();
 
@@ -527,8 +529,12 @@ export class PackageManager {
      */
     private hasPnpmVersionOrLater(version: string): boolean {
         try {
-            const result = spawnSync('pnpm', ['--version'], { stdio: ['pipe', 'pipe', 'ignore'] });
-            if (result.status !== 0) return false;
+            const result = spawnSync('pnpm', ['--version'], {
+                stdio: ['pipe', 'pipe', 'ignore'],
+                // 同 detectAvailablePMs：禁用 corepack strict，防止版本不匹配时非零退出
+                env: { ...process.env, COREPACK_ENABLE_STRICT: '0' },
+            });
+            if (result.status !== 0 || result.error) return false;
             const pnpmVersion = stripAnsi(result.stdout.toString().trim()) || '0.0.0';
             return semver.gte(pnpmVersion, version);
         } catch (e) {
@@ -561,7 +567,8 @@ export class PackageManager {
             const packageJson = this.fse.readJsonFile(packagePath);
             return packageJson.version;
         } catch (e) {
-            console.warn(`Failed to get version for ${packageName}:`, e);
+            // 【低15】避免将含路径的敏感信息输出到 console，改用 debug 级别
+            this.logger.debug(`获取 ${packageName} 版本失败（已忽略）: ${(e as any)?.message ?? e}`);
             return null;
         }
     }
@@ -621,8 +628,11 @@ export class PackageManager {
      */
     private hasPnpm3OrLater(): boolean {
         try {
-            const result = spawnSync('pnpm', ['--version'], { stdio: ['pipe', 'pipe', 'ignore'] });
-            if (result.status !== 0) return false;
+            const result = spawnSync('pnpm', ['--version'], {
+                stdio: ['pipe', 'pipe', 'ignore'],
+                env: { ...process.env, COREPACK_ENABLE_STRICT: '0' },
+            });
+            if (result.status !== 0 || result.error) return false;
             const pnpmVersion = stripAnsi(result.stdout.toString().trim()) || '0.0.0';
             return semver.gte(pnpmVersion, '3.0.0');
         } catch (e) {
@@ -714,7 +724,11 @@ export class PackageManager {
         delete process.env.NODE_ENV;
 
         try {
-            await this.setRegistryEnvs();
+            // 【中4】注册表环境变量只需在首次命令前设置一次，避免每次都触发 npm config get 子进程
+            if (!this._registryEnvsReady) {
+                await this.setRegistryEnvs();
+                this._registryEnvsReady = true;
+            }
             const config = this.getPackageManagerConfig(this.bin!);
             const commandArgs = [...config[command], ...args];
 

@@ -15,7 +15,7 @@ export default {
             }
         }, async (args: Record<string, unknown>, rawArgv: string[] = []) => {         
             // 开始构建
-            api.service.startBuilder();
+            await api.service.startBuilder();
         });
     }
 };

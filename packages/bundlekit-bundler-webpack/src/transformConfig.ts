@@ -8,6 +8,7 @@ import TerserPlugin from "terser-webpack-plugin";
 
 import { fileURLToPath } from "url";
 import { Logger } from "@bundlekit/shared-utils";
+import { resolveSSRExternalsForWebpack } from "@bundlekit/shared-utils";
 import type { Configuration } from "webpack";
 import type { IBuildConfig, IBuildEnv, IBuildOutput } from "@bundlekit/shared-utils"
 
@@ -126,34 +127,10 @@ export default class TransformConfig {
         return this.transformConfig;
     }
     /**
-     * SSR server pass externals：'auto' / array / 默认 'auto'
-     * - 'auto'：把项目的 dependencies / peerDependencies 与 node_modules 全部 externalize
-     * - array：直接用作 webpack externals
+     * SSR server pass externals — 委托给 shared-utils 统一实现（webpack callback 格式）
      */
     private resolveServerExternals(): any {
-        const ssrExternals = (this.buildConfig as any).ssr?.externals;
-        if (Array.isArray(ssrExternals)) return ssrExternals;
-        // 默认 'auto'
-        const externalNames = new Set<string>();
-        try {
-            const pkgPath = path.join(this.context, 'package.json');
-            if (require('fs').existsSync(pkgPath)) {
-                const pkg = require(pkgPath) as Record<string, any>;
-                Object.keys(pkg.dependencies || {}).forEach((k) => externalNames.add(k));
-                Object.keys(pkg.peerDependencies || {}).forEach((k) => externalNames.add(k));
-            }
-        } catch {}
-        return ({ request }: any, callback: any) => {
-            if (!request) return callback();
-            if (request.startsWith('node:')) return callback(null, 'commonjs ' + request);
-            if (request.startsWith('.') || path.isAbsolute(request)) return callback();
-            for (const name of externalNames) {
-                if (request === name || request.startsWith(name + '/')) {
-                    return callback(null, 'commonjs ' + request);
-                }
-            }
-            return callback();
-        };
+        return resolveSSRExternalsForWebpack((this.buildConfig as any).ssr, this.context);
     }
 
     private transformResolve(): Configuration['resolve'] {

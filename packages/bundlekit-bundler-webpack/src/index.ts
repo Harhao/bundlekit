@@ -130,7 +130,7 @@ export default class WebpackBundler implements IBuildToolAdapter<Configuration> 
             }
         } catch (e) {
             this.logger.error(`打包失败, 错误信息: ${e}`);
-            process.exit(1);
+            throw e;
         }
     }
 

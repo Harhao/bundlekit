@@ -39,7 +39,7 @@ function makeBaseConfig(): IBuildConfig {
 }
 
 describe("Service.getBundlerRegistry", () => {
-    it("maps all 5 bundler names to their adapter package names", () => {
+    it("maps all 6 bundler names to their adapter package names", () => {
         const service = new Service("/tmp");
         const registry = (service as any).getBundlerRegistry() as Record<string, string>;
 
@@ -48,12 +48,13 @@ describe("Service.getBundlerRegistry", () => {
         expect(registry.rollup).toBe("@bundlekit/bundler-rollup");
         expect(registry.rspack).toBe("@bundlekit/bundler-rspack");
         expect(registry.rolldown).toBe("@bundlekit/bundler-rolldown");
+        expect(registry.parcel).toBe("@bundlekit/bundler-parcel");
     });
 
-    it("returns exactly 5 entries", () => {
+    it("returns exactly 6 entries", () => {
         const service = new Service("/tmp");
         const registry = (service as any).getBundlerRegistry() as Record<string, string>;
-        expect(Object.keys(registry)).toHaveLength(5);
+        expect(Object.keys(registry)).toHaveLength(6);
     });
 
     it("all values are @bundlekit-scoped package names", () => {

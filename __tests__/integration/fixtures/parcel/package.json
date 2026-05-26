@@ -1,0 +1,15 @@
+{
+    "name": "bundlekit-fixture-parcel",
+    "version": "0.0.0",
+    "private": true,
+    "dependencies": {
+        "react": "^18.3.0",
+        "react-dom": "^18.3.0"
+    },
+    "devDependencies": {
+        "@bundlekit/service": "link:../../../../packages/bundlekit-service",
+        "@bundlekit/bundler-parcel": "link:../../../../packages/bundlekit-bundler-parcel",
+        "@bundlekit/shared-utils": "link:../../../../packages/bundlekit-shared-utils",
+        "@bundlekit/plugin-react": "link:../../../../packages/bundlekit-plugin-react"
+    }
+}

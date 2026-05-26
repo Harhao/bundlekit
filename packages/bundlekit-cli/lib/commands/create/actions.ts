@@ -139,8 +139,11 @@ export function detectAvailablePMs(): Record<PMName, boolean> {
             const result = spawnSync(bin, ["--version"], {
                 stdio: "ignore",
                 shell: process.platform === "win32",
+                // 禁用 corepack strict 模式：避免当项目 package.json 指定了特定
+                // packageManager 版本但全局安装版本不同时，corepack 拦截并返回非零退出码
+                env: { ...process.env, COREPACK_ENABLE_STRICT: "0" },
             });
-            return result.status === 0;
+            return result.status === 0 && !result.error;
         } catch {
             return false;
         }

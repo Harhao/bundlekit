@@ -15,7 +15,9 @@
     "rollup:dev": "npm run clean && bundlekit-service serve --bundler rollup --mode development",
     "rollup:prod": "npm run clean && bundlekit-service build --bundler rollup --mode production",
     "rolldown:dev": "npm run clean && bundlekit-service serve --bundler rolldown --mode development",
-    "rolldown:prod": "npm run clean && bundlekit-service build --bundler rolldown --mode production"
+    "rolldown:prod": "npm run clean && bundlekit-service build --bundler rolldown --mode production",
+    "parcel:dev": "npm run clean && bundlekit-service serve --bundler parcel --mode development",
+    "parcel:prod": "npm run clean && bundlekit-service build --bundler parcel --mode production"
   },
   "keywords": [],
   "author": "",
@@ -27,6 +29,7 @@
     "@bundlekit/bundler-rspack": "workspace:*",
     "@bundlekit/bundler-vite": "workspace:*",
     "@bundlekit/bundler-rolldown": "workspace:*",
+    "@bundlekit/bundler-parcel": "workspace:*",
     "@bundlekit/plugin-react": "workspace:*",
     "@bundlekit/plugin-mock": "workspace:*",
     "@types/react": "^18.2.0",

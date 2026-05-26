@@ -35,6 +35,7 @@ export type IBundlerConfigMap = {
     rspack: import("@rspack/core").RspackOptions;
     rollup: import("rollup").RollupOptions;
     rolldown: unknown;
+    parcel: unknown;
 };
 
 /**

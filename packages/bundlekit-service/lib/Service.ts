@@ -52,6 +52,8 @@ export default class Service {
     private configLoader: ConfigLoader | null = null;
     // 打包工具配置
     private buildConfig: IBuildConfig | null = null;
+    // 【中5】loadBundlerPlugin 实例级缓存，避免同一次构建多次解析同一包
+    private bundlerPluginCache = new Map<string, any>();
 
     constructor(context?: string) {
         this.context = context || process.cwd();
@@ -86,17 +88,16 @@ export default class Service {
         const sortedPlugins: IRegisterPlugin[] = [];
 
         const builtInPlugins = [
-            await import("./commands/build").then(m => m.default),
-            await import("./commands/serve").then(m => m.default),
-            await import("./commands/help").then(m => m.default)
+            { id: "built-in:build",  module: await import("./commands/build").then(m => m.default) },
+            { id: "built-in:serve",  module: await import("./commands/serve").then(m => m.default) },
+            { id: "built-in:help",   module: await import("./commands/help").then(m => m.default)  },
         ];
 
-        for (let plugin of builtInPlugins) {
-            const { defaultModes, apply } = plugin;
+        for (const { id, module: plugin } of builtInPlugins) {
             sortedPlugins.push({
-                id: `built-in:${plugin.defaultModes ? Object.keys(plugin.defaultModes)[0] : 'unknown'}`,
-                apply: apply,
-                defaultModes,
+                id,
+                apply: plugin.apply,
+                defaultModes: plugin.defaultModes,
             });
         }
 
@@ -182,16 +183,14 @@ export default class Service {
 
     /**
      * 处理打包工具的原生配置(暴露出去的配置)
-     * @param config 打包工具的配置(针对具体的bundler配置， 所以这里config的类型是Record<string, unknown>)
-     * @returns Recodr<string, unknown>
+     * @param config 打包工具的配置(针对具体的bundler配置)
      */
-    public async configureConfig(config: Record<string, unknown>) {
-
+    public async configureConfig<T extends Record<string, unknown>>(config: T): Promise<T> {
         if (!this.buildConfig?.changeConfigure) {
             return config;
         }
-        const result = this.buildConfig.changeConfigure(config, this.mode);
-        return result instanceof Promise ? await result : result;
+        const result = this.buildConfig.changeConfigure(config as Record<string, unknown>, this.mode);
+        return (result instanceof Promise ? await result : result) as T;
     }
 
     /**
@@ -200,6 +199,10 @@ export default class Service {
      * @returns 打包工具插件
      */
     public async loadBundlerPlugin(packageName: string) {
+        // 【中5】命中缓存直接返回，避免同一次构建多次解析同一包
+        if (this.bundlerPluginCache.has(packageName)) {
+            return this.bundlerPluginCache.get(packageName);
+        }
         try {
             const require = createRequire(import.meta.url);
             let bundlerModule;
@@ -225,6 +228,7 @@ export default class Service {
                     bundlerModule = bundlerModule.default || bundlerModule;
                 }
             }
+            this.bundlerPluginCache.set(packageName, bundlerModule);
             return bundlerModule;
         } catch (error) {
             this.logger.error(`无法加载打包工具插件: ${packageName}`, "构建工具");
@@ -310,7 +314,7 @@ export default class Service {
         };
 
         const builderConifg = await builder.transformConfig(passConfig);
-        const afterTools = await applyTools(passConfig, bundlerName, builderConifg, toolsCtx);
+        const afterTools = await applyTools(passConfig.tools, bundlerName, builderConifg, toolsCtx);
         const finalConfig = await this.configureConfig(afterTools as Record<string, unknown>);
         await builder.run(finalConfig);
     }
@@ -325,25 +329,23 @@ export default class Service {
         const finalBundler = this.buildConfig?.bundler || "vite";
         const packageName = bundlerList[finalBundler];
 
-        let isInstallBundler = !!(await this.loadBundlerPlugin(packageName));
+        let bundlerPlugin = await this.loadBundlerPlugin(packageName);
 
         // 如果打包工具不在默认列表中，则按策略矩阵决定是否安装并写入 devDependencies
-        if (!isInstallBundler) {
+        if (!bundlerPlugin) {
             const installed = await this.resolveBundlerOrPrompt(packageName);
             if (!installed) {
-                process.exit(1);
+                throw new Error(`打包工具 ${packageName} 安装失败，无法继续`);
             }
-            isInstallBundler = !!(await this.loadBundlerPlugin(packageName));
-            if (!isInstallBundler) {
-                this.logger.error(`安装后仍无法加载 ${packageName}，请检查 node_modules`, "构建工具");
-                process.exit(1);
+            // 清除缓存以便重新解析刚安装的包
+            this.bundlerPluginCache.delete(packageName);
+            bundlerPlugin = await this.loadBundlerPlugin(packageName);
+            if (!bundlerPlugin) {
+                throw new Error(`安装后仍无法加载 ${packageName}，请检查 node_modules`);
             }
         }
 
-        if (!isInstallBundler) return;
-
         this.logger.log(`使用的构建：${finalBundler}`, "构建工具");
-        const bundlerPlugin = await this.loadBundlerPlugin(packageName);
 
         // 检测是否启用 SSR：当前 envConfig 上有 ssr 字段
         const envConfig = this.buildConfig?.config?.[this.mode];
@@ -356,16 +358,11 @@ export default class Service {
         }
 
         // dev SSR 路径：service 起 HTTP server，adapter 提供 middleware 链
-        // 当且仅当 (currentCommand === 'serve') 且 envConfig.ssr.dev !== false 时启用 dev SSR
         const ssrDev = !!envConfig?.ssr?.dev;
         if (this.currentCommand === "serve" && ssrDev) {
             const builder = new bundlerPlugin(this, this.mode);
             if (typeof builder.createSSRMiddleware !== "function") {
-                this.logger.error(
-                    `bundler "${finalBundler}" 未实现 createSSRMiddleware，无法启动 dev SSR`,
-                    "构建工具",
-                );
-                process.exit(1);
+                throw new Error(`bundler "${finalBundler}" 未实现 createSSRMiddleware，无法启动 dev SSR`);
             }
             try {
                 const middleware = await builder.createSSRMiddleware(this.buildConfig!, {
@@ -386,8 +383,7 @@ export default class Service {
                     "构建工具",
                 );
             } catch (err: any) {
-                this.logger.error(`启动 SSR dev server 失败: ${err?.message ?? err}`, "构建工具");
-                process.exit(1);
+                throw new Error(`启动 SSR dev server 失败: ${err?.message ?? err}`);
             }
             return;
         }
@@ -446,8 +442,7 @@ export default class Service {
             let runCommand = this.commands[command];
 
             if (!runCommand && command) {
-                this.logger.error(`command ${command} is not defined in bundlekit-service`);
-                process.exit(1);
+                throw new Error(`command "${command}" is not defined in bundlekit-service`);
             }
 
             if (!command || args.help || args.h) {
@@ -459,6 +454,6 @@ export default class Service {
 
             const { fn } = runCommand;
 
-            fn(args, rawArgv);
+            await fn(args, rawArgv);
     }
 }

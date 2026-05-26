@@ -9,6 +9,16 @@ export interface GeneratorOptions {
     context: Record<string, any>;
 }
 
+// 【低14】SSR 相关文件名常量，避免在逻辑中散落硬编码字符串
+/** SSR 模式下需要跳过的 non-SSR 入口文件名（不含 .ejs 后缀） */
+const NON_SSR_SKIP_NAMES = new Set([
+    "index.tsx", "index.jsx", "main.ts", "main.js",
+    "index.tsx.ejs", "index.jsx.ejs", "main.ts.ejs", "main.js.ejs",
+]);
+
+/** 非 SSR 模式下需要跳过的文件名关键词（这些文件仅用于 SSR） */
+const SSR_ONLY_KEYWORDS = ["entry-server", "entry-client"];
+
 export default class Generator {
     private templateDir: string;
     private targetDir: string;
@@ -33,10 +43,12 @@ export default class Generator {
         const entries = await fs.readdir(srcDir, { withFileTypes: true });
 
         for (const entry of entries) {
-            if (!this.context.ssr && (entry.name.includes('entry-server') || entry.name.includes('entry-client'))) {
+            // 非 SSR 项目跳过 SSR 专属文件
+            if (!this.context.ssr && SSR_ONLY_KEYWORDS.some((kw) => entry.name.includes(kw))) {
                 continue;
             }
-            if (this.context.ssr && (entry.name === 'index.tsx' || entry.name === 'index.jsx' || entry.name === 'main.ts' || entry.name === 'main.js' || entry.name === 'index.tsx.ejs' || entry.name === 'index.jsx.ejs' || entry.name === 'main.ts.ejs' || entry.name === 'main.js.ejs')) {
+            // SSR 项目跳过 non-SSR 的通用入口文件
+            if (this.context.ssr && NON_SSR_SKIP_NAMES.has(entry.name)) {
                 continue;
             }
 
