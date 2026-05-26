@@ -204,19 +204,26 @@ export default class Service {
             const require = createRequire(import.meta.url);
             let bundlerModule;
             try {
-                // 显式指定查找路径，优先当前 context 的 node_modules
-                const packagePath = require.resolve(packageName, {
-                    paths: [
-                        path.join(this.context, "node_modules"),
-                        path.join(process.cwd(), "node_modules")
-                    ]
-                });
+                // 优先使用自然解析（从 service 自身目录出发），可找到 peerDependencies 中的包
+                const packagePath = require.resolve(packageName);
                 bundlerModule = require(packagePath);
                 bundlerModule = bundlerModule.default || bundlerModule;
             } catch (e) {
-                // fallback: 动态 import
-                bundlerModule = await import(packageName);
-                bundlerModule = bundlerModule.default || bundlerModule;
+                try {
+                    // 其次从项目 context 目录解析（用户项目自行安装的情况）
+                    const packagePath = require.resolve(packageName, {
+                        paths: [
+                            this.context,
+                            process.cwd(),
+                        ]
+                    });
+                    bundlerModule = require(packagePath);
+                    bundlerModule = bundlerModule.default || bundlerModule;
+                } catch (e2) {
+                    // 最后降级到动态 import
+                    bundlerModule = await import(packageName);
+                    bundlerModule = bundlerModule.default || bundlerModule;
+                }
             }
             return bundlerModule;
         } catch (error) {
