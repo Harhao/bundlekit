@@ -133,6 +133,17 @@ export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) =>
         setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)));
     }, []);
 
+    /**
+     * 让出一帧给 Ink 渲染。
+     * - React 18 + Ink 的 setState 会被合批到下一个微任务一次性 flush
+     * - 中间穿插同步重活（fs/EJS/JSON I/O）会让多次状态变化看起来"批量跳出来"
+     * - setTimeout(0) 会跳到宏任务，给 Ink 留出实际把帧 paint 到终端的时间窗口
+     */
+    const yieldFrame = useCallback(
+        () => new Promise<void>((r) => setTimeout(r, 0)),
+        [],
+    );
+
     useEffect(() => {
         if (currentStep !== "tasks") return;
         if (tasks.length > 0) return;
@@ -147,6 +158,9 @@ export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) =>
         setTasks(initialTasks);
 
         (async () => {
+            // 让初始 5 个 pending 标签先完整渲染一帧，再开跑任务
+            // 否则 setTasks 会和后续 updateTask("render", running) 合批，用户看不到"全 pending"
+            await yieldFrame();
             const cwd = params.cwd || process.cwd();
             let targetDir: string;
             try {
@@ -161,6 +175,7 @@ export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) =>
 
             try {
                 updateTask("render", { status: "running" });
+                await yieldFrame();
                 const templateDir = resolveTemplateDir(template!);
                 await renderTemplates({
                     targetDir,
@@ -171,6 +186,7 @@ export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) =>
                     ssr,
                 });
                 updateTask("render", { status: "done" });
+                await yieldFrame();
             } catch (err) {
                 const e = err as Error;
                 updateTask("render", { status: "error" });
@@ -180,9 +196,11 @@ export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) =>
 
             try {
                 updateTask("normalize", { status: "running" });
+                await yieldFrame();
                 normalizeProjectDeps(targetDir, depMode);
                 const detail = `npm 模式 → ^${depMode.cliVersion}`;
                 updateTask("normalize", { status: "done", detail });
+                await yieldFrame();
             } catch (err) {
                 const e = err as Error;
                 updateTask("normalize", { status: "error" });
@@ -192,6 +210,7 @@ export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) =>
 
             try {
                 updateTask("deps", { status: "running" });
+                await yieldFrame();
                 const written = injectBundlerToDeps(targetDir, bundler!, depMode);
                 if (written) {
                     const [pkgName, version] = written;
@@ -199,6 +218,7 @@ export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) =>
                 } else {
                     updateTask("deps", { status: "done", detail: "未识别的 bundler，跳过" });
                 }
+                await yieldFrame();
             } catch (err) {
                 const e = err as Error;
                 updateTask("deps", { status: "error" });
@@ -208,8 +228,10 @@ export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) =>
 
             try {
                 updateTask("install", { status: "running" });
+                await yieldFrame();
                 await installDeps(targetDir, { pm });
                 updateTask("install", { status: "done" });
+                await yieldFrame();
             } catch (err) {
                 const e = err as Error;
                 updateTask("install", { status: "error" });
@@ -219,6 +241,7 @@ export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) =>
 
             try {
                 updateTask("generator", { status: "running" });
+                await yieldFrame();
                 const pluginPkgName = resolvePluginPkgName(template!);
                 // ink 路径下 generator 不应另起 enquirer prompt 抢 stdin
                 const prevNoPrompt = process.env.DEVKIT_NO_PROMPT;
@@ -246,7 +269,7 @@ export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) =>
                 return;
             }
         })();
-    }, [currentStep, tasks.length, template, bundler, pm, ssr, description, params, updateTask]);
+    }, [currentStep, tasks.length, template, bundler, pm, ssr, description, params, updateTask, yieldFrame]);
 
     useEffect(() => {
         if (currentStep === "done") {

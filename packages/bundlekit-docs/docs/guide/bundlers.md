@@ -5,7 +5,7 @@ order: 4
 
 # 打包器适配器
 
-bundlekit 通过 `IBuildToolAdapter` 接口统一五种打包器，一套 `.bundlekitrc.ts` 配置即可在所有打包器中运行。
+bundlekit 通过 `IBuildToolAdapter` 接口统一七种打包器，一套 `.bundlekitrc.ts` 配置即可在所有打包器中运行。
 
 ## 支持的打包器
 
@@ -16,6 +16,8 @@ bundlekit 通过 `IBuildToolAdapter` 接口统一五种打包器，一套 `.bund
 | Rollup | `@bundlekit/bundler-rollup` | Rollup 4 + Babel + TypeScript |
 | Rspack | `@bundlekit/bundler-rspack` | Rspack 1.x + SWC loader |
 | Rolldown | `@bundlekit/bundler-rolldown` | Rolldown 1.x（Rust 实现，实验性） |
+| Parcel | `@bundlekit/bundler-parcel` | Parcel 2（零配置，内置转换） |
+| esbuild | `@bundlekit/bundler-esbuild` | esbuild（极速编译，Go 实现） |
 
 ## Bundler 安装方式
 
@@ -83,8 +85,10 @@ interface IBuildToolAdapter<T = any> {
 ```bash
 bundlekit-service serve --bundler vite       # 开发优先，秒级热更新
 bundlekit-service serve --bundler rspack     # Rust 实现，冷启动极速
+bundlekit-service serve --bundler esbuild    # Go 实现，极速编译
 bundlekit-service build --bundler webpack    # 生态最完整
 bundlekit-service build --bundler rollup     # 适合库打包
+bundlekit-service build --bundler parcel     # 零配置首选
 ```
 
 ## 各打包器特性
@@ -138,26 +142,43 @@ bundlekit-service build --bundler rollup     # 适合库打包
 - HTML 手动生成
 - **SSR**：build 双 pass（client + server），dev 通过 `createSSRMiddleware` 提供 HTTP SSR 渲染
 
+### Parcel
+
+- 零配置，内置 TypeScript / JSX / CSS Modules 变换，无需手动配置 loader
+- `@parcel/packager-ts` + `@parcel/transformer-typescript-tsc` 处理 TS
+- 开发模式内置 HMR（Parcel 原生 websocket 方案）
+- 多入口、多 target 并行构建
+- **SSR**：build 双 pass（client + server），dev 通过 `createSSRMiddleware` 提供 HTTP SSR 渲染；server bundle 路径通过 `bundleGraph.getBundles()` 动态解析（Parcel 会重命名输出文件）
+
+### esbuild
+
+- Go 实现，编译速度极快（比 tsc 快 10–100x）
+- 内置 TypeScript / JSX 编译器，无需额外 loader
+- 支持 CSS、CSS Modules、SVG / 图片 / 字体 dataurl 内联
+- ESM 格式下自动开启 code splitting（`chunkNames: "chunks/[name]-[hash]"`）
+- Library 模式多格式输出（ESM / CJS / IIFE / UMD）
+- **SSR**：build 双 pass（client + server），dev 通过 `createSSRMiddleware` 提供 HTTP SSR 渲染；SSR externals "auto" 模式通过内置 Node.js built-in 列表 + 项目 `package.json` deps 解析，无需 `builtinModules` 运行时依赖
+
 ## 配置字段映射
 
 `IBuildConfig` 抽象字段到各打包器配置的映射：
 
-| IBuildConfig 字段 | Webpack | Vite | Rollup | Rspack |
-|-------------------|---------|------|--------|--------|
-| `entry` | `entry` | `rollupOptions.input` | `input` | `entry` |
-| `output.dir` | `output.path` | `build.outDir` | `output.dir` | `output.path` |
-| `alias` | `resolve.alias` | `resolve.alias` | `resolve.alias` | `resolve.alias` |
-| `framework` | ts-loader jsx / vue-loader | plugin-react / plugin-vue | - | swc-loader options |
-| `pages` | HtmlWebpackPlugin × n | createHtmlPlugin pages | - | HtmlRspackPlugin × n |
-| `devServer.host` | `devServer.host` | `server.host` | - | `devServer.host` |
-| `devServer.port` | `devServer.port` | `server.port` | - | `devServer.port` |
-| `devServer.proxy` | `devServer.proxy`（数组） | `server.proxy` | - | `devServer.proxy` |
-| `js.sourcemap` | `devtool` | `build.sourcemap` | `output.sourcemap` | `devtool` |
-| `js.minify` | `optimization.minimize` | `build.minify` | - | `optimization.minimize` |
-| `js.splitChunks` | `optimization.splitChunks` | `manualChunks` | - | `optimization.splitChunks` |
-| `css.loaders` | css/less/sass-loader | preprocessorOptions | postcss use | style/less/sass-loader |
-| `library` | - | - | `output.format` | - |
-| `libraryName` | - | - | `output.name` | - |
+| IBuildConfig 字段 | Webpack | Vite | Rollup | Rspack | Parcel | esbuild |
+|-------------------|---------|------|--------|--------|--------|---------|
+| `entry` | `entry` | `rollupOptions.input` | `input` | `entry` | `entries` | `entryPoints` |
+| `output.dir` | `output.path` | `build.outDir` | `output.dir` | `output.path` | `distDir` | `outdir` |
+| `alias` | `resolve.alias` | `resolve.alias` | `resolve.alias` | `resolve.alias` | — | `alias` |
+| `framework` | ts-loader jsx / vue-loader | plugin-react / plugin-vue | — | swc-loader options | — | `jsx` option |
+| `pages` | HtmlWebpackPlugin × n | createHtmlPlugin pages | — | HtmlRspackPlugin × n | — | — |
+| `devServer.host` | `devServer.host` | `server.host` | — | `devServer.host` | `serveOptions.host` | `host` |
+| `devServer.port` | `devServer.port` | `server.port` | — | `devServer.port` | `serveOptions.port` | `port` |
+| `devServer.proxy` | `devServer.proxy`（数组） | `server.proxy` | — | `devServer.proxy` | — | — |
+| `js.sourcemap` | `devtool` | `build.sourcemap` | `output.sourcemap` | `devtool` | `sourceMaps` | `sourcemap` |
+| `js.minify` | `optimization.minimize` | `build.minify` | — | `optimization.minimize` | `minify` | `minify` |
+| `js.splitChunks` | `optimization.splitChunks` | `manualChunks` | — | `optimization.splitChunks` | — | `splitting` |
+| `css.loaders` | css/less/sass-loader | preprocessorOptions | postcss use | style/less/sass-loader | — | — |
+| `library` | — | — | `output.format` | — | — | `format` |
+| `libraryName` | — | — | `output.name` | — | — | `globalName` |
 
 ## SSR 支持矩阵
 
@@ -168,5 +189,7 @@ bundlekit-service build --bundler rollup     # 适合库打包
 | rspack | ✅ | ✅ | ✅ | ⚠️ 进程级 |
 | rollup | ✅ | ✅ | ❌ | ❌ |
 | rolldown | ✅ | ✅ | ❌ | ❌ |
+| parcel | ✅ | ✅ | ⚠️ Parcel 原生 | ❌ |
+| esbuild | ✅ | ✅ | ❌ | ❌ |
 
-> dev SSR = 开发模式下通过 `createSSRMiddleware` 提供 HTTP SSR 渲染能力。Vite 提供全双工 HMR；webpack/rspack 支持 client HMR（React Fast Refresh），server 侧进程级更新；rollup/rolldown 无原生 HMR，修改后需重启进程。详见 [SSR 指南](/guide/ssr)。
+> dev SSR = 开发模式下通过 `createSSRMiddleware` 提供 HTTP SSR 渲染能力。Vite 提供全双工 HMR；webpack/rspack 支持 client HMR（React Fast Refresh），server 侧进程级更新；rollup/rolldown/esbuild 无原生 HMR，修改后需重启进程；parcel 使用其原生 HMR websocket 方案（仅 client）。详见 [SSR 指南](/guide/ssr)。

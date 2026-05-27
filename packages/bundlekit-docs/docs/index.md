@@ -2,7 +2,7 @@
 title: bundlekit
 hero:
   title: bundlekit
-  description: 前端多打包器构建工具集，一套配置运行 Webpack / Vite / Rollup / Rspack / Rolldown
+  description: 前端多打包器构建工具集，一套配置运行 Webpack / Vite / Rollup / Rspack / Rolldown / Parcel / esbuild
   actions:
     - text: 快速开始
       link: /guide
@@ -11,7 +11,7 @@ hero:
 features:
   - title: 多打包器统一接口
     emoji: 🔧
-    description: 支持 Webpack 5、Vite、Rollup 4、Rspack、Rolldown 五种主流打包器，使用同一套 .bundlekitrc.ts 配置文件，一套代码多打包器构建
+    description: 支持 Webpack 5、Vite、Rollup 4、Rspack、Rolldown、Parcel 2、esbuild 七种主流打包器，使用同一套 .bundlekitrc.ts 配置文件，一套代码多打包器构建
 
   - title: 框架感知插件系统
     emoji: 🔌
@@ -31,7 +31,7 @@ features:
 
   - title: SSR 全 bundler 支持
     emoji: 🌐
-    description: 5 个 bundler 都支持 build SSR 双产物（client + server）；vite 提供原生 dev SSR middleware
+    description: 7 个 bundler 都支持 build SSR 双产物（client + server）；vite 提供原生 dev SSR middleware
 ---
 
 ## 安装与上手

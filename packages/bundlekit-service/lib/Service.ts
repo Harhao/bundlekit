@@ -1,4 +1,5 @@
 import path from "path";
+import { pathToFileURL } from "url";
 import PluginAPI from "./PluginAPI";
 import ConfigLoader from "./ConfigLoader";
 import { applyTools } from "./utils/applyTools";
@@ -199,39 +200,52 @@ export default class Service {
      * @returns 打包工具插件
      */
     public async loadBundlerPlugin(packageName: string) {
-        // 【中5】命中缓存直接返回，避免同一次构建多次解析同一包
+        // 命中缓存直接返回，避免同一次构建多次解析同一包
         if (this.bundlerPluginCache.has(packageName)) {
             return this.bundlerPluginCache.get(packageName);
         }
         try {
-            const require = createRequire(import.meta.url);
-            let bundlerModule;
+            // 优先从用户项目目录创建 require（确保解析到用户安装的包，而非 service 包自身位置）
+            const ctxRequire = createRequire(
+                path.join(this.context!, "package.json")
+            );
+
+            let resolvedPath: string | null = null;
+
+            // 策略1：从用户项目目录解析
             try {
-                // 优先使用自然解析（从 service 自身目录出发），可找到 peerDependencies 中的包
-                const packagePath = require.resolve(packageName);
-                bundlerModule = require(packagePath);
-                bundlerModule = bundlerModule.default || bundlerModule;
-            } catch (e) {
+                resolvedPath = ctxRequire.resolve(packageName);
+            } catch {
+                // 策略2：从 service 自身位置解析（peerDependencies 可能在此找到）
                 try {
-                    // 其次从项目 context 目录解析（用户项目自行安装的情况）
-                    const packagePath = require.resolve(packageName, {
-                        paths: [
-                            this.context,
-                            process.cwd(),
-                        ]
-                    });
-                    bundlerModule = require(packagePath);
+                    const svcRequire = createRequire(import.meta.url);
+                    resolvedPath = svcRequire.resolve(packageName);
+                } catch { /* package not found anywhere */ }
+            }
+
+            let bundlerModule: any;
+
+            if (resolvedPath) {
+                try {
+                    // 优先用 require 加载 CJS
+                    bundlerModule = ctxRequire(resolvedPath);
                     bundlerModule = bundlerModule.default || bundlerModule;
-                } catch (e2) {
-                    // 最后降级到动态 import
-                    bundlerModule = await import(packageName);
+                } catch (e: any) {
+                    // ERR_REQUIRE_ESM 等情况：改用 dynamic import + file URL（绝对路径）
+                    bundlerModule = await import(pathToFileURL(resolvedPath).href);
                     bundlerModule = bundlerModule.default || bundlerModule;
                 }
+            } else {
+                // 兜底：bare specifier dynamic import
+                bundlerModule = await import(packageName);
+                bundlerModule = bundlerModule.default || bundlerModule;
             }
+
             this.bundlerPluginCache.set(packageName, bundlerModule);
             return bundlerModule;
-        } catch (error) {
+        } catch (error: any) {
             this.logger.error(`无法加载打包工具插件: ${packageName}`, "构建工具");
+            this.logger.error(`详细错误: ${error?.message ?? String(error)}`, "构建工具");
             return null;
         }
     }

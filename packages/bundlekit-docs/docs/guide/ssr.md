@@ -5,7 +5,7 @@ order: 5
 
 # SSR 服务端渲染
 
-bundlekit 在 5 个 bundler 上提供统一的 SSR 双产物（client + server）构建支持。
+bundlekit 在 7 个 bundler 上提供统一的 SSR 双产物（client + server）构建支持。
 
 ## 入口约定
 
@@ -156,8 +156,10 @@ bundlekit-service build --bundler vite --mode production
 | rspack | ✅ | ⚠️ 进程级 | ✅ | 行为镜像 webpack，client Fast Refresh 可用 |
 | rollup | ❌ | ❌ | ✅ | watch 模式 + 进程级重启 |
 | rolldown | ❌ | ❌ | ✅ | watch 模式 + 进程级重启 |
+| parcel | ⚠️ Parcel 原生 | ❌ | ✅ | Parcel 内置 websocket HMR（client 侧），server 侧进程级重启 |
+| esbuild | ❌ | ❌ | ✅ | watch 模式 + `onEnd` 回调驱动，修改后需重启进程 |
 
-> **当前 release**：5 个 bundler 的 build SSR 与 dev SSR (`createSSRMiddleware`) 均已就绪。Vite 提供全双工 HMR；webpack / rspack 提供 client HMR + server 进程级更新；rollup / rolldown 的 watch 模式下修改 server bundle 需手动重启进程。
+> **当前 release**：7 个 bundler 的 build SSR 与 dev SSR (`createSSRMiddleware`) 均已就绪。Vite 提供全双工 HMR；webpack / rspack 提供 client HMR + server 进程级更新；rollup / rolldown / esbuild 的 watch 模式下修改 server bundle 需手动重启进程；parcel 使用其内置 websocket HMR 方案（仅 client 侧）。
 
 ## 互斥规则
 

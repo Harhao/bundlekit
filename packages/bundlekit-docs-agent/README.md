@@ -1,6 +1,6 @@
 # BundleKit 文档查询 Agent
 
-基于 Mastra 框架和 Cloudflare Workers AI 构建的文档查询 Agent，提供 RAG（检索增强生成）功能。
+基于 Mastra 框架和 Cloudflare Workers AI 构建的文档查询 Agent，提供 RAG（检索增强生成）功能，覆盖 bundlekit 全部七种打包器（Webpack / Vite / Rollup / Rspack / Rolldown / Parcel / esbuild）的使用文档。
 
 ## 🚀 快速开始
 

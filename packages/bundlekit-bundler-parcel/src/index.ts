@@ -1,5 +1,5 @@
 import path from "path";
-import { existsSync, writeFileSync, mkdirSync, readdirSync } from "fs";
+import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync } from "fs";
 import { createRequire } from "module";
 import { Parcel, createWorkerFarm } from "@parcel/core";
 
@@ -19,6 +19,65 @@ import type {
     ISSRMiddlewareCtx,
 } from "@bundlekit/shared-utils";
 import { DevServer } from "./DevServer";
+
+// ─── HTML 写入配置 ────────────────────────────────────────────────────────────
+interface HtmlWriteConfig {
+    outDir: string;
+    template?: string;
+    filename: string;
+    inject: "head" | "body";
+    context: string;
+}
+
+/** 根据配置生成并写入 index.html（Parcel 只产出 JS/CSS bundle，需手动写 HTML） */
+function writeHtmlFile(opts: HtmlWriteConfig): void {
+    let jsFiles:  string[] = [];
+    let cssFiles: string[] = [];
+    try {
+        const files = readdirSync(opts.outDir);
+        jsFiles  = files.filter((f) => /\.(js|mjs|cjs)$/.test(f) && !f.endsWith(".map"));
+        cssFiles = files.filter((f) => f.endsWith(".css")         && !f.endsWith(".map"));
+    } catch { /* outDir 不存在时静默跳过 */ }
+
+    const linkTags   = cssFiles.map((c) => `  <link rel="stylesheet" href="${c}">`).join("\n");
+    const scriptTags = jsFiles .map((s) => `  <script src="${s}"></script>`).join("\n");
+
+    let html: string;
+    const tplPath = opts.template ? path.resolve(opts.context, opts.template) : null;
+
+    if (tplPath && existsSync(tplPath)) {
+        html = readFileSync(tplPath, "utf-8");
+        if (linkTags) {
+            html = html.includes("</head>")
+                ? html.replace("</head>", `${linkTags}\n</head>`)
+                : linkTags + "\n" + html;
+        }
+        const closeTag = opts.inject === "head" ? "</head>" : "</body>";
+        html = html.includes(closeTag)
+            ? html.replace(closeTag, `${scriptTags}\n${closeTag}`)
+            : html + scriptTags;
+    } else {
+        html = [
+            "<!DOCTYPE html>",
+            '<html lang="en">',
+            "<head>",
+            '  <meta charset="UTF-8">',
+            '  <meta name="viewport" content="width=device-width, initial-scale=1.0">',
+            "  <title>App</title>",
+            ...(linkTags ? [linkTags] : []),
+            ...(opts.inject === "head" ? [scriptTags] : []),
+            "</head>",
+            "<body>",
+            '  <div id="root"></div>',
+            ...(opts.inject !== "head" ? [scriptTags] : []),
+            "</body>",
+            "</html>",
+        ].join("\n");
+    }
+
+    mkdirSync(opts.outDir, { recursive: true });
+    writeFileSync(path.join(opts.outDir, opts.filename), html, "utf-8");
+}
 
 // ─── 运行时保留的 devServer 配置 ─────────────────────────────────────────────
 interface StoredDevServerConfig {
@@ -58,6 +117,7 @@ export default class ParcelBundler implements IBuildToolAdapter {
     private mode: IBuildEnv;
     private logger: Logger = new Logger();
     private devServerConfig: StoredDevServerConfig | null = null;
+    private htmlWriteConfig: HtmlWriteConfig | null = null;
     public name: string = "@bundlekit/bundler-parcel";
 
     constructor(api: IService, mode: IBuildEnv) {
@@ -111,6 +171,23 @@ export default class ParcelBundler implements IBuildToolAdapter {
         };
 
         this.logger.info("开始转换 Parcel 配置");
+
+        // ── HTML 写入配置（仅应用模式，SSR server pass 和 library 不需要）───────
+        if (!isLibrary && !isServerPass) {
+            const pages = rawEnvConfig.pages as Array<{
+                template?: string;
+                filename?: string;
+                inject?: "head" | "body";
+            }> | undefined;
+            const page = pages?.[0];
+            this.htmlWriteConfig = {
+                outDir:   outDir,
+                template: page?.template,
+                filename: page?.filename || "index.html",
+                inject:   page?.inject   || "body",
+                context:  this.context,
+            };
+        }
 
         // ── SSR server pass 返回值 ─────────────────────────────────────────
         if (isServerPass) {
@@ -242,6 +319,14 @@ export default class ParcelBundler implements IBuildToolAdapter {
                     return;
                 }
                 this.logger.done("Parcel 构建完成", "parcel");
+                // 每次构建成功后写 HTML（保证 index.html 与 JS 同步）
+                if (this.htmlWriteConfig) {
+                    try {
+                        writeHtmlFile(this.htmlWriteConfig);
+                    } catch (e: any) {
+                        this.logger.warn(`[bundlekit] 写入 HTML 失败: ${e.message}`);
+                    }
+                }
                 if (!serverStarted) {
                     serverStarted = true;
                     await server.start();
@@ -285,6 +370,10 @@ export default class ParcelBundler implements IBuildToolAdapter {
             const bundles = bundleGraph.getBundles();
             const stats = bundles.map((b: any) => `  ${b.displayName || b.filePath}`).join("\n");
             this.logger.done(`Parcel 生产构建完成\n${stats}`, "parcel");
+            // 生产构建也写 HTML（应用模式）
+            if (this.htmlWriteConfig) {
+                writeHtmlFile(this.htmlWriteConfig);
+            }
         } finally {
             await workerFarm.end();
         }
