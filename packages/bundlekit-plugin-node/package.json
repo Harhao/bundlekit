@@ -1,6 +1,6 @@
 {
   "name": "@bundlekit/plugin-node",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Node.js / pure TypeScript plugin for bundlekit - library / CLI / server SDK templates",
   "main": "./index.ts",
   "type": "module",
@@ -17,7 +17,12 @@
   "scripts": {
     "plugin:node:build": "echo 'plugin:node built successfully'"
   },
-  "keywords": ["node", "typescript", "bundlekit-plugin", "bundlekit"],
+  "keywords": [
+    "node",
+    "typescript",
+    "bundlekit-plugin",
+    "bundlekit"
+  ],
   "author": "harhao@163.com",
   "license": "MIT",
   "website": "https://bundlekit.harhao.workers.dev",
