@@ -75,9 +75,10 @@ async function legacyCreate(name: string, options: Record<string, any>) {
         options.bundler = answer.bundler;
     }
 
-    // SSR 选择：library 模式下没有 SSR 概念，跳过 prompt
+    // SSR 选择：library 模式和 node-ts 模板没有 SSR 概念，跳过 prompt
     const isLib = !!options.lib;
-    if (isLib) {
+    const isNodeTs = options.template === "node-ts";
+    if (isLib || isNodeTs) {
         options.ssr = false;
     } else if (options.ssr === undefined) {
         const answer = (await enquirer.prompt({
@@ -121,7 +122,7 @@ async function legacyCreate(name: string, options: Record<string, any>) {
 program
     .command("create <name>")
     .description("create a new project powered by bundlekit-service")
-    .option("-t, --template <template>", "模板类型 (react-ts, react-js, vue3-ts, vue3-js)")
+    .option("-t, --template <template>", "模板类型 (react-ts, react-js, vue3-ts, vue3-js, node-ts)")
     .option("-b, --bundler <bundler>", "默认构建工具 (vite, webpack, rspack, rollup, rolldown, parcel, esbuild)")
     .option("-d, --description <desc>", "项目描述")
     .option("--pm <pm>", "包管理器 (pnpm, yarn, npm)")
