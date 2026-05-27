@@ -1,6 +1,6 @@
 {
   "name": "@bundlekit/cli-mcp",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "BundleKit CLI 的 MCP 服务器，暴露项目创建和插件管理工具",
   "type": "module",
   "main": "./dist/index.mjs",

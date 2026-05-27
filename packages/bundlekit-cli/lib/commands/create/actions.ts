@@ -71,14 +71,14 @@ export function resolveTemplateDir(template: string): string {
 
     try {
         const require = createRequire(import.meta.url);
-        const pkgJsonPath = require.resolve(`${pluginPkgName}/package.json`);
-        const templateDir = path.join(path.dirname(pkgJsonPath), "templates", `template-${normalized}`);
+        const mainPath = require.resolve(pluginPkgName);
+        const templateDir = path.join(path.dirname(mainPath), "templates", `template-${normalized}`);
         if (fs.existsSync(templateDir)) return templateDir;
     } catch {}
 
     const __dir = path.dirname(fileURLToPath(import.meta.url));
     const pluginDirName = pluginPkgName.replace("@bundlekit/", "bundlekit-");
-    const monorepoDir = path.resolve(__dir, "../..", pluginDirName, "templates", `template-${normalized}`);
+    const monorepoDir = path.resolve(__dir, "../../../..", pluginDirName, "templates", `template-${normalized}`);
     if (fs.existsSync(monorepoDir)) return monorepoDir;
 
     throw new Error(`模板 "${template}" 未找到，可用模板：react-ts / react-js / vue3-ts / vue3-js / node-ts`);

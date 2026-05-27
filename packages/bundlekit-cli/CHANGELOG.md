@@ -1,5 +1,11 @@
 # @bundlekit/cli
 
+## 0.0.12
+
+### Patch Changes
+
+- ce5779c: 修复安装模板失败
+
 ## 0.0.11
 
 ### Patch Changes
