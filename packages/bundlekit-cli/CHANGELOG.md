@@ -1,5 +1,11 @@
 # @bundlekit/cli
 
+## 0.0.11
+
+### Patch Changes
+
+- 7078d92: fix: 修复纯 node + Typescript 的模版
+
 ## 0.0.10
 
 ### Patch Changes

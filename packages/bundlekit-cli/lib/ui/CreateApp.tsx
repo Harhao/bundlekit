@@ -26,6 +26,7 @@ const TEMPLATES: ISelectItem[] = [
     { label: "React + JavaScript", value: "react-js" },
     { label: "Vue 3 + TypeScript", value: "vue3-ts" },
     { label: "Vue 3 + JavaScript", value: "vue3-js" },
+    { label: "Node.js / 纯 TypeScript（无框架）", value: "node-ts" },
 ];
 
 const BUNDLERS_PRIMARY: ISelectItem[] = [
@@ -123,7 +124,7 @@ export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) =>
         currentStep = "template";
     } else if (!bundler) {
         currentStep = "bundler";
-    } else if (ssr === undefined) {
+    } else if (template === "node-ts" ? false : ssr === undefined) {
         currentStep = "ssr";
     } else if (!pm) {
         currentStep = "pm";
