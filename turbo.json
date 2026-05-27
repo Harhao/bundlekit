@@ -54,6 +54,10 @@
       "dependsOn": ["^shared:build"],
       "outputs": []
     },
+    "plugin:node:build": {
+      "dependsOn": ["^shared:build"],
+      "outputs": []
+    },
     "rolldown:build": {
       "dependsOn": ["^shared:build"],
       "outputs": ["dist/**"]

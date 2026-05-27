@@ -1,0 +1,14 @@
+/**
+ * Library 入口（library 模式由 generator 重命名为 src/index.ts）
+ *
+ * 这里是你的纯 TS SDK 公共 API，所有要被消费方 import 的符号都从这里 re-export。
+ */
+
+export { greet, add } from "./utils";
+
+// 默认导出整个命名空间（方便 CJS 消费方 require() 后直接使用）
+const <%= libraryName %> = {
+    greet: (name: string) => `Hello, ${name}! — from <%= libraryName %>`,
+    add: (a: number, b: number) => a + b,
+};
+export default <%= libraryName %>;

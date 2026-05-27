@@ -1,7 +1,7 @@
 {
-  "name": "@bundlekit/plugin-vue",
-  "version": "0.0.8",
-  "description": "Vue 3 plugin for bundlekit - provides Vue 3 build support and project templates",
+  "name": "@bundlekit/plugin-node",
+  "version": "0.0.1",
+  "description": "Node.js / pure TypeScript plugin for bundlekit - library / CLI / server SDK templates",
   "main": "./index.ts",
   "type": "module",
   "exports": {
@@ -10,35 +10,24 @@
   },
   "files": [
     "index.ts",
-    "generator",
     "templates",
+    "generator",
     "package.json"
   ],
   "scripts": {
-    "plugin:vue:build": "echo 'plugin:vue built successfully'"
+    "plugin:node:build": "echo 'plugin:node built successfully'"
   },
-  "keywords": [
-    "vue",
-    "vue3",
-    "bundlekit-plugin",
-    "bundlekit"
-  ],
+  "keywords": ["node", "typescript", "bundlekit-plugin", "bundlekit"],
   "author": "harhao@163.com",
   "license": "MIT",
   "website": "https://bundlekit.harhao.workers.dev",
   "repository": {
     "type": "git",
     "url": "https://github.com/Harhao/bundlekit.git",
-    "directory": "packages/bundlekit-plugin-vue"
+    "directory": "packages/bundlekit-plugin-node"
   },
   "dependencies": {
-    "@bundlekit/shared-utils": "workspace:*",
-    "@vitejs/plugin-vue": "^5.2.0",
-    "vue": "^3.5.0",
-    "vue-tsc": "^2.2.0"
-  },
-  "devDependencies": {
-    "typescript": "^5.8.2"
+    "@bundlekit/shared-utils": "workspace:*"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",

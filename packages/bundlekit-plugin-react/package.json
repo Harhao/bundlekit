@@ -4,8 +4,13 @@
   "description": "React plugin for bundlekit - provides React build support and project templates",
   "main": "./index.ts",
   "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./generator": "./generator/index.ts"
+  },
   "files": [
     "index.ts",
+    "generator",
     "templates",
     "package.json"
   ],

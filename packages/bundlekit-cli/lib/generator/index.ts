@@ -22,10 +22,11 @@ const SSR_ONLY_KEYWORDS = ["entry-server", "entry-client"];
 /**
  * Library 模式下需要跳过的应用入口 / SSR 入口 / HTML 模板等。
  * Library 模式产物是 SDK，不需要 mount DOM 也不需要 HTML shell。
+ * 注意：index.ts.ejs（Node 应用入口）也要跳过，library 入口由 lib-entry 重命名提供。
  */
 const NON_LIB_SKIP_NAMES = new Set([
-    "index.tsx", "index.jsx", "main.ts", "main.js",
-    "index.tsx.ejs", "index.jsx.ejs", "main.ts.ejs", "main.js.ejs",
+    "index.tsx", "index.jsx", "main.ts", "main.js", "index.ts",
+    "index.tsx.ejs", "index.jsx.ejs", "main.ts.ejs", "main.js.ejs", "index.ts.ejs",
 ]);
 const NON_LIB_SKIP_KEYWORDS = ["entry-server", "entry-client"];
 /** Library 模式下跳过 public/ 目录（HTML shell） */

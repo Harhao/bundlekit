@@ -365,6 +365,9 @@ importers:
 
   packages/bundlekit-cli:
     dependencies:
+      '@bundlekit/plugin-node':
+        specifier: workspace:*
+        version: link:../bundlekit-plugin-node
       '@bundlekit/plugin-react':
         specifier: workspace:*
         version: link:../bundlekit-plugin-react
@@ -569,6 +572,12 @@ importers:
       json-server:
         specifier: ^0.17.3
         version: 0.17.4
+
+  packages/bundlekit-plugin-node:
+    dependencies:
+      '@bundlekit/shared-utils':
+        specifier: workspace:*
+        version: link:../bundlekit-shared-utils
 
   packages/bundlekit-plugin-react:
     dependencies:

@@ -17,6 +17,7 @@ const TEMPLATES = [
     { name: "react-js", message: "React + JavaScript" },
     { name: "vue3-ts", message: "Vue 3 + TypeScript" },
     { name: "vue3-js", message: "Vue 3 + JavaScript" },
+    { name: "node-ts", message: "Node.js / 纯 TypeScript（无框架）" },
 ];
 
 const BUNDLERS = [

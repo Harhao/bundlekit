@@ -1,0 +1,26 @@
+{
+  "name": "<%= projectName %>",
+  "version": "1.0.0",
+  "description": "<%= description %>",
+  "type": "module",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "clean": "rimraf dist",
+    "dev": "bundlekit-service serve --bundler <%= bundler %> --mode development",
+    "build": "bundlekit-service build --bundler <%= bundler %> --mode production",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@bundlekit/service": "workspace:^",
+    "@bundlekit/plugin-node": "workspace:^",
+    "rimraf": "^5.0.1",
+    "typescript": "^5.8.0"
+  }
+}
