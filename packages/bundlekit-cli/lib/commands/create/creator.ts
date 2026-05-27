@@ -51,6 +51,9 @@ export class Creator {
             description: options.description,
             bundler,
             ssr: !!options.ssr,
+            // commander 把 --lib 转成 options.lib（兼容 options.library 兜底）
+            library: !!(options.lib ?? options.library),
+            libraryName: options.libraryName,
         });
 
         // 2. 规范化依赖版本（替换 workspace:^ 为 ^cliVersion）

@@ -109,6 +109,88 @@ export async function assertLibraryBuild(bundler: string): Promise<void> {
 }
 
 /**
+ * 断言 UMD library build：
+ *   - dist/ 下产出 *.js / *.umd.js 等可被浏览器 <script> 加载的产物
+ *   - 产物里能找到 libraryName（通过文本搜索 `MyLib` 验证 UMD 全局变量名挂上了）
+ *   - 用 vm 在伪 browser 环境里 eval 产物，验证 `globalThis.MyLib.add(2,3)===5`
+ *
+ * 这个断言专门验证 webpack/rspack/vite/rollup/rolldown/parcel 的 library 模式
+ * 是否真把 libraryName 注入到了 UMD 包装里 —— 仅靠 require 不能验证 UMD 全局名。
+ */
+export async function assertLibraryUMDBuild(bundler: string): Promise<void> {
+    const r = await runBuild(bundler, "lib-umd");
+    try {
+        if (r.code !== 0) {
+            throw new Error(
+                `${bundler} lib-umd build failed (code=${r.code}):\nstdout: ${r.stdout}\nstderr: ${r.stderr}`,
+            );
+        }
+        const distDir = path.resolve(r.dir, "dist");
+        const allJs = await collectFiles(distDir, [".js", ".cjs", ".mjs"]);
+        if (allJs.length === 0) {
+            throw new Error(`${bundler} lib-umd: no js produced in ${distDir}`);
+        }
+        // 找 UMD 包装 + 含 libraryName + LIBRARY_MARKER 的产物
+        let umdFile: string | null = null;
+        let umdContent: string | null = null;
+        for (const f of allJs) {
+            const c = await fs.readFile(f, "utf-8");
+            if (c.includes("MyLib") && c.includes("__DEVKIT_LIB_MARKER__")) {
+                umdFile = f;
+                umdContent = c;
+                break;
+            }
+        }
+        if (!umdFile || !umdContent) {
+            throw new Error(
+                `${bundler} lib-umd: no UMD-style file containing both \`MyLib\` and \`__DEVKIT_LIB_MARKER__\`\n` +
+                `js files: ${allJs.join(", ")}\nstdout: ${r.stdout.slice(-600)}`,
+            );
+        }
+        // 在伪 browser 环境里 eval UMD 产物，验证全局变量挂上了。
+        // 关键：不能定义 module / exports，否则 UMD 包装会探测成 CJS 环境，
+        // 把导出送到 module.exports 而不是 global.MyLib。
+        const vm = await import("node:vm");
+        const sandbox: any = {
+            console,
+            React: { Children: {}, Component: class {}, createElement: () => ({}) },
+            ReactDOM: {},
+        };
+        sandbox.self = sandbox;
+        sandbox.window = sandbox;
+        sandbox.globalThis = sandbox;
+        // require 给 amd-cjs 分支或显式 require 用；UMD 在浏览器环境下不会调到
+        sandbox.require = (id: string) => {
+            if (id === "react") return sandbox.React;
+            if (id === "react-dom") return sandbox.ReactDOM;
+            throw new Error(`stub require: ${id} not provided`);
+        };
+        try {
+            vm.createContext(sandbox);
+            vm.runInContext(umdContent, sandbox);
+        } catch (e: any) {
+            throw new Error(
+                `${bundler} lib-umd: vm.runInContext failed for ${umdFile}: ${e?.message ?? e}\n` +
+                `first 300 chars: ${umdContent.slice(0, 300)}`,
+            );
+        }
+        const lib = sandbox.MyLib;
+        if (!lib || typeof lib.add !== "function") {
+            throw new Error(
+                `${bundler} lib-umd: globalThis.MyLib not bound after eval\n` +
+                `sandbox keys: ${Object.keys(sandbox).filter((k) => !["console","require","React","ReactDOM","self","window","globalThis"].includes(k)).join(", ")}\n` +
+                `MyLib value: ${JSON.stringify(sandbox.MyLib)}`,
+            );
+        }
+        if (lib.add(2, 3) !== 5) {
+            throw new Error(`${bundler} lib-umd: MyLib.add(2,3) !== 5 (got ${lib.add(2, 3)})`);
+        }
+    } finally {
+        await r.cleanup();
+    }
+}
+
+/**
  * 断言 SSR build 产生 dist/client + dist/server，且：
  *   - dist/client/*.js 存在（client bundle）
  *   - dist/client/index.html 存在且含 <script src=...>（hydration 入口被正确注入；

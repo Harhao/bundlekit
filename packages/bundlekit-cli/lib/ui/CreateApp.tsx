@@ -61,6 +61,10 @@ export interface ICreateAppParams {
     description?: string;
     cwd?: string;
     ssr?: boolean;
+    /** 类库 / SDK 模式：跳过 HTML 入口，输出多格式 */
+    library?: boolean;
+    /** UMD/IIFE 全局变量名（仅 library 模式） */
+    libraryName?: string;
 }
 
 interface IErrorState {
@@ -184,6 +188,8 @@ export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) =>
                     description,
                     bundler: bundler!,
                     ssr,
+                    library: params.library,
+                    libraryName: params.libraryName,
                 });
                 updateTask("render", { status: "done" });
                 await yieldFrame();

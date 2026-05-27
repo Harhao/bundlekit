@@ -189,7 +189,8 @@ export default class EsbuildBundler implements IBuildToolAdapter {
 
         // ── Format ────────────────────────────────────────────────────────────
         const fmtRaw = rawEnvConfig.output?.formats;
-        const fmt    = toEsbuildFormat(Array.isArray(fmtRaw) ? fmtRaw[0] : (fmtRaw || "esm"));
+        const requestedFormat = (Array.isArray(fmtRaw) ? fmtRaw[0] : (fmtRaw || "esm")) as string;
+        const fmt    = toEsbuildFormat(requestedFormat);
 
         // ── entryNames（文件名模板）──────────────────────────────────────────
         const rawFilename = rawEnvConfig.output?.filename || "[name].js";
@@ -204,6 +205,20 @@ export default class EsbuildBundler implements IBuildToolAdapter {
         const isLibrary = rawEnvConfig.library === true;
         const minify    = jsConfig.minify   ?? (this.mode === "production");
         const sourcemap = (jsConfig.sourcemap ?? false) ? "inline" as const : false as const;
+
+        // ── Library 模式：library / libraryName 接入 ──────────────────────────
+        // esbuild 原生不支持 UMD：把 umd 映射成 iife + globalName + 包一层 UMD
+        // wrapper（banner/footer）。这样产物在 cjs / amd / browser 三种宿主里都能跑。
+        const libraryName = rawEnvConfig.libraryName as string | undefined;
+        const isUmdRequested = isLibrary && requestedFormat === "umd";
+        const isIifeRequested = isLibrary && (requestedFormat === "iife" || isUmdRequested);
+        const globalName = isIifeRequested && libraryName ? libraryName : undefined;
+        const umdBanner = isUmdRequested && libraryName
+            ? `(function(global,factory){"use strict";typeof exports==="object"&&typeof module!=="undefined"?module.exports=factory():typeof define==="function"&&define.amd?define([],factory):(global=typeof globalThis!=="undefined"?globalThis:global||self,global["${libraryName}"]=factory());}(this,function(){`
+            : undefined;
+        const umdFooter = isUmdRequested && libraryName
+            ? `return typeof ${libraryName}!=="undefined"?${libraryName}:undefined;}));`
+            : undefined;
 
         // ── Alias → esbuild alias ────────────────────────────────────────────
         const alias: Record<string, string> = {};
@@ -286,6 +301,9 @@ export default class EsbuildBundler implements IBuildToolAdapter {
             define,
             alias,
             external,
+            ...(globalName ? { globalName } : {}),
+            ...(umdBanner ? { banner: { js: umdBanner } } : {}),
+            ...(umdFooter ? { footer: { js: umdFooter } } : {}),
             // esbuild 原生支持 JSX/TSX
             jsx:              "automatic",
             jsxImportSource:  "react",

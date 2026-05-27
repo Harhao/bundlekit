@@ -82,7 +82,7 @@ export default class RspackBundler implements IBuildToolAdapter<RspackOptions> {
             } catch { return []; }
         })() : [];
 
-        const htmlPlugins = pages.map((page: any) =>
+        const htmlPlugins = (rawEnvConfig.library === true ? [] : pages).map((page: any) =>
             new Rspack.HtmlRspackPlugin({
                 template: path.resolve(this.context, page.template),
                 filename: page.filename,
@@ -103,9 +103,33 @@ export default class RspackBundler implements IBuildToolAdapter<RspackOptions> {
             ? (Array.isArray(rawEnvConfig.output.formats) ? rawEnvConfig.output.formats[0] : rawEnvConfig.output.formats)
             : undefined;
         const serverLibraryType = outputFormat === 'esm' ? 'module' : 'commonjs2';
-        const libraryConfig = isServerPass
+
+        // Library 模式：library=true 走 library 输出，libraryName 填到 output.library.name
+        //   - 跳过 HtmlRspackPlugin（上面已处理）
+        //   - format → rspack library type 标准化映射
+        const isLibrary = rawEnvConfig.library === true;
+        const libraryName = rawEnvConfig.libraryName as string | undefined;
+        const formatToLibType = (f: string | undefined): string => {
+            switch (f) {
+                case 'esm':      return 'module';
+                case 'commonjs': return 'commonjs2';
+                case 'umd':      return 'umd';
+                case 'iife':     return 'window';
+                default:         return f || 'umd';
+            }
+        };
+        const clientLibType = formatToLibType(outputFormat);
+        const libraryConfig: any = isServerPass
             ? { type: serverLibraryType }
-            : (rawEnvConfig.output?.formats ? { type: outputFormat } : undefined);
+            : isLibrary
+                ? {
+                    type: clientLibType,
+                    ...(libraryName || ['umd', 'window', 'amd'].includes(clientLibType)
+                        ? { name: libraryName || Object.keys(resolvedEntry)[0] || 'app' }
+                        : {}),
+                    ...(clientLibType === 'umd' ? { umdNamedDefine: true } : {}),
+                }
+                : (rawEnvConfig.output?.formats ? { type: outputFormat } : undefined);
 
         const serverExternals = isServerPass ? this.resolveServerExternals(rawEnvConfig) : (rawEnvConfig.externals || []);
 
@@ -118,7 +142,14 @@ export default class RspackBundler implements IBuildToolAdapter<RspackOptions> {
                 filename: rawEnvConfig.output?.filename || "[name].js",
                 publicPath: rawEnvConfig.publicPath || "/",
                 library: libraryConfig,
+                ...(isLibrary && libraryConfig?.type === 'umd'
+                    ? { globalObject: 'typeof self !== "undefined" ? self : this' }
+                    : {}),
             },
+            // ESM 输出需要开 experiments.outputModule
+            ...((libraryConfig?.type === 'module')
+                ? { experiments: { outputModule: true } }
+                : {}),
             resolve: {
                 extensions,
                 alias: Object.entries(alias).reduce((acc, [key, val]) => {

@@ -1,3 +1,25 @@
+<% if (library) { %>
+/**
+ * Library / SDK 模式：多格式输出（esm + cjs + umd）
+ */
+export default {
+  mode: "development",
+  bundler: "<%= bundler %>",
+  config: {
+    development: {
+      target: "web",
+      publicPath: "/",
+      entry: "src/index.js",
+      output: { dir: "dist", filename: "[name].js", formats: ["esm", "commonjs", "umd"] },
+      alias: { "@": "src" },
+      externals: ["vue"],
+      library: true,
+      libraryName: "<%= libraryName %>",
+      js: { sourcemap: true, minify: false, splitChunks: false },
+    },
+  },
+};
+<% } else { %>
 export default {
   mode: "development",
   bundler: "<%= bundler %>",
@@ -29,3 +51,4 @@ export default {
     },
   },
 };
+<% } %>

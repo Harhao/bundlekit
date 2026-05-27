@@ -22,6 +22,10 @@ export interface ICreateOptions {
     cwd?: string;
     pm?: PMName;
     ssr?: boolean;
+    /** 类库 / SDK 模式：跳过 HTML 入口，输出 esm/cjs/umd 多格式 */
+    library?: boolean;
+    /** UMD/IIFE 全局变量名（仅 library 模式有效） */
+    libraryName?: string;
 }
 
 /** 项目名 + 路径校验，失败时抛错 */
@@ -84,6 +88,8 @@ export async function renderTemplates(opts: {
     description?: string;
     bundler: string;
     ssr?: boolean;
+    library?: boolean;
+    libraryName?: string;
 }): Promise<void> {
     const generator = new Generator({
         templateDir: opts.templateDir,
@@ -93,9 +99,25 @@ export async function renderTemplates(opts: {
             description: opts.description || "",
             bundler: opts.bundler,
             ssr: !!opts.ssr,
+            library: !!opts.library,
+            // libraryName fallback 到项目名转 PascalCase（兼容 UMD/IIFE 全局变量名规则）
+            libraryName: opts.libraryName || toPascalCase(opts.projectName),
         },
     });
     await generator.generate();
+}
+
+/**
+ * project name → PascalCase（用作 UMD libraryName 默认值）。
+ *   "my-lib" → "MyLib"，"@scope/foo-bar" → "FooBar"
+ */
+function toPascalCase(name: string): string {
+    return name
+        .replace(/^@[^/]+\//, "")
+        .split(/[-_/.]/)
+        .filter(Boolean)
+        .map((seg) => seg.charAt(0).toUpperCase() + seg.slice(1))
+        .join("");
 }
 
 /** 把所选 bundler 写入 targetDir/package.json 的 devDependencies（按 depMode） */

@@ -1,3 +1,42 @@
+<% if (library) { %>
+/**
+ * Library / SDK 模式
+ *   - 入口 src/index.tsx 导出公共 API
+ *   - 多格式输出（esm + cjs + umd），消费方 import / require / <script> 都能用
+ *   - peer deps 自动 external（不把 react / react-dom 打进 SDK）
+ *   - 推荐 bundler：rollup（含 dts）/ rolldown / vite / webpack / rspack
+ */
+export default {
+  mode: "development" as const,
+  bundler: "<%= bundler %>",
+  plugins: ["@bundlekit/plugin-react"],
+  config: {
+    development: {
+      target: "web" as const,
+      publicPath: "/",
+      entry: "src/index.tsx",
+      output: { dir: "dist", filename: "[name].js", formats: ["esm", "commonjs", "umd"] as const },
+      alias: { "@": "src" },
+      // peerDependencies / dependencies 默认 externalize
+      externals: ["react", "react-dom"],
+      library: true,
+      libraryName: "<%= libraryName %>",
+      js: { sourcemap: true, minify: false, splitChunks: false },
+    },
+    production: {
+      target: "web" as const,
+      publicPath: "/",
+      entry: "src/index.tsx",
+      output: { dir: "dist", filename: "[name].js", formats: ["esm", "commonjs", "umd"] as const },
+      alias: { "@": "src" },
+      externals: ["react", "react-dom"],
+      library: true,
+      libraryName: "<%= libraryName %>",
+      js: { sourcemap: false, minify: true, splitChunks: false },
+    },
+  } as any,
+};
+<% } else { %>
 export default {
   mode: "development" as const,
   bundler: "<%= bundler %>",
@@ -51,3 +90,4 @@ export default {
     },
   } as any,
 };
+<% } %>

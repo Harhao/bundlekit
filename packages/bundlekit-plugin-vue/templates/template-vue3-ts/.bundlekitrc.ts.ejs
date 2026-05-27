@@ -1,3 +1,41 @@
+<% if (library) { %>
+/**
+ * Library / SDK 模式
+ *   - 入口 src/index.ts 导出公共 API（含 .vue 组件）
+ *   - 多格式输出（esm + cjs + umd），消费方 import / require / <script> 都能用
+ *   - peer deps（vue）默认 external
+ *   - 推荐 bundler：rollup（含 dts）/ rolldown / vite
+ */
+export default {
+  mode: "development" as const,
+  bundler: "<%= bundler %>",
+  plugins: ["@bundlekit/plugin-vue"],
+  config: {
+    development: {
+      target: "web" as const,
+      publicPath: "/",
+      entry: "src/index.ts",
+      output: { dir: "dist", filename: "[name].js", formats: ["esm", "commonjs", "umd"] as const },
+      alias: { "@": "src" },
+      externals: ["vue"],
+      library: true,
+      libraryName: "<%= libraryName %>",
+      js: { sourcemap: true, minify: false, splitChunks: false },
+    },
+    production: {
+      target: "web" as const,
+      publicPath: "/",
+      entry: "src/index.ts",
+      output: { dir: "dist", filename: "[name].js", formats: ["esm", "commonjs", "umd"] as const },
+      alias: { "@": "src" },
+      externals: ["vue"],
+      library: true,
+      libraryName: "<%= libraryName %>",
+      js: { sourcemap: false, minify: true, splitChunks: false },
+    },
+  } as any,
+};
+<% } else { %>
 export default {
   mode: "development" as const,
   bundler: "<%= bundler %>",
@@ -51,3 +89,4 @@ export default {
     },
   } as any,
 };
+<% } %>
