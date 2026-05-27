@@ -1,6 +1,6 @@
 {
   "name": "@bundlekit/service",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "cjs": "./dist/index.cjs",

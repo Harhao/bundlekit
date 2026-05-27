@@ -1,6 +1,6 @@
 {
   "name": "@bundlekit/plugin-vue",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Vue 3 plugin for bundlekit - provides Vue 3 build support and project templates",
   "main": "./index.ts",
   "type": "module",
