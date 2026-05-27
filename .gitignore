@@ -22,6 +22,7 @@ dist
 package-lock.json
 ssl_config.js
 .turbo
+.parcel-cache
 test-app
 __tests__/integration/.tmp/
 
