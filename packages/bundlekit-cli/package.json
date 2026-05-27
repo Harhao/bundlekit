@@ -17,7 +17,7 @@
   },
   "scripts": {
     "clean": "rimraf -rf dist",
-    "debug": "tsx ./index.tsx create test-app -t react-ts",
+    "debug": "tsx ./index.tsx create test-app -t react-ts --ssr",
     "cli:build": "pnpm run clean && rollup -c ./scripts/rollup.config.js"
   },
   "files": [

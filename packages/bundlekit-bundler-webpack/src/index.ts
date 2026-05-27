@@ -246,6 +246,11 @@ export default class WebpackBundler implements IBuildToolAdapter<Configuration> 
                     ? path.resolve(this.context, ssrConfig.template)
                     : path.resolve(this.context, "public/index.html");
                 let html = await fs.readFile(templatePath, "utf-8");
+                // 模板若已含 <script src=...>（例如 ssr.template 指到 prod dist/index.html），
+                // 跳过手工注入，避免重复加载入口造成双挂载。
+                if (/<script\b[^>]*\bsrc\s*=/i.test(html)) {
+                    return html;
+                }
                 const publicPath = (clientConfig.output?.publicPath as string) || "/";
                 const entryFile = (clientConfig.output as any)?.filename || "[name].js";
                 // webpack adapter 把 string entry 包成 { app: entry }，chunk name = 'app'

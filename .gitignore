@@ -10,6 +10,7 @@ coverage
 # production
 build
 dist
+!__tests__/integration/build/
 # example
 
 # misc

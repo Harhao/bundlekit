@@ -8,6 +8,7 @@ import {
     createSSRRequestHandler,
     buildSSRView,
     resolveSSRExternals,
+    createStaticFileMiddleware,
 } from "@bundlekit/shared-utils";
 import type {
     IBuildConfig,
@@ -462,10 +463,13 @@ export default class EsbuildBundler implements IBuildToolAdapter {
     /**
      * esbuild dev SSR middleware
      *
-     * 实现思路（与 rolldown 镜像）：
-     *   1. server bundle 用 esbuild.context().watch() 持续监听并写到磁盘
-     *   2. onEnd plugin 设置 serverReady 标志
-     *   3. ssrHandler 每次请求等编译就绪 → 清 require cache → require → render
+     * 实现：
+     *   1. **Client pass**：esbuild.context().watch()，构建完成调 writeHtmlFile
+     *      把 client 产物作 <script> 注入到 dist/index.html。
+     *   2. **Server pass**：buildSSRView 切到 server，单独 esbuild.context().watch()
+     *      输出到 ssr.output.dir，文件名固定为 server.cjs。
+     *   3. **Middleware 链**：createStaticFileMiddleware + ssrHandler；
+     *      ssrHandler 优先用 dist/index.html 作模板。
      */
     public async createSSRMiddleware(
         buildConfig: IBuildConfig,
@@ -475,27 +479,76 @@ export default class EsbuildBundler implements IBuildToolAdapter {
         const ssrConfig = (envConfig as any)?.ssr;
         if (!ssrConfig) throw new Error("ssr config not found in envConfig");
 
+        // ── 1) Client pass ─────────────────────────────────────────────────────
+        const clientEsbuildOpts = this.transformConfig(buildConfig) as esbuild.BuildOptions;
+        const clientHtmlConfig = this.htmlWriteConfig;
+        const clientOutDir = path.resolve(
+            this.context,
+            (Array.isArray((envConfig as any).output)
+                ? (envConfig as any).output[0]?.dir
+                : (envConfig as any).output?.dir) || "dist",
+        );
+        const publicPath = (envConfig as any)?.publicPath || "/";
+
+        mkdirSync(clientOutDir, { recursive: true });
+
+        let clientReady = false;
+        let clientPending: Array<() => void> = [];
+        const waitClient = () =>
+            clientReady ? Promise.resolve() : new Promise<void>((r) => clientPending.push(r));
+
+        const clientCtx = await esbuild.context({
+            ...clientEsbuildOpts,
+            plugins: [
+                ...(clientEsbuildOpts.plugins ?? []),
+                {
+                    name: "bundlekit-ssr-client-ready",
+                    setup: (build) => {
+                        build.onEnd((result) => {
+                            if (result.errors.length > 0) {
+                                this.logger.error(
+                                    `esbuild client compiler 错误: ${result.errors[0]?.text}`,
+                                    "esbuild",
+                                );
+                                return;
+                            }
+                            if (clientHtmlConfig) {
+                                try { writeHtmlFile(clientHtmlConfig); } catch (e: any) {
+                                    this.logger.warn(
+                                        `[bundlekit] SSR client HTML 写入失败: ${e.message}`,
+                                        "esbuild",
+                                    );
+                                }
+                            }
+                            clientReady = true;
+                            const r = clientPending; clientPending = []; r.forEach((f) => f());
+                        });
+                    },
+                },
+            ],
+        });
+        await clientCtx.watch();
+
+        // ── 2) Server pass ─────────────────────────────────────────────────────
         const serverBuildConfig = buildSSRView(buildConfig, this.mode);
         const serverEsbuildOpts = this.transformConfig(serverBuildConfig) as esbuild.BuildOptions;
 
-        const serverOutDir      = path.resolve(this.context, ssrConfig.output.dir);
-        const serverFilename    = ssrConfig.output.filename || "server.cjs";
+        const serverOutDir = path.resolve(this.context, ssrConfig.output.dir);
+        const serverFilename = ssrConfig.output.filename || "server.cjs";
 
         // esbuild 输出文件名由 entryNames 决定，通常是 entry-server.js
         // 我们把 entryNames 固定为 "server"，这样产物是 server.js
-        const serverEntryNames  = "server";
-        let resolvedBundlePath  = path.resolve(serverOutDir, `${serverEntryNames}.js`);
+        const serverEntryNames = "server";
+        let resolvedBundlePath = path.resolve(serverOutDir, `${serverEntryNames}.js`);
 
         let serverReady = false;
-        let pending: Array<() => void> = [];
-        const waitUntilReady = () =>
-            serverReady
-                ? Promise.resolve()
-                : new Promise<void>((r) => pending.push(r));
+        let serverPending: Array<() => void> = [];
+        const waitServer = () =>
+            serverReady ? Promise.resolve() : new Promise<void>((r) => serverPending.push(r));
 
         mkdirSync(serverOutDir, { recursive: true });
 
-        const ctx = await esbuild.context({
+        const serverCtx = await esbuild.context({
             ...serverEsbuildOpts,
             outdir:     serverOutDir,
             entryNames: serverEntryNames,
@@ -518,24 +571,44 @@ export default class EsbuildBundler implements IBuildToolAdapter {
                             // 产物是 server.cjs（outExtension: .js → .cjs）
                             resolvedBundlePath = path.resolve(serverOutDir, `${serverEntryNames}.cjs`);
                             serverReady = true;
-                            const r = pending; pending = []; r.forEach((f) => f());
+                            const r = serverPending; serverPending = []; r.forEach((f) => f());
                         });
                     },
                 },
             ],
         });
 
-        await ctx.watch();
+        await serverCtx.watch();
+
+        // ── 3) Middleware 链 ────────────────────────────────────────────────────
+        const staticMW = createStaticFileMiddleware({
+            outDir: clientOutDir,
+            publicPath,
+            skipIndexHtml: true,
+        });
 
         const ssrHandler = createSSRRequestHandler({
             context:          this.context,
             ssrConfig,
             serverBundlePath: () => resolvedBundlePath,
-            waitUntilReady,
+            waitUntilReady: async () => {
+                await waitClient();
+                await waitServer();
+            },
+            getTemplate: async () => {
+                const compiled = path.join(clientOutDir, "index.html");
+                if (existsSync(compiled)) {
+                    return readFileSync(compiled, "utf-8");
+                }
+                const templatePath = ssrConfig.template
+                    ? path.resolve(this.context, ssrConfig.template)
+                    : path.resolve(this.context, "public/index.html");
+                return readFileSync(templatePath, "utf-8");
+            },
             onError: (e) =>
                 this.logger.error(`SSR 渲染失败: ${e?.message ?? e}`, "esbuild"),
         });
 
-        return [ssrHandler];
+        return [staticMW, ssrHandler];
     }
 }

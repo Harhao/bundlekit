@@ -5,6 +5,7 @@ import ConfigLoader from "./ConfigLoader";
 import { applyTools } from "./utils/applyTools";
 import { buildSSRView } from "./utils/ssr";
 import { startSSRDevServer, resolveDevServerBinding } from "./utils/ssrDevServer";
+import { buildSSRHTMLTemplate } from "@bundlekit/shared-utils";
 import { createJiti } from "jiti";
 
 import { createRequire } from "module";
@@ -405,8 +406,51 @@ export default class Service {
         // build SSR 双 pass：先 client，再 server
         this.logger.log(`SSR 模式启用：将依次执行 client + server 两次构建`, "构建工具");
 
-        // Pass 1: client
+        // Pass 1: client。.bundlekitrc 的 SSR 配置里 pages 字段保留了，所以会走每个
+        // bundler 原生 HTML pipeline（HtmlWebpackPlugin / vite-plugin-html / 自家
+        // writeHtmlFile 等），产物 dist/index.html 自带 hashed <script>/<link> 注入，
+        // 同时保留模板里的 <!--ssr-outlet--> 占位，server pass runtime 读它做 SSR。
         await this.runSinglePass(bundlerPlugin, this.buildConfig!, finalBundler, "client");
+
+        // Pass 1.5（兜底）：如果 client pass 没产 dist/index.html（用户自定义配置
+        // 删了 pages 或 bundler 异常），用 buildSSRHTMLTemplate 扫 outDir 顶层 *.js /
+        // *.css 手工注入一份；不覆盖 bundler 原生产物，避免破坏 split chunks 顺序。
+        try {
+            const ssrCfg = envConfig.ssr;
+            const rawOutput = envConfig.output as { dir?: string } | { dir?: string }[] | undefined;
+            const outputDir = Array.isArray(rawOutput)
+                ? rawOutput[0]?.dir
+                : rawOutput?.dir;
+            const pages = (envConfig as any)?.pages as Array<{ template?: string }> | undefined;
+            const sourceTemplateRel = pages?.[0]?.template
+                ?? (typeof ssrCfg?.template === "string" && !ssrCfg.template.startsWith(outputDir || "dist") ? ssrCfg.template : undefined);
+
+            if (ssrCfg && outputDir && sourceTemplateRel) {
+                const clientOutDir = path.resolve(this.context, outputDir);
+                const destHTML = path.join(clientOutDir, "index.html");
+                const fsModule = await import("node:fs");
+                if (!fsModule.existsSync(destHTML)) {
+                    const sourceTemplate = path.resolve(this.context, sourceTemplateRel);
+                    const result = buildSSRHTMLTemplate({
+                        sourceTemplate,
+                        outDir: clientOutDir,
+                        publicPath: envConfig.publicPath || "/",
+                        destPath: destHTML,
+                    });
+                    if (result.output) {
+                        this.logger.done(
+                            `SSR 模板兜底注入：${path.relative(this.context, result.output)} (JS ${result.jsFiles.length} / CSS ${result.cssFiles.length})`,
+                            "构建工具",
+                        );
+                    }
+                }
+            }
+        } catch (err: any) {
+            this.logger.warn(
+                `SSR HTML 模板兜底注入失败（不影响 server bundle 编译）：${err?.message ?? err}`,
+                "构建工具",
+            );
+        }
 
         // Pass 2: server（用 buildSSRView 切换 entry / output / target）
         const serverBuildConfig = buildSSRView(this.buildConfig!, this.mode);

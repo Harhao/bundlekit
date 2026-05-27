@@ -236,15 +236,25 @@ export default class RspackBundler implements IBuildToolAdapter<RspackOptions> {
                 case "staging":
                 case "gray": {
                     const compiler = Rspack(config as any);
-                    compiler.run((err: any, stats: any) => {
-                        if (err) {
-                            this.logger.error(`打包失败, 错误信息: ${err}`);
-                            throw err;
-                        }
-                        if (stats) {
-                            process.stdout.write(stats.toString({ colors: true }) + "\n");
-                        }
-                        compiler.close(() => {});
+                    // 必须 await 编译完成，否则 Service 的 SSR 双 pass 会变成「fire-and-forget」
+                    // → client / server pass 并行跑，且后续依赖 dist 产物的逻辑（如 Service.ts
+                    // 的兜底 HTML 注入器）会读到空目录。
+                    await new Promise<void>((resolve, reject) => {
+                        compiler.run((err: any, stats: any) => {
+                            if (err) {
+                                this.logger.error(`打包失败, 错误信息: ${err}`);
+                                reject(err);
+                                return;
+                            }
+                            if (stats) {
+                                process.stdout.write(stats.toString({ colors: true }) + "\n");
+                                if (stats.hasErrors?.()) {
+                                    reject(new Error("rspack 构建包含错误"));
+                                    return;
+                                }
+                            }
+                            compiler.close(() => resolve());
+                        });
                     });
                     break;
                 }
@@ -327,6 +337,31 @@ export default class RspackBundler implements IBuildToolAdapter<RspackOptions> {
             serverBundlePath: () => serverBundlePath,
             waitUntilReady,
             onError: (e) => this.logger.error(`SSR 渲染失败: ${e?.message ?? e}`),
+            // 与 webpack adapter 镜像：注入 client bundle <script>，让浏览器加载客户端 JS
+            // 触发 hydration，否则页面只有 SSR 出来的静态 HTML，事件绑定丢失。
+            // 防御：若用户把 ssr.template 指到 prod 编译产物（已含 <script>），就跳过手工注入。
+            getTemplate: async (_url) => {
+                const fsp = await import("node:fs/promises");
+                const templatePath = ssrConfig.template
+                    ? path.resolve(this.context, ssrConfig.template)
+                    : path.resolve(this.context, "public/index.html");
+                let html = await fsp.readFile(templatePath, "utf-8");
+                // 模板自带 <script> 标签时直接返回，避免重复加载入口造成双挂载。
+                if (/<script\b[^>]*\bsrc\s*=/i.test(html)) {
+                    return html;
+                }
+                const publicPath = ((clientConfig as any).output?.publicPath as string) || "/";
+                const entryFile = ((clientConfig as any).output as any)?.filename || "[name].js";
+                // rspack adapter 把 string entry 包成 { app: entry }，chunk name = 'app'
+                const clientUrl = `${publicPath}${entryFile.replace(/\[name\]/g, "app").replace(/\[contenthash[^\]]*\]/g, "")}`;
+                const scriptTag = `<script defer src="${clientUrl}"></script>`;
+                if (html.includes("</body>")) {
+                    html = html.replace(/<\/body>/i, `${scriptTag}</body>`);
+                } else {
+                    html += scriptTag;
+                }
+                return html;
+            },
         });
 
         return [devMiddleware as IRequestHandler, ssrHandler];
