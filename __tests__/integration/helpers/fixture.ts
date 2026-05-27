@@ -12,11 +12,12 @@ import { spawnSync } from "node:child_process";
  *   - 必须在 monorepo 文件树内才能保证相对路径解析正确
  *
  * mode 参数控制使用哪份 .bundlekitrc：
- *   - 'spa' → .bundlekitrc.spa.ts → 复制为 .bundlekitrc.ts
- *   - 'lib' → .bundlekitrc.lib.ts → 复制为 .bundlekitrc.ts
- *   - 'ssr' → .bundlekitrc.ssr.ts → 复制为 .bundlekitrc.ts
+ *   - 'spa'     → .bundlekitrc.spa.ts → 复制为 .bundlekitrc.ts
+ *   - 'lib'     → .bundlekitrc.lib.ts → 复制为 .bundlekitrc.ts
+ *   - 'lib-umd' → .bundlekitrc.lib-umd.ts → 复制为 .bundlekitrc.ts（library + UMD + libraryName）
+ *   - 'ssr'     → .bundlekitrc.ssr.ts → 复制为 .bundlekitrc.ts
  */
-export type FixtureMode = "spa" | "lib" | "ssr";
+export type FixtureMode = "spa" | "lib" | "lib-umd" | "ssr";
 
 export interface IFixtureHandle {
     /** 临时项目根目录 */

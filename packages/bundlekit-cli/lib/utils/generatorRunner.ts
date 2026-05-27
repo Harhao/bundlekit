@@ -2,6 +2,8 @@ import path from "path";
 import fs from "fs";
 import Enquirer from "enquirer";
 import { createRequire } from "module";
+import { fileURLToPath } from "url";
+import { createJiti } from "jiti";
 import { Logger } from "@bundlekit/shared-utils";
 import type { IGeneratorAPI } from "@bundlekit/shared-utils";
 
@@ -69,15 +71,44 @@ export async function invokeGenerator(
     api: IGeneratorAPI,
     logger: Logger,
 ): Promise<boolean> {
-    const generatorEntry = `${pkgName}/generator`;
-
     try {
         const require = createRequire(import.meta.url);
-        const generatorPath = require.resolve(generatorEntry, {
-            paths: [context],
-        });
+        // 解析策略：
+        //  1. 先 resolve `${pkgName}/package.json`，找到插件包根目录
+        //  2. 从包根目录拼接 generator/index.ts（源文件）或 generator/index.js（编译产物）
+        //  3. 用 jiti 加载，支持 .ts 源文件和 .js 产物
+        const searchPaths = [
+            context,
+            path.dirname(fileURLToPath(import.meta.url)),
+        ];
+        let generatorPath: string | undefined;
+        for (const searchDir of searchPaths) {
+            try {
+                const pkgJsonPath = require.resolve(`${pkgName}/package.json`, { paths: [searchDir] });
+                const pkgRoot = path.dirname(pkgJsonPath);
+                // 按优先级依次尝试：.ts（monorepo 源码）→ .js → .cjs → .mjs
+                for (const candidate of [
+                    path.join(pkgRoot, "generator", "index.ts"),
+                    path.join(pkgRoot, "generator", "index.js"),
+                    path.join(pkgRoot, "generator", "index.cjs"),
+                    path.join(pkgRoot, "generator", "index.mjs"),
+                ]) {
+                    if (fs.existsSync(candidate)) {
+                        generatorPath = candidate;
+                        break;
+                    }
+                }
+                if (generatorPath) break;
+            } catch {
+                // 继续下一个查找路径
+            }
+        }
+        if (!generatorPath) throw Object.assign(new Error("Not found"), { code: "MODULE_NOT_FOUND" });
 
-        const mod = await import(generatorPath);
+        // 使用 jiti 加载，支持 .ts 源文件形式的 generator（monorepo workspace 场景）；
+        // 已编译产物（.js / .cjs / .mjs）同样能正常加载。
+        const jiti = createJiti(import.meta.url);
+        const mod = jiti(generatorPath) as any;
         const generate = mod.default ?? mod;
 
         if (typeof generate !== "function") {

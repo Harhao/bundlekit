@@ -1,0 +1,16 @@
+/**
+ * Library 入口（library 模式由 generator 重命名为 src/index.ts）
+ *
+ * 这个文件就是你的 SDK 公共 API：所有要被消费方 import 的东西都从这里 export。
+ */
+import App from "./App.vue";
+
+export { App };
+
+/** 简单的 SDK 工具示例 */
+export function greet(name: string): string {
+    return `Hello, ${name}! — from <%= libraryName %>`;
+}
+
+const <%= libraryName %> = { App, greet };
+export default <%= libraryName %>;

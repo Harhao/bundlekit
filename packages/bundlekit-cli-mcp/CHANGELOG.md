@@ -1,5 +1,15 @@
 # @bundlekit/cli-mcp
 
+## 0.1.5
+
+### Patch Changes
+
+- Updated dependencies [fb94642]
+- Updated dependencies [1308e66]
+- Updated dependencies [0ef5a9b]
+  - @bundlekit/cli@0.0.10
+  - @bundlekit/shared-utils@0.0.8
+
 ## 0.1.4
 
 ### Patch Changes

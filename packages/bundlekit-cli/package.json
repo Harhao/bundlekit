@@ -1,6 +1,6 @@
 {
   "name": "@bundlekit/cli",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "a cli tool serve for generate frontend project",
   "type": "module",
   "main": "./dist/index.mjs",
@@ -17,7 +17,7 @@
   },
   "scripts": {
     "clean": "rimraf -rf dist",
-    "debug": "tsx ./index.tsx create test-app -t react-ts",
+    "debug": "tsx ./index.tsx create test-app -t react-ts --ssr",
     "cli:build": "pnpm run clean && rollup -c ./scripts/rollup.config.js"
   },
   "files": [
@@ -43,6 +43,7 @@
   "dependencies": {
     "@bundlekit/plugin-react": "workspace:*",
     "@bundlekit/plugin-vue": "workspace:*",
+    "@bundlekit/plugin-node": "workspace:*",
     "@bundlekit/shared-utils": "workspace:*",
     "commander": "^13.1.0",
     "ejs": "^3.1.10",

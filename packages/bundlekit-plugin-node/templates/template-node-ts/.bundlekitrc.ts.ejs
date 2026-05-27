@@ -1,0 +1,63 @@
+<% if (library) { %>
+/**
+ * Library / SDK 模式
+ *   - 多格式输出（esm + cjs），适合发布到 npm 的纯 TS 库
+ *   - 推荐 bundler：rollup（含 dts）/ rolldown / esbuild
+ */
+export default {
+  mode: "development" as const,
+  bundler: "<%= bundler %>",
+  plugins: ["@bundlekit/plugin-node"],
+  config: {
+    development: {
+      target: "node" as const,
+      publicPath: "/",
+      entry: "src/index.ts",
+      output: { dir: "dist", filename: "[name].js", formats: ["esm", "commonjs"] as const },
+      alias: { "@": "src" },
+      externals: [],
+      library: true,
+      libraryName: "<%= libraryName %>",
+      js: { sourcemap: true, minify: false, splitChunks: false },
+    },
+    production: {
+      target: "node" as const,
+      publicPath: "/",
+      entry: "src/index.ts",
+      output: { dir: "dist", filename: "[name].js", formats: ["esm", "commonjs"] as const },
+      alias: { "@": "src" },
+      externals: [],
+      library: true,
+      libraryName: "<%= libraryName %>",
+      js: { sourcemap: false, minify: false, splitChunks: false },
+    },
+  } as any,
+};
+<% } else { %>
+export default {
+  mode: "development" as const,
+  bundler: "<%= bundler %>",
+  plugins: ["@bundlekit/plugin-node"],
+  config: {
+    development: {
+      target: "node" as const,
+      publicPath: "/",
+      entry: "src/index.ts",
+      // Node.js 库 / 服务：输出 esm + cjs 双格式，不含 HTML / devServer
+      output: { dir: "dist", filename: "[name].js", formats: ["esm", "commonjs"] as const },
+      alias: { "@": "src" },
+      externals: [],
+      js: { sourcemap: true, minify: false, splitChunks: false },
+    },
+    production: {
+      target: "node" as const,
+      publicPath: "/",
+      entry: "src/index.ts",
+      output: { dir: "dist", filename: "[name].js", formats: ["esm", "commonjs"] as const },
+      alias: { "@": "src" },
+      externals: [],
+      js: { sourcemap: false, minify: false, splitChunks: false },
+    },
+  } as any,
+};
+<% } %>

@@ -3,7 +3,7 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync } from 
 import { build, watch } from "rolldown";
 import postcss from "rollup-plugin-postcss";
 
-import { Logger, validateBuildConfig, createSSRRequestHandler, buildSSRView, resolveSSRExternals } from "@bundlekit/shared-utils";
+import { Logger, validateBuildConfig, createSSRRequestHandler, buildSSRView, resolveSSRExternals, createStaticFileMiddleware } from "@bundlekit/shared-utils";
 import type { IBuildConfig, IBuildToolAdapter, IService, IBuildEnv, IRequestHandler, ISSRMiddlewareCtx } from "@bundlekit/shared-utils";
 import { DevServer } from "./DevServer";
 
@@ -459,11 +459,17 @@ export default class RolldownBundler implements IBuildToolAdapter {
     }
 
     /**
-     * Rolldown dev SSR middleware（无 HMR 注入）
+     * Rolldown dev SSR middleware
      *
-     * 实现思路：与 rollup 镜像
-     *   1. server bundle 用 rolldown.watch 持续监听并写到磁盘
-     *   2. ssrHandler 每次请求等编译就绪 → 清 require cache → require → render
+     * 实现：
+     *   1. **Client pass**：用 rolldown.watch 编译 client bundle 写到 envConfig.output.dir，
+     *      构建完成后调 writeHtmlFile 生成 dist/index.html（带 <script> 注入）。
+     *   2. **Server pass**：buildSSRView 把 entry/target 切到 server，单独 watch 写到
+     *      ssr.output.dir。
+     *   3. **Middleware 链**：
+     *        a) createStaticFileMiddleware 服务 client outDir 下的 *.js / *.css / 静态资源；
+     *        b) createSSRRequestHandler 处理 HTML 请求 → require server bundle → render；
+     *           getTemplate 优先读 dist/index.html（已含 <script>），否则回退源模板。
      */
     public async createSSRMiddleware(
         buildConfig: IBuildConfig,
@@ -473,6 +479,44 @@ export default class RolldownBundler implements IBuildToolAdapter {
         const ssrConfig = (envConfig as any)?.ssr;
         if (!ssrConfig) throw new Error("ssr config not found in envConfig");
 
+        // ── 1) Client pass ─────────────────────────────────────────────────────
+        // transformConfig 内部会按 isLibrary && !isServerPass 设置 htmlWriteConfig
+        const clientConfig = this.transformConfig(buildConfig);
+        // 抓取 client 这次 transformConfig 设置的 htmlWriteConfig；server pass 不会覆盖它
+        const clientHtmlConfig = this.htmlWriteConfig;
+        const clientOutDir =
+            (Array.isArray((clientConfig as any).output)
+                ? (clientConfig as any).output[0]?.dir
+                : (clientConfig as any).output?.dir)
+            || path.resolve(this.context, "dist");
+        const publicPath = (envConfig as any)?.publicPath || "/";
+
+        let clientReady = false;
+        let clientPending: Array<() => void> = [];
+        const waitClient = () =>
+            clientReady ? Promise.resolve() : new Promise<void>((r) => clientPending.push(r));
+
+        const clientWatcher = await watch(clientConfig as any);
+        clientWatcher.on("event", (event: any) => {
+            const code = event?.code;
+            if (code === "BUNDLE_END" || code === "END") {
+                // 写 dist/index.html：把 client 产物作为 <script> 注入到源模板
+                if (clientHtmlConfig) {
+                    try {
+                        writeHtmlFile(clientHtmlConfig);
+                    } catch (e: any) {
+                        this.logger.warn(`[bundlekit] SSR client HTML 写入失败: ${e.message}`, "rolldown");
+                    }
+                }
+                clientReady = true;
+                const r = clientPending; clientPending = []; r.forEach((f) => f());
+            }
+            if (code === "ERROR") {
+                this.logger.error(`rolldown client compiler 错误: ${event.error}`, "rolldown");
+            }
+        });
+
+        // ── 2) Server pass ─────────────────────────────────────────────────────
         const serverBuildConfig = buildSSRView(buildConfig, this.mode);
         const serverConfig = this.transformConfig(serverBuildConfig);
 
@@ -481,31 +525,54 @@ export default class RolldownBundler implements IBuildToolAdapter {
         const serverBundlePath = path.resolve(serverOutDir, serverFilename);
 
         let serverReady = false;
-        let pending: Array<() => void> = [];
-        const waitUntilReady = () =>
-            serverReady ? Promise.resolve() : new Promise<void>((r) => pending.push(r));
+        let serverPending: Array<() => void> = [];
+        const waitServer = () =>
+            serverReady ? Promise.resolve() : new Promise<void>((r) => serverPending.push(r));
 
-        const watcher = await watch(serverConfig as any);
-
-        watcher.on("event", (event: any) => {
+        const serverWatcher = await watch(serverConfig as any);
+        serverWatcher.on("event", (event: any) => {
             const code = event?.code;
             if (code === "BUNDLE_END" || code === "END") {
                 serverReady = true;
-                const r = pending; pending = []; r.forEach((f) => f());
+                const r = serverPending; serverPending = []; r.forEach((f) => f());
             }
             if (code === "ERROR") {
                 this.logger.error(`rolldown server compiler 错误: ${event.error}`, "rolldown");
             }
         });
 
+        // ── 3) Middleware 链 ────────────────────────────────────────────────────
+        const staticMW = createStaticFileMiddleware({
+            outDir: clientOutDir,
+            publicPath,
+            skipIndexHtml: true,
+        });
+
         const ssrHandler = createSSRRequestHandler({
             context: this.context,
             ssrConfig,
             serverBundlePath: () => serverBundlePath,
-            waitUntilReady,
+            // SSR 请求必须等 client + server 都就绪：client 还没产 dist/index.html 时，
+            // 直接用源模板会丢 <script>，浏览器仍然不能 hydrate。
+            waitUntilReady: async () => {
+                await waitClient();
+                await waitServer();
+            },
+            getTemplate: async () => {
+                // 优先用 client pass 写出的 dist/index.html（自带 <script>）
+                const compiled = path.join(clientOutDir, "index.html");
+                if (existsSync(compiled)) {
+                    return readFileSync(compiled, "utf-8");
+                }
+                // 回退源模板（一般是用户删了 pages 的边界情况）
+                const templatePath = ssrConfig.template
+                    ? path.resolve(this.context, ssrConfig.template)
+                    : path.resolve(this.context, "public/index.html");
+                return readFileSync(templatePath, "utf-8");
+            },
             onError: (e) => this.logger.error(`SSR 渲染失败: ${e?.message ?? e}`, "rolldown"),
         });
 
-        return [ssrHandler];
+        return [staticMW, ssrHandler];
     }
 }

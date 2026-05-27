@@ -10,7 +10,7 @@ import json from "@rollup/plugin-json";
 import replace from "@rollup/plugin-replace";
 import postcss from "rollup-plugin-postcss";
 
-import { Logger, validateBuildConfig, FileManager, createSSRRequestHandler, buildSSRView, resolveSSRExternals } from "@bundlekit/shared-utils";
+import { Logger, validateBuildConfig, FileManager, createSSRRequestHandler, buildSSRView, resolveSSRExternals, createStaticFileMiddleware } from "@bundlekit/shared-utils";
 import type { IBuildConfig, IBuildToolAdapter, IService, IBuildEnv, IRequestHandler, ISSRMiddlewareCtx } from "@bundlekit/shared-utils";
 import { DevServer } from "./DevServer";
 
@@ -499,12 +499,15 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
     }
 
     /**
-     * Rollup dev SSR middleware（无 HMR 注入）
+     * Rollup dev SSR middleware
      *
-     * 实现思路：
-     *   1. server bundle 用 rollup.watch 持续监听并写到磁盘
-     *   2. ssrHandler 每次请求等编译就绪 → 清 require cache → require → render
-     *   3. client 部分由用户自行处理（rollup dev 通常用 livereload，无原生 HMR）
+     * 实现：
+     *   1. **Client pass**：rollup.watch 编译 client 写到 envConfig.output.dir，
+     *      构建完成调 writeHtmlFile 生成 dist/index.html（带 <script> 注入）。
+     *   2. **Server pass**：buildSSRView 切换到 server，单独 rollup.watch 写到
+     *      ssr.output.dir。
+     *   3. **Middleware 链**：createStaticFileMiddleware + ssrHandler。
+     *      ssrHandler 优先用 dist/index.html 作模板，避免漏掉 <script>。
      */
     public async createSSRMiddleware(
         buildConfig: IBuildConfig,
@@ -514,6 +517,45 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
         const ssrConfig = (envConfig as any)?.ssr;
         if (!ssrConfig) throw new Error("ssr config not found in envConfig");
 
+        // ── 1) Client pass ─────────────────────────────────────────────────────
+        const clientConfig = sanitizeRollupOptions(this.transformConfig(buildConfig));
+        const clientHtmlConfig = this.htmlWriteConfig;
+        const clientOutDir = path.resolve(
+            this.context,
+            (Array.isArray((envConfig as any).output)
+                ? (envConfig as any).output[0]?.dir
+                : (envConfig as any).output?.dir) || "dist",
+        );
+        const publicPath = (envConfig as any)?.publicPath || "/";
+
+        let clientReady = false;
+        let clientPending: Array<() => void> = [];
+        const waitClient = () =>
+            clientReady ? Promise.resolve() : new Promise<void>((r) => clientPending.push(r));
+
+        const clientWatcher = watch({
+            ...clientConfig,
+            watch: { clearScreen: false, exclude: "node_modules/**" },
+        } as any);
+        clientWatcher.on("event", (event: any) => {
+            if (event.code === "END") {
+                if (clientHtmlConfig) {
+                    try {
+                        writeHtmlFile(clientHtmlConfig);
+                    } catch (e: any) {
+                        this.logger.warn(`[bundlekit] SSR client HTML 写入失败: ${e.message}`, "rollup");
+                    }
+                }
+                clientReady = true;
+                const r = clientPending; clientPending = []; r.forEach((f) => f());
+            }
+            if (event.code === "ERROR") {
+                this.logger.error(`rollup client compiler 错误: ${event.error}`, "rollup");
+            }
+            if (event.result) event.result.close();
+        });
+
+        // ── 2) Server pass ─────────────────────────────────────────────────────
         const serverBuildConfig = buildSSRView(buildConfig, this.mode);
         const serverConfig = sanitizeRollupOptions(this.transformConfig(serverBuildConfig));
 
@@ -522,19 +564,18 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
         const serverBundlePath = path.resolve(serverOutDir, serverFilename);
 
         let serverReady = false;
-        let pending: Array<() => void> = [];
-        const waitUntilReady = () =>
-            serverReady ? Promise.resolve() : new Promise<void>((r) => pending.push(r));
+        let serverPending: Array<() => void> = [];
+        const waitServer = () =>
+            serverReady ? Promise.resolve() : new Promise<void>((r) => serverPending.push(r));
 
-        const watcher = watch({
+        const serverWatcher = watch({
             ...serverConfig,
             watch: { clearScreen: false, exclude: "node_modules/**" },
         } as any);
-
-        watcher.on("event", (event: any) => {
+        serverWatcher.on("event", (event: any) => {
             if (event.code === "END") {
                 serverReady = true;
-                const r = pending; pending = []; r.forEach((f) => f());
+                const r = serverPending; serverPending = []; r.forEach((f) => f());
             }
             if (event.code === "ERROR") {
                 this.logger.error(`rollup server compiler 错误: ${event.error}`, "rollup");
@@ -542,14 +583,34 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
             if (event.result) event.result.close();
         });
 
+        // ── 3) Middleware 链 ────────────────────────────────────────────────────
+        const staticMW = createStaticFileMiddleware({
+            outDir: clientOutDir,
+            publicPath,
+            skipIndexHtml: true,
+        });
+
         const ssrHandler = createSSRRequestHandler({
             context: this.context,
             ssrConfig,
             serverBundlePath: () => serverBundlePath,
-            waitUntilReady,
+            waitUntilReady: async () => {
+                await waitClient();
+                await waitServer();
+            },
+            getTemplate: async () => {
+                const compiled = path.join(clientOutDir, "index.html");
+                if (existsSync(compiled)) {
+                    return readFileSync(compiled, "utf-8");
+                }
+                const templatePath = ssrConfig.template
+                    ? path.resolve(this.context, ssrConfig.template)
+                    : path.resolve(this.context, "public/index.html");
+                return readFileSync(templatePath, "utf-8");
+            },
             onError: (e) => this.logger.error(`SSR 渲染失败: ${e?.message ?? e}`, "rollup"),
         });
 
-        return [ssrHandler];
+        return [staticMW, ssrHandler];
     }
 }

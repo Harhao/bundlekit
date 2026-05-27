@@ -1,0 +1,26 @@
+/**
+ * <%= projectName %>
+ *
+ * 纯 TypeScript 项目入口。
+ * 当前为最小化示例，包含一个 `greet` 工具函数；
+ * 按需替换 / 扩展成你的业务逻辑。
+ */
+
+export function greet(name: string): string {
+    return `Hello, ${name}! — from <%= projectName %>`;
+}
+
+export function add(a: number, b: number): number {
+    return a + b;
+}
+
+// CLI 直接运行时（esm 入口）打印示例输出
+const isMain =
+    typeof process !== "undefined" &&
+    process.argv[1] &&
+    (process.argv[1] === new URL(import.meta.url).pathname);
+
+if (isMain) {
+    console.log(greet("world"));
+    console.log(`add(1, 2) = ${add(1, 2)}`);
+}

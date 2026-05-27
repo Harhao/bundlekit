@@ -204,3 +204,85 @@ describe("cli-create SSR file filtering", () => {
         expect(files).toContain("main.ts");
     });
 });
+
+describe("cli-create --lib mode", () => {
+    const cleanups: Array<() => Promise<void>> = [];
+
+    afterAll(async () => {
+        for (const c of cleanups) await c();
+    });
+
+    async function createLib(label: string, template: string, libraryName?: string) {
+        const { cwd, cleanup } = await makeTmpCwd(label);
+        cleanups.push(cleanup);
+
+        const args = [CLI_BIN, "create", "demo-lib", "-t", template, "-b", "rollup", "--pm", "pnpm", "--lib"];
+        if (libraryName) args.push("--library-name", libraryName);
+
+        const result = spawnSync("node", args, {
+            cwd,
+            stdio: ["ignore", "pipe", "pipe"],
+            env: {
+                ...process.env,
+                DEVKIT_NO_INK: "1",
+                DEVKIT_QUIET: "0",
+                DEVKIT_SKIP_INSTALL: "1",
+            },
+        });
+        const projectDir = path.join(cwd, "demo-lib");
+        const srcFiles = await fs.readdir(path.join(projectDir, "src")).catch(() => []);
+        const topFiles = await fs.readdir(projectDir).catch(() => []);
+        const bundlekitrc = await fs.readFile(path.join(projectDir, ".bundlekitrc.ts"), "utf-8").catch(() => "");
+        const indexEntry = await fs.readFile(path.join(projectDir, "src/index.tsx"), "utf-8")
+            .catch(() => fs.readFile(path.join(projectDir, "src/index.ts"), "utf-8").catch(() => ""));
+        return {
+            code: result.status ?? -1,
+            stdout: result.stdout?.toString() || "",
+            stderr: result.stderr?.toString() || "",
+            srcFiles,
+            topFiles,
+            bundlekitrc,
+            indexEntry,
+        };
+    }
+
+    it("react-ts --lib：跳过 index.tsx 应用入口和 public/，生成 src/index.tsx 库入口", async () => {
+        const r = await createLib("lib-react-ts", "react-ts");
+        expect(r.code).toBe(0);
+        // lib-entry.tsx.ejs 被 generator 重命名为 index.tsx
+        expect(r.srcFiles).toContain("index.tsx");
+        // App.tsx 保留（被 lib 入口 re-export）
+        expect(r.srcFiles).toContain("App.tsx");
+        // 没有 entry-client/entry-server（非 SSR）
+        expect(r.srcFiles).not.toContain("entry-client.tsx");
+        expect(r.srcFiles).not.toContain("entry-server.tsx");
+        // public/ 被跳过
+        expect(r.topFiles).not.toContain("public");
+        // bundlekitrc 含 library: true 与 libraryName 默认值（DemoLib：项目名 demo-lib → PascalCase）
+        expect(r.bundlekitrc).toContain("library: true");
+        expect(r.bundlekitrc).toContain('libraryName: "DemoLib"');
+        // 入口 re-export App + 默认导出
+        expect(r.indexEntry).toContain('export { App }');
+        expect(r.indexEntry).toContain('export default');
+    });
+
+    it("--library-name 覆盖默认名（PascalCase）", async () => {
+        const r = await createLib("lib-react-name", "react-ts", "MyCoolSDK");
+        expect(r.code).toBe(0);
+        expect(r.bundlekitrc).toContain('libraryName: "MyCoolSDK"');
+        expect(r.indexEntry).toContain('MyCoolSDK');
+    });
+
+    it("vue3-ts --lib：使用 src/index.ts 入口，re-export App.vue", async () => {
+        const r = await createLib("lib-vue-ts", "vue3-ts");
+        expect(r.code).toBe(0);
+        // lib-entry.ts.ejs → index.ts
+        expect(r.srcFiles).toContain("index.ts");
+        expect(r.srcFiles).toContain("App.vue");
+        // 没有 main.ts mount 入口
+        expect(r.srcFiles).not.toContain("main.ts");
+        // public/ 被跳过
+        expect(r.topFiles).not.toContain("public");
+        expect(r.bundlekitrc).toContain("library: true");
+    });
+});

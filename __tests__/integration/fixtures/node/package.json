@@ -1,0 +1,13 @@
+{
+    "name": "bundlekit-fixture-node",
+    "version": "0.0.0",
+    "private": true,
+    "devDependencies": {
+        "@bundlekit/service": "link:../../../../packages/bundlekit-service",
+        "@bundlekit/bundler-rollup": "link:../../../../packages/bundlekit-bundler-rollup",
+        "@bundlekit/bundler-esbuild": "link:../../../../packages/bundlekit-bundler-esbuild",
+        "@bundlekit/shared-utils": "link:../../../../packages/bundlekit-shared-utils",
+        "@bundlekit/plugin-node": "link:../../../../packages/bundlekit-plugin-node",
+        "@bundlekit/plugin-react": "link:../../../../packages/bundlekit-plugin-react"
+    }
+}

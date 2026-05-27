@@ -103,6 +103,40 @@ export default class ViteBundler implements IBuildToolAdapter<InlineConfig> {
         const isServerPass = envConfig.target === 'node';
         const ssrConfig = envConfig.ssr;
 
+        // Library 模式：library=true 走 vite 原生 build.lib（支持多格式 + UMD name）
+        const isLibrary = envConfig.library === true;
+        const libraryName = envConfig.libraryName as string | undefined;
+        // build.lib.formats 接收 vite 自己的 token（es/cjs/umd/iife）
+        const libFormats: string[] = (() => {
+            const arr = Array.isArray(rawFormats) ? rawFormats : (rawFormats ? [rawFormats] : ['es']);
+            return arr.map((f: string) => formatMap[f] || f);
+        })();
+        // entry 文件名（去后缀）—— 用于 build.lib.fileName 默认值
+        const firstEntryRaw = typeof envConfig.entry === "string" ? envConfig.entry : Object.values(envConfig.entry || { app: "src/index.ts" })[0] as string;
+        const libEntryAbs = path.resolve(this.context, firstEntryRaw);
+        const libBaseName = (() => {
+            const base = path.basename(firstEntryRaw).replace(/\.[^.]+$/, "");
+            return libraryName || base || "index";
+        })();
+        // SDK 默认把 dependencies / peerDependencies 视为 external（避免把 react / vue 打进来）
+        const libExternals: (string | RegExp)[] = (() => {
+            const explicit = Array.isArray(envConfig.externals) ? envConfig.externals : [];
+            if (!isLibrary) return explicit;
+            try {
+                const fs = require("node:fs");
+                const pkgPath = path.resolve(this.context, "package.json");
+                if (fs.existsSync(pkgPath)) {
+                    const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
+                    const auto = [
+                        ...Object.keys(pkg.peerDependencies || {}),
+                        ...Object.keys(pkg.dependencies || {}),
+                    ];
+                    return [...new Set([...explicit, ...auto])];
+                }
+            } catch { /* ignore */ }
+            return explicit;
+        })();
+
         const viteConfig = {
             base: envConfig.publicPath || "/",
             publicDir: false,
@@ -143,8 +177,8 @@ export default class ViteBundler implements IBuildToolAdapter<InlineConfig> {
                     }
                 },
             }),
-            plugins: isServerPass
-                ? [...frameworkPlugins]   // server pass 不需要 HTML plugin
+            plugins: isServerPass || isLibrary
+                ? [...frameworkPlugins]   // server / library 不需要 HTML plugin
                 : [...frameworkPlugins, buildHtmlPlugin()],
             build: {
                 outDir: outDir,
@@ -168,6 +202,34 @@ export default class ViteBundler implements IBuildToolAdapter<InlineConfig> {
                         output: {
                             format: ssrConfig?.output?.formats === "esm" ? "es" : "cjs",
                             entryFileNames: ssrConfig?.output?.filename || "server.cjs",
+                        },
+                    },
+                } : isLibrary ? {
+                    // Vite 原生 library 模式（支持多格式 + UMD name）
+                    lib: {
+                        entry: libEntryAbs,
+                        formats: libFormats as any,
+                        // UMD/IIFE 必须有 name
+                        ...(libFormats.includes('umd') || libFormats.includes('iife')
+                            ? { name: libraryName || libBaseName }
+                            : {}),
+                        fileName: (format: string, name: string) => {
+                            const ext = format === 'es' ? 'mjs' : format === 'cjs' ? 'cjs' : `${format}.js`;
+                            return `${libBaseName}.${ext}`;
+                        },
+                    },
+                    rollupOptions: {
+                        external: libExternals,
+                        output: {
+                            // UMD/IIFE 需要 globals 映射，但用户可在 .bundlekitrc 覆写；
+                            // 这里只为 react/react-dom/vue 提供常见映射
+                            globals: libExternals.reduce<Record<string, string>>((acc, ext) => {
+                                if (typeof ext !== "string") return acc;
+                                if (ext === "react") acc[ext] = "React";
+                                else if (ext === "react-dom") acc[ext] = "ReactDOM";
+                                else if (ext === "vue") acc[ext] = "Vue";
+                                return acc;
+                            }, {}),
                         },
                     },
                 } : {

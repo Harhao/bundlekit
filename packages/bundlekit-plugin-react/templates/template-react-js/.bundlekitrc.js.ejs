@@ -1,3 +1,25 @@
+<% if (library) { %>
+/**
+ * Library / SDK 模式：多格式输出（esm + cjs + umd）
+ */
+export default {
+  mode: "development",
+  bundler: "<%= bundler %>",
+  config: {
+    development: {
+      target: "web",
+      publicPath: "/",
+      entry: "src/index.jsx",
+      output: { dir: "dist", filename: "[name].js", formats: ["esm", "commonjs", "umd"] },
+      alias: { "@": "src" },
+      externals: ["react", "react-dom"],
+      library: true,
+      libraryName: "<%= libraryName %>",
+      js: { sourcemap: true, minify: false, splitChunks: false },
+    },
+  },
+};
+<% } else { %>
 export default {
   mode: "development",
   bundler: "<%= bundler %>",
@@ -6,6 +28,11 @@ export default {
       target: "web",
       publicPath: "/",
       entry: <% if (ssr) { %>"src/entry-client.jsx"<% } else { %>"src/index.jsx"<% } %>,
+      // SSR 也保留 pages，让 client pass 走 bundler 原生 HTML 流水线，产物自带
+      // <script>/<link> 注入，保留 split chunks 顺序、hash 等。
+      pages: [
+        { entry: <% if (ssr) { %>"src/entry-client.jsx"<% } else { %>"src/index.jsx"<% } %>, filename: "index.html", template: "public/index.html", inject: "body" },
+      ],
       output: { dir: "dist", filename: "[name].js", formats: "umd" },
       alias: { "@": "src" },
       externals: [],
@@ -15,6 +42,8 @@ export default {
         entry: "src/entry-server.jsx",
         output: { dir: "dist/server", filename: "server.cjs", formats: "commonjs" },
         externals: "auto",
+        // dev：HTML plugin 输出在内存，adapter 在 createSSRMiddleware 里手工注入 <script>，
+        // 这里指向源模板即可。
         template: "public/index.html",
         placeholder: "<!--ssr-outlet-->",
         dev: true,
@@ -22,3 +51,4 @@ export default {
     },
   },
 };
+<% } %>

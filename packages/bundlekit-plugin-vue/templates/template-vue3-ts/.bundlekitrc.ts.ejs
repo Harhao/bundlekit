@@ -1,3 +1,11 @@
+<% if (library) { %>
+/**
+ * Library / SDK 模式
+ *   - 入口 src/index.ts 导出公共 API（含 .vue 组件）
+ *   - 多格式输出（esm + cjs + umd），消费方 import / require / <script> 都能用
+ *   - peer deps（vue）默认 external
+ *   - 推荐 bundler：rollup（含 dts）/ rolldown / vite
+ */
 export default {
   mode: "development" as const,
   bundler: "<%= bundler %>",
@@ -6,10 +14,42 @@ export default {
     development: {
       target: "web" as const,
       publicPath: "/",
-      entry: <% if (ssr) { %>"src/entry-client.ts"<% } else { %>"src/main.ts"<% } %>,<% if (!ssr) { %>
+      entry: "src/index.ts",
+      output: { dir: "dist", filename: "[name].js", formats: ["esm", "commonjs", "umd"] as const },
+      alias: { "@": "src" },
+      externals: ["vue"],
+      library: true,
+      libraryName: "<%= libraryName %>",
+      js: { sourcemap: true, minify: false, splitChunks: false },
+    },
+    production: {
+      target: "web" as const,
+      publicPath: "/",
+      entry: "src/index.ts",
+      output: { dir: "dist", filename: "[name].js", formats: ["esm", "commonjs", "umd"] as const },
+      alias: { "@": "src" },
+      externals: ["vue"],
+      library: true,
+      libraryName: "<%= libraryName %>",
+      js: { sourcemap: false, minify: true, splitChunks: false },
+    },
+  } as any,
+};
+<% } else { %>
+export default {
+  mode: "development" as const,
+  bundler: "<%= bundler %>",
+  plugins: ["@bundlekit/plugin-vue"],
+  config: {
+    development: {
+      target: "web" as const,
+      publicPath: "/",
+      entry: <% if (ssr) { %>"src/entry-client.ts"<% } else { %>"src/main.ts"<% } %>,
+      // SSR 也保留 pages，让 client pass 走 bundler 原生 HTML 流水线，
+      // 产物自带 <script>/<link> 注入（保持 split chunks 顺序、hash 等都正确）。
       pages: [
-        { entry: "src/main.ts", filename: "index.html", template: "public/index.html", inject: "body" },
-      ],<% } %>
+        { entry: <% if (ssr) { %>"src/entry-client.ts"<% } else { %>"src/main.ts"<% } %>, filename: "index.html", template: "public/index.html", inject: "body" },
+      ],
       output: { dir: "dist", filename: "[name].js", formats: "esm" as const },
       alias: { "@": "src" },
       externals: [],
@@ -19,6 +59,8 @@ export default {
         entry: "src/entry-server.ts",
         output: { dir: "dist/server", filename: "server.cjs", formats: "commonjs" as const },
         externals: "auto" as const,
+        // dev 阶段 HTML plugin 输出在内存里，运行时读盘只能拿到源模板；adapter
+        // 会在 createSSRMiddleware 里手工注入 client <script>，所以这里照旧指向源文件。
         template: "public/index.html",
         placeholder: "<!--ssr-outlet-->",
         dev: true,
@@ -27,10 +69,10 @@ export default {
     production: {
       target: "web" as const,
       publicPath: "/",
-      entry: <% if (ssr) { %>"src/entry-client.ts"<% } else { %>"src/main.ts"<% } %>,<% if (!ssr) { %>
+      entry: <% if (ssr) { %>"src/entry-client.ts"<% } else { %>"src/main.ts"<% } %>,
       pages: [
-        { entry: "src/main.ts", filename: "index.html", template: "public/index.html", inject: "body" },
-      ],<% } %>
+        { entry: <% if (ssr) { %>"src/entry-client.ts"<% } else { %>"src/main.ts"<% } %>, filename: "index.html", template: "public/index.html", inject: "body" },
+      ],
       output: { dir: "dist", filename: "[name].[contenthash:8].js", formats: "esm" as const },
       alias: { "@": "src" },
       externals: [],
@@ -39,9 +81,12 @@ export default {
         entry: "src/entry-server.ts",
         output: { dir: "dist/server", filename: "server.cjs", formats: "commonjs" as const },
         externals: "auto" as const,
-        template: "public/index.html",
+        // production：client pass 产出的 dist/index.html 已含 hashed <script>/<link>
+        // 与 <!--ssr-outlet--> 占位，runtime 直接以它为模板替换占位即可。
+        template: "dist/index.html",
         placeholder: "<!--ssr-outlet-->",
       },<% } %>
     },
   } as any,
 };
+<% } %>

@@ -76,8 +76,35 @@ export default class TransformConfig {
 
         // SSR server pass：target='node' 时输出 commonjs 模块，并 externalize node_modules
         const isServerPass = this.buildConfig.target === 'node';
+
+        // Library 模式：从 envConfig 读 library / libraryName。
+        //   - library=true 时跳过 HtmlWebpackPlugin（不产 dev shell HTML）
+        //   - libraryName 填到 output.library.name；UMD/IIFE 不能没有 name，需要 fallback 到入口名
+        //   - format 标准化映射：esm → 'module'；commonjs → 'commonjs2'；umd / iife / amd 透传
+        const isLibrary = (this.buildConfig as any).library === true;
+        const libraryName = (this.buildConfig as any).libraryName as string | undefined;
+        const formatToLibType = (f: string): string => {
+            switch (f) {
+                case 'esm':      return 'module';
+                case 'commonjs': return 'commonjs2';
+                case 'umd':      return 'umd';
+                case 'iife':     return 'window';
+                default:         return f;
+            }
+        };
         const serverFormat = primaryFormat === 'esm' ? 'module' : 'commonjs2';
-        const libraryConfig = isServerPass ? { type: serverFormat } : { type: primaryFormat };
+        const libraryConfig: any = isServerPass
+            ? { type: serverFormat }
+            : isLibrary
+                ? {
+                    type: formatToLibType(String(primaryFormat)),
+                    // UMD/window 必须有 name；esm/commonjs2 可空
+                    ...(libraryName || (['umd', 'window', 'amd'].includes(formatToLibType(String(primaryFormat)))) ? {
+                        name: libraryName || Object.keys(resolvedEntry)[0] || 'app',
+                    } : {}),
+                    ...(formatToLibType(String(primaryFormat)) === 'umd' ? { umdNamedDefine: true } : {}),
+                }
+                : { type: primaryFormat };
 
         this.transformConfig = {
             mode: this.mode || "none",
@@ -89,7 +116,14 @@ export default class TransformConfig {
                 filename: buildOutput?.filename || '[name].js',
                 publicPath: this.buildConfig.publicPath || '/',
                 library: libraryConfig,
+                ...(isLibrary && libraryConfig.type === 'umd'
+                    ? { globalObject: 'typeof self !== "undefined" ? self : this' }
+                    : {}),
             },
+            // ESM 输出（library 或 SSR module）需要开 experiments.outputModule
+            ...((libraryConfig.type === 'module')
+                ? { experiments: { outputModule: true } }
+                : {}),
             resolveLoader: {
                 modules: [
                     path.resolve(__dirname, '../node_modules'),
@@ -338,6 +372,10 @@ export default class TransformConfig {
     }
 
     private transformPlugins() {
+        // Library 模式：跳过 HTML 注入（用户在打 SDK，没有 HTML 入口）
+        if ((this.buildConfig as any).library === true) {
+            return [];
+        }
         const pages = this.buildConfig.pages || [];
         return pages.map((page) =>
             new HtmlWebpackPlugin({

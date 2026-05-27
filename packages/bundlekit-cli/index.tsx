@@ -17,6 +17,7 @@ const TEMPLATES = [
     { name: "react-js", message: "React + JavaScript" },
     { name: "vue3-ts", message: "Vue 3 + TypeScript" },
     { name: "vue3-js", message: "Vue 3 + JavaScript" },
+    { name: "node-ts", message: "Node.js / 纯 TypeScript（无框架）" },
 ];
 
 const BUNDLERS = [
@@ -74,8 +75,11 @@ async function legacyCreate(name: string, options: Record<string, any>) {
         options.bundler = answer.bundler;
     }
 
-    // SSR 选择：优先级 --ssr > 交互
-    if (options.ssr === undefined) {
+    // SSR 选择：library 模式下没有 SSR 概念，跳过 prompt
+    const isLib = !!options.lib;
+    if (isLib) {
+        options.ssr = false;
+    } else if (options.ssr === undefined) {
         const answer = (await enquirer.prompt({
             type: "select",
             name: "ssr",
@@ -122,6 +126,8 @@ program
     .option("-d, --description <desc>", "项目描述")
     .option("--pm <pm>", "包管理器 (pnpm, yarn, npm)")
     .option("--ssr", "启用 SSR：模板生成 entry-client/entry-server + .bundlekitrc.ts 加 ssr 配置块", false)
+    .option("--lib", "类库 / SDK 模式：.bundlekitrc.ts 输出多格式 (esm/cjs/umd)，跳过 HTML 入口", false)
+    .option("--library-name <name>", "UMD/IIFE 全局变量名（仅 --lib 时生效，默认取项目名 PascalCase）")
     .action(async (name: string, options: Record<string, any>) => {
         if (!isInkEnabled()) {
             // Non-TTY / DEVKIT_NO_INK fallback
@@ -141,6 +147,8 @@ program
                     pm: inputPM,
                     description: options.description,
                     ssr: !!options.ssr,
+                    library: !!options.lib,
+                    libraryName: options.libraryName,
                 },
             } as any),
         );

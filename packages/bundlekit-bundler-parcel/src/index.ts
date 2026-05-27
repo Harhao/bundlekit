@@ -9,6 +9,7 @@ import {
     createSSRRequestHandler,
     buildSSRView,
     resolveSSRExternals,
+    createStaticFileMiddleware,
 } from "@bundlekit/shared-utils";
 import type {
     IBuildConfig,
@@ -382,10 +383,13 @@ export default class ParcelBundler implements IBuildToolAdapter {
     /**
      * Parcel dev SSR middleware
      *
-     * 实现思路（与 rolldown 镜像）：
-     *   1. server bundle 用 Parcel.watch 持续监听并写到磁盘
-     *   2. 从 buildSuccess 事件的 bundleGraph 动态获取实际产物路径
-     *   3. ssrHandler 每次请求等编译就绪 → 清 require cache → require → render
+     * 实现：
+     *   1. **Client pass**：Parcel.watch 编译 client 写到 envConfig.output.dir，
+     *      buildSuccess 后调 writeHtmlFile 生成 dist/index.html（带 <script> 注入）。
+     *   2. **Server pass**：单独 Parcel 实例 watch 写到 ssr.output.dir，
+     *      用 bundleGraph 解析实际产物路径。
+     *   3. **Middleware 链**：createStaticFileMiddleware + ssrHandler；
+     *      ssrHandler 优先用 dist/index.html 作模板。
      */
     public async createSSRMiddleware(
         buildConfig: IBuildConfig,
@@ -395,7 +399,66 @@ export default class ParcelBundler implements IBuildToolAdapter {
         const ssrConfig = (envConfig as any)?.ssr;
         if (!ssrConfig) throw new Error("ssr config not found in envConfig");
 
-        // 生成 server pass 的 buildConfig，然后 transformConfig
+        // ── 1) Client pass ─────────────────────────────────────────────────────
+        const clientRunConfig = this.transformConfig(buildConfig) as ParcelRunConfig;
+        const clientHtmlConfig = this.htmlWriteConfig;
+        const clientOutDir = path.resolve(
+            this.context,
+            (Array.isArray((envConfig as any).output)
+                ? (envConfig as any).output[0]?.dir
+                : (envConfig as any).output?.dir) || "dist",
+        );
+        const publicPath = (envConfig as any)?.publicPath || "/";
+
+        mkdirSync(clientOutDir, { recursive: true });
+
+        let clientReady = false;
+        let clientPending: Array<() => void> = [];
+        const waitClient = () =>
+            clientReady ? Promise.resolve() : new Promise<void>((r) => clientPending.push(r));
+
+        const clientWorkerFarm = createWorkerFarm();
+        const clientBundler = new Parcel({
+            entries:       clientRunConfig.entries,
+            defaultConfig: "@parcel/config-default",
+            mode: "development",
+            targets: {
+                default: {
+                    distDir: clientOutDir,
+                    context: "browser",
+                    engines: { browsers: ["last 2 versions"] },
+                },
+            },
+            env: clientRunConfig.env,
+            workerFarm: clientWorkerFarm,
+            shouldDisableCache: false,
+            shouldAutoInstall:  false,
+            logLevel: "warn",
+        } as any);
+
+        await clientBundler.watch((err: Error | null, event: any) => {
+            if (err || event?.type === "buildFailure") {
+                const msg = err?.message ?? event?.diagnostics?.[0]?.message ?? String(err ?? event);
+                this.logger.error(`Parcel client compiler 错误: ${msg}`, "parcel");
+                return;
+            }
+            if (event?.type === "buildSuccess") {
+                if (clientHtmlConfig) {
+                    try {
+                        writeHtmlFile(clientHtmlConfig);
+                    } catch (e: any) {
+                        this.logger.warn(
+                            `[bundlekit] SSR client HTML 写入失败: ${e.message}`,
+                            "parcel",
+                        );
+                    }
+                }
+                clientReady = true;
+                const r = clientPending; clientPending = []; r.forEach((f) => f());
+            }
+        });
+
+        // ── 2) Server pass ─────────────────────────────────────────────────────
         const serverBuildConfig = buildSSRView(buildConfig, this.mode);
         const serverRunConfig   = this.transformConfig(serverBuildConfig) as ParcelRunConfig;
 
@@ -405,18 +468,16 @@ export default class ParcelBundler implements IBuildToolAdapter {
         let resolvedBundlePath = path.resolve(serverOutDir, serverFilename);
 
         let serverReady = false;
-        let pending: Array<() => void> = [];
-        const waitUntilReady = () =>
-            serverReady
-                ? Promise.resolve()
-                : new Promise<void>((r) => pending.push(r));
+        let serverPending: Array<() => void> = [];
+        const waitServer = () =>
+            serverReady ? Promise.resolve() : new Promise<void>((r) => serverPending.push(r));
 
         // 确保输出目录存在
         mkdirSync(serverOutDir, { recursive: true });
 
         // 启动 Parcel server-side watcher
-        const workerFarm = createWorkerFarm();
-        const bundler = new Parcel({
+        const serverWorkerFarm = createWorkerFarm();
+        const serverBundler = new Parcel({
             entries:       serverRunConfig.entries,
             defaultConfig: "@parcel/config-default",
             mode: "development",
@@ -431,14 +492,14 @@ export default class ParcelBundler implements IBuildToolAdapter {
                 },
             },
             env:         serverRunConfig.env,
-            workerFarm,
+            workerFarm:  serverWorkerFarm,
             shouldDisableCache: false,
             shouldAutoInstall:  false,
             logLevel: "warn",
         } as any);
 
         // Parcel 2 watch 回调签名: (err: Error | null, event: BuildSuccessEvent | BuildFailureEvent) => void
-        await bundler.watch((err: Error | null, event: any) => {
+        await serverBundler.watch((err: Error | null, event: any) => {
             if (err || event?.type === "buildFailure") {
                 const msg = err?.message ?? event?.diagnostics?.[0]?.message ?? String(err ?? event);
                 this.logger.error(`Parcel server compiler 错误: ${msg}`, "parcel");
@@ -458,19 +519,39 @@ export default class ParcelBundler implements IBuildToolAdapter {
                     // bundleGraph API 不可用时回落到预期路径
                 }
                 serverReady = true;
-                const r = pending; pending = []; r.forEach((f) => f());
+                const r = serverPending; serverPending = []; r.forEach((f) => f());
             }
+        });
+
+        // ── 3) Middleware 链 ────────────────────────────────────────────────────
+        const staticMW = createStaticFileMiddleware({
+            outDir: clientOutDir,
+            publicPath,
+            skipIndexHtml: true,
         });
 
         const ssrHandler = createSSRRequestHandler({
             context:          this.context,
             ssrConfig,
             serverBundlePath: () => resolvedBundlePath,
-            waitUntilReady,
+            waitUntilReady: async () => {
+                await waitClient();
+                await waitServer();
+            },
+            getTemplate: async () => {
+                const compiled = path.join(clientOutDir, "index.html");
+                if (existsSync(compiled)) {
+                    return readFileSync(compiled, "utf-8");
+                }
+                const templatePath = ssrConfig.template
+                    ? path.resolve(this.context, ssrConfig.template)
+                    : path.resolve(this.context, "public/index.html");
+                return readFileSync(templatePath, "utf-8");
+            },
             onError: (e) =>
                 this.logger.error(`SSR 渲染失败: ${e?.message ?? e}`, "parcel"),
         });
 
-        return [ssrHandler];
+        return [staticMW, ssrHandler];
     }
 }
