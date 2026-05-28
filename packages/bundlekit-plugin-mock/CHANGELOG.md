@@ -1,5 +1,11 @@
 # @bundlekit/plugin-mock
 
+## 0.0.9
+
+### Patch Changes
+
+- 0e06ecf: 修复项目的 lib 模式问题
+
 ## 0.0.8
 
 ### Patch Changes

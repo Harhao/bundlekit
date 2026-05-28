@@ -1,5 +1,14 @@
 # @bundlekit/cli
 
+## 0.0.14
+
+### Patch Changes
+
+- 0e06ecf: 修复项目的 lib 模式问题
+- Updated dependencies [0e06ecf]
+  - @bundlekit/plugin-react@0.0.10
+  - @bundlekit/plugin-vue@0.0.10
+
 ## 0.0.13
 
 ### Patch Changes

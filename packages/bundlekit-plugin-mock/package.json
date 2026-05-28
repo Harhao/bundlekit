@@ -1,11 +1,16 @@
 {
   "name": "@bundlekit/plugin-mock",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Mock plugin for bundlekit - provides mock API server with proxy config",
   "main": "./index.ts",
   "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./generator": "./generator/index.ts"
+  },
   "files": [
     "index.ts",
+    "generator",
     "package.json"
   ],
   "scripts": {

@@ -1,7 +1,6 @@
 import { describe, it, expect, afterAll } from "vitest";
 import path from "node:path";
 import fs from "node:fs/promises";
-import os from "node:os";
 import { spawnSync } from "node:child_process";
 
 /**
@@ -68,7 +67,7 @@ describe("cli-create dep normalization", () => {
         const r = runCreate({
             cwd,
             name: "demo-npm",
-            template: "vue3-ts",
+            template: "vue3-js",
             bundler: "webpack",
         });
         if (r.code !== 0) {
@@ -106,7 +105,7 @@ describe("cli-create generator prompt silenced", () => {
         const r = runCreate({
             cwd,
             name: "demo-prompt",
-            template: "react-ts",
+            template: "react-js",
             bundler: "vite",
             env,
         });
@@ -172,53 +171,48 @@ describe("cli-create SSR file filtering", () => {
         return { files, code: result.status ?? -1 };
     }
 
-    it("generates entry-server.tsx and entry-client.tsx when --ssr is used", async () => {
-        const { files, code } = await createAndCheckFiles("ssr-true", "react-ts", true);
+    it("generates entry-server.jsx and entry-client.jsx when --ssr is used", async () => {
+        const { files, code } = await createAndCheckFiles("ssr-true", "react-js", true);
         expect(code).toBe(0);
-        expect(files).toContain("entry-server.tsx");
-        expect(files).toContain("entry-client.tsx");
-        expect(files).not.toContain("index.tsx");
+        expect(files).toContain("entry-server.jsx");
+        expect(files).toContain("entry-client.jsx");
+        expect(files).not.toContain("index.jsx");
     });
 
-    it("skips entry-server.tsx and entry-client.tsx when --ssr is not used", async () => {
-        const { files, code } = await createAndCheckFiles("ssr-false", "react-ts", false);
+    it("skips entry-server.jsx and entry-client.jsx when --ssr is not used", async () => {
+        const { files, code } = await createAndCheckFiles("ssr-false", "react-js", false);
         expect(code).toBe(0);
-        expect(files).not.toContain("entry-server.tsx");
-        expect(files).not.toContain("entry-client.tsx");
-        expect(files).toContain("index.tsx");
+        expect(files).not.toContain("entry-server.jsx");
+        expect(files).not.toContain("entry-client.jsx");
+        expect(files).toContain("index.jsx");
     });
 
-    it("generates entry-server.ts and entry-client.ts for vue3 template with --ssr", async () => {
-        const { files, code } = await createAndCheckFiles("ssr-vue", "vue3-ts", true);
+    it("generates entry-server.js and entry-client.js for vue3 template with --ssr", async () => {
+        const { files, code } = await createAndCheckFiles("ssr-vue", "vue3-js", true);
         expect(code).toBe(0);
-        expect(files).toContain("entry-server.ts");
-        expect(files).toContain("entry-client.ts");
-        expect(files).not.toContain("main.ts");
+        expect(files).toContain("entry-server.js");
+        expect(files).toContain("entry-client.js");
+        expect(files).not.toContain("main.js");
     });
 
-    it("skips entry-server.ts and entry-client.ts for vue3 template without --ssr", async () => {
-        const { files, code } = await createAndCheckFiles("ssr-vue-false", "vue3-ts", false);
+    it("skips entry-server.js and entry-client.js for vue3 template without --ssr", async () => {
+        const { files, code } = await createAndCheckFiles("ssr-vue-false", "vue3-js", false);
         expect(code).toBe(0);
-        expect(files).not.toContain("entry-server.ts");
-        expect(files).not.toContain("entry-client.ts");
-        expect(files).toContain("main.ts");
+        expect(files).not.toContain("entry-server.js");
+        expect(files).not.toContain("entry-client.js");
+        expect(files).toContain("main.js");
     });
 });
 
 describe("cli-create --lib mode", () => {
-    const cleanups: Array<() => Promise<void>> = [];
-
-    afterAll(async () => {
-        for (const c of cleanups) await c();
-    });
-
-    async function createLib(label: string, template: string, libraryName?: string) {
-        const { cwd, cleanup } = await makeTmpCwd(label);
+    // React / Vue 不再支持 library 模式（已移至 plugin-node）。
+    // node-ts --lib 完整测试见 __tests__/integration/cli/cli-plugin-node.test.ts
+    it("react-js 不使用 --lib，bundlekitrc 不含 library: true", async () => {
+        const cleanups: Array<() => Promise<void>> = [];
+        const { cwd, cleanup } = await makeTmpCwd("no-lib-react");
         cleanups.push(cleanup);
 
-        const args = [CLI_BIN, "create", "demo-lib", "-t", template, "-b", "rollup", "--pm", "pnpm", "--lib"];
-        if (libraryName) args.push("--library-name", libraryName);
-
+        const args = [CLI_BIN, "create", "demo-react", "-t", "react-js", "-b", "rollup", "--pm", "pnpm"];
         const result = spawnSync("node", args, {
             cwd,
             stdio: ["ignore", "pipe", "pipe"],
@@ -229,60 +223,12 @@ describe("cli-create --lib mode", () => {
                 DEVKIT_SKIP_INSTALL: "1",
             },
         });
-        const projectDir = path.join(cwd, "demo-lib");
-        const srcFiles = await fs.readdir(path.join(projectDir, "src")).catch(() => []);
-        const topFiles = await fs.readdir(projectDir).catch(() => []);
-        const bundlekitrc = await fs.readFile(path.join(projectDir, ".bundlekitrc.ts"), "utf-8").catch(() => "");
-        const indexEntry = await fs.readFile(path.join(projectDir, "src/index.tsx"), "utf-8")
-            .catch(() => fs.readFile(path.join(projectDir, "src/index.ts"), "utf-8").catch(() => ""));
-        return {
-            code: result.status ?? -1,
-            stdout: result.stdout?.toString() || "",
-            stderr: result.stderr?.toString() || "",
-            srcFiles,
-            topFiles,
-            bundlekitrc,
-            indexEntry,
-        };
-    }
+        expect(result.status ?? -1).toBe(0);
+        const bundlekitrc = await fs.readFile(
+            path.join(cwd, "demo-react/.bundlekitrc.js"), "utf-8",
+        ).catch(() => "");
+        expect(bundlekitrc).not.toContain("library: true");
 
-    it("react-ts --lib：跳过 index.tsx 应用入口和 public/，生成 src/index.tsx 库入口", async () => {
-        const r = await createLib("lib-react-ts", "react-ts");
-        expect(r.code).toBe(0);
-        // lib-entry.tsx.ejs 被 generator 重命名为 index.tsx
-        expect(r.srcFiles).toContain("index.tsx");
-        // App.tsx 保留（被 lib 入口 re-export）
-        expect(r.srcFiles).toContain("App.tsx");
-        // 没有 entry-client/entry-server（非 SSR）
-        expect(r.srcFiles).not.toContain("entry-client.tsx");
-        expect(r.srcFiles).not.toContain("entry-server.tsx");
-        // public/ 被跳过
-        expect(r.topFiles).not.toContain("public");
-        // bundlekitrc 含 library: true 与 libraryName 默认值（DemoLib：项目名 demo-lib → PascalCase）
-        expect(r.bundlekitrc).toContain("library: true");
-        expect(r.bundlekitrc).toContain('libraryName: "DemoLib"');
-        // 入口 re-export App + 默认导出
-        expect(r.indexEntry).toContain('export { App }');
-        expect(r.indexEntry).toContain('export default');
-    });
-
-    it("--library-name 覆盖默认名（PascalCase）", async () => {
-        const r = await createLib("lib-react-name", "react-ts", "MyCoolSDK");
-        expect(r.code).toBe(0);
-        expect(r.bundlekitrc).toContain('libraryName: "MyCoolSDK"');
-        expect(r.indexEntry).toContain('MyCoolSDK');
-    });
-
-    it("vue3-ts --lib：使用 src/index.ts 入口，re-export App.vue", async () => {
-        const r = await createLib("lib-vue-ts", "vue3-ts");
-        expect(r.code).toBe(0);
-        // lib-entry.ts.ejs → index.ts
-        expect(r.srcFiles).toContain("index.ts");
-        expect(r.srcFiles).toContain("App.vue");
-        // 没有 main.ts mount 入口
-        expect(r.srcFiles).not.toContain("main.ts");
-        // public/ 被跳过
-        expect(r.topFiles).not.toContain("public");
-        expect(r.bundlekitrc).toContain("library: true");
+        for (const c of cleanups) await c();
     });
 });
