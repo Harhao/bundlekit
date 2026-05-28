@@ -18,6 +18,7 @@
     "build:esbuild": "turbo run esbuild:build",
     "build:docs": "turbo run docs:build",
     "build:all": "turbo run service:build cli:build plugin:mock:build plugin:react:build plugin:vue:build request:build rolldown:build parcel:build esbuild:build",
+    "verify:pack": "node ./scripts/verify-pack.mjs",
     "test": "vitest run",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:e2e": "playwright test",
