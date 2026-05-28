@@ -136,7 +136,9 @@ export default class RspackBundler implements IBuildToolAdapter<RspackOptions> {
                         : {}),
                     ...(clientLibType === 'umd' ? { umdNamedDefine: true } : {}),
                 }
-                : (rawEnvConfig.output?.formats ? { type: outputFormat } : undefined);
+                // 应用模式：rspack 默认 IIFE wrapping 即可，不下发 library，
+                // 避免把模板里的 output.formats（如 'esm'）误塞进 library.type 报错
+                : undefined;
 
         const serverExternals = isServerPass ? this.resolveServerExternals(rawEnvConfig) : (rawEnvConfig.externals || []);
 
@@ -148,7 +150,7 @@ export default class RspackBundler implements IBuildToolAdapter<RspackOptions> {
                 path: path.resolve(this.context, outDir),
                 filename: rawEnvConfig.output?.filename || "[name].js",
                 publicPath: rawEnvConfig.publicPath || "/",
-                library: libraryConfig,
+                ...(libraryConfig ? { library: libraryConfig } : {}),
                 ...(isLibrary && libraryConfig?.type === 'umd'
                     ? { globalObject: 'typeof self !== "undefined" ? self : this' }
                     : {}),
@@ -167,7 +169,9 @@ export default class RspackBundler implements IBuildToolAdapter<RspackOptions> {
             module: {
                 rules: [
                     {
-                        test: /\.tsx?$/,
+                        // 同时匹配 .ts/.tsx/.js/.jsx —— SWC 的 typescript parser
+                        // 是 ecmascript 的超集，能正确处理 JSX（启用 tsx 时）
+                        test: /\.[jt]sx?$/,
                         use: [{ loader: "builtin:swc-loader", options: swcOptions }],
                         type: "javascript/auto",
                     },

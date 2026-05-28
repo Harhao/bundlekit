@@ -158,10 +158,11 @@ export default class EsbuildBundler implements IBuildToolAdapter {
         this.context = api.context || process.cwd();
     }
 
-    public transformConfig(config: IBuildConfig): esbuild.BuildOptions {
+    public async transformConfig(config: IBuildConfig): Promise<esbuild.BuildOptions> {
         const rawEnvConfig = (
             config.config?.[this.mode] || config.config?.development || {}
         ) as Record<string, any>;
+        const framework = rawEnvConfig.framework as string | undefined;
 
         const isServerPass = rawEnvConfig.target === "node";
 
@@ -288,6 +289,19 @@ export default class EsbuildBundler implements IBuildToolAdapter {
             };
         }
 
+        // 框架插件：Vue 3 SFC 支持。esbuild 没有官方 vue 插件，使用社区 esbuild-plugin-vue3。
+        // dynamic import 失败时仅 warn，让 .vue 文件按 esbuild 默认 loader 报错（更易诊断）
+        const frameworkPlugins: esbuild.Plugin[] = [];
+        if (framework === "vue3") {
+            try {
+                const vue3Module = await import("esbuild-plugin-vue3");
+                const vuePluginFactory = (vue3Module as any).default || vue3Module;
+                frameworkPlugins.push(vuePluginFactory());
+            } catch {
+                this.logger.warn("framework 为 vue3 但未安装 esbuild-plugin-vue3，跳过");
+            }
+        }
+
         return {
             entryPoints,
             outdir:     outDir,
@@ -301,6 +315,7 @@ export default class EsbuildBundler implements IBuildToolAdapter {
             define,
             alias,
             external,
+            plugins:    frameworkPlugins,
             ...(globalName ? { globalName } : {}),
             ...(umdBanner ? { banner: { js: umdBanner } } : {}),
             ...(umdFooter ? { footer: { js: umdFooter } } : {}),
@@ -498,7 +513,7 @@ export default class EsbuildBundler implements IBuildToolAdapter {
         if (!ssrConfig) throw new Error("ssr config not found in envConfig");
 
         // ── 1) Client pass ─────────────────────────────────────────────────────
-        const clientEsbuildOpts = this.transformConfig(buildConfig) as esbuild.BuildOptions;
+        const clientEsbuildOpts = await this.transformConfig(buildConfig) as esbuild.BuildOptions;
         const clientHtmlConfig = this.htmlWriteConfig;
         const clientOutDir = path.resolve(
             this.context,
@@ -549,7 +564,7 @@ export default class EsbuildBundler implements IBuildToolAdapter {
 
         // ── 2) Server pass ─────────────────────────────────────────────────────
         const serverBuildConfig = buildSSRView(buildConfig, this.mode);
-        const serverEsbuildOpts = this.transformConfig(serverBuildConfig) as esbuild.BuildOptions;
+        const serverEsbuildOpts = await this.transformConfig(serverBuildConfig) as esbuild.BuildOptions;
 
         const serverOutDir = path.resolve(this.context, ssrConfig.output.dir);
         const serverFilename = ssrConfig.output.filename || "server.cjs";

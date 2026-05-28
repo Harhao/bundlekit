@@ -363,7 +363,9 @@ export default class Service {
         this.logger.log(`使用的构建：${finalBundler}`, "构建工具");
 
         // 检测是否启用 SSR：当前 envConfig 上有 ssr 字段
-        const envConfig = this.buildConfig?.config?.[this.mode];
+        // 与 bundler 适配器保持一致：mode 块缺失时回退到 development 块，
+        // 保证 build --mode production 在用户只声明 development 的模板下也能识别 SSR
+        const envConfig = this.buildConfig?.config?.[this.mode] || this.buildConfig?.config?.development;
         const ssrEnabled = !!envConfig?.ssr;
 
         if (!ssrEnabled) {

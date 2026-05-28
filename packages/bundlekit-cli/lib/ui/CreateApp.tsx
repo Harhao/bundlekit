@@ -22,7 +22,9 @@ import {
 } from "../commands/create/actions";
 
 const TEMPLATES: ISelectItem[] = [
+    { label: "React + TypeScript", value: "react-ts" },
     { label: "React + JavaScript", value: "react-js" },
+    { label: "Vue 3 + TypeScript", value: "vue3-ts" },
     { label: "Vue 3 + JavaScript", value: "vue3-js" },
     { label: "Node.js / 纯 TypeScript（无框架）", value: "node-ts" },
 ];

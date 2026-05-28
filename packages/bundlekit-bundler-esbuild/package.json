@@ -23,7 +23,8 @@
   },
   "dependencies": {
     "@bundlekit/shared-utils": "workspace:*",
-    "esbuild": "^0.20.0"
+    "esbuild": "^0.20.0",
+    "esbuild-plugin-vue3": "^0.4.2"
   },
   "devDependencies": {
     "@rollup/plugin-json": "^6.1.0",

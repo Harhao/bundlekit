@@ -152,9 +152,12 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
         this.fse     = new FileManager(this.context);
     }
 
-    public transformConfig(config: IBuildConfig): RollupOptions {
-        const extensions   = [".js", ".jsx", ".ts", ".tsx"];
+    public async transformConfig(config: IBuildConfig): Promise<RollupOptions> {
         const rawEnvConfig = (config.config?.[this.mode] || config.config?.development || {}) as Record<string, any>;
+        const framework    = rawEnvConfig.framework as string | undefined;
+        const extensions   = framework === "vue3"
+            ? [".js", ".jsx", ".ts", ".tsx", ".vue"]
+            : [".js", ".jsx", ".ts", ".tsx"];
 
         // SSR server pass 检测
         const isServerPass = rawEnvConfig.target === "node";
@@ -192,7 +195,21 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
 
         // ── Plugins ───────────────────────────────────────────────────────────
         const nodeEnv = this.mode === "production" ? "production" : "development";
+
+        // 框架插件：Vue 3 SFC 支持。@vitejs/plugin-vue 是 rollup-API 兼容的，
+        // 直接放到 rollup plugins 列表即可。dynamic import 失败时仅 warn。
+        const frameworkPlugins: Plugin[] = [];
+        if (framework === "vue3") {
+            try {
+                const { default: vue } = await import("@vitejs/plugin-vue");
+                frameworkPlugins.push((vue as any)());
+            } catch {
+                this.logger.warn("framework 为 vue3 但未安装 @vitejs/plugin-vue，跳过");
+            }
+        }
+
         const plugins: Plugin[] = [
+            ...frameworkPlugins,
             // replace 必须排在最前，替换编译期常量：
             //  - process.env.NODE_ENV : CRA/React 等使用
             //  - import.meta.env.*    : Vite 生态（zustand/jotai 等）在 UMD 格式下会触发 EMPTY_IMPORT_META 警告
@@ -232,14 +249,19 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
                     ...(cssConfig.loaders?.includes("sass") || cssConfig.loaders?.includes("scss") ? ["sass"] : []),
                 ],
             }),
-            typescript({
-                tsconfig:    path.resolve(this.context, "tsconfig.json"),
-                outDir:      resolvedOutDir,
-                declaration: isLibrary,
-                noEmit:      false,
-                // 与 rollup output.sourcemap 保持一致，避免 "Rollup 'sourcemap' option must be set" 警告
-                sourceMap:   rawEnvConfig.js?.sourcemap ?? false,
-            }),
+            // 仅当工程含 tsconfig.json 时启用 @rollup/plugin-typescript；
+            // JS-only 工程（react-js / vue3-js）改由 @babel/preset-typescript 兜底，
+            // 避免 ts plugin 在无 tsconfig 时报 "Couldn't process compiler options"
+            ...(existsSync(path.resolve(this.context, "tsconfig.json"))
+                ? [typescript({
+                    tsconfig:    path.resolve(this.context, "tsconfig.json"),
+                    outDir:      resolvedOutDir,
+                    declaration: isLibrary,
+                    noEmit:      false,
+                    // 与 rollup output.sourcemap 保持一致，避免 "Rollup 'sourcemap' option must be set" 警告
+                    sourceMap:   rawEnvConfig.js?.sourcemap ?? false,
+                })]
+                : []),
             babel({
                 babelHelpers: "bundled",
                 extensions,
@@ -248,6 +270,10 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
                 exclude: ["node_modules/**"],
                 presets: [
                     ["@babel/preset-env", { modules: false }],
+                    // React 框架（含 .jsx）：preset-react 处理 JSX 转 React.createElement
+                    ...(rawEnvConfig.framework === "react"
+                        ? [["@babel/preset-react", { runtime: "automatic" }]]
+                        : []),
                     "@babel/preset-typescript",
                 ],
             }),
@@ -518,7 +544,7 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
         if (!ssrConfig) throw new Error("ssr config not found in envConfig");
 
         // ── 1) Client pass ─────────────────────────────────────────────────────
-        const clientConfig = sanitizeRollupOptions(this.transformConfig(buildConfig));
+        const clientConfig = sanitizeRollupOptions(await this.transformConfig(buildConfig));
         const clientHtmlConfig = this.htmlWriteConfig;
         const clientOutDir = path.resolve(
             this.context,
@@ -557,7 +583,7 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
 
         // ── 2) Server pass ─────────────────────────────────────────────────────
         const serverBuildConfig = buildSSRView(buildConfig, this.mode);
-        const serverConfig = sanitizeRollupOptions(this.transformConfig(serverBuildConfig));
+        const serverConfig = sanitizeRollupOptions(await this.transformConfig(serverBuildConfig));
 
         const serverOutDir = path.resolve(this.context, ssrConfig.output.dir);
         const serverFilename = ssrConfig.output.filename || "server.cjs";

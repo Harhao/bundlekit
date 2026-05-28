@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@bundlekit/shared-utils": "workspace:*",
+    "@vitejs/plugin-vue": "^5.2.0",
     "less": "^4.2.2",
     "rolldown": "^1.0.1",
     "rollup-plugin-postcss": "^4.0.2"
