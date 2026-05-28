@@ -7,12 +7,14 @@ import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import TerserPlugin from "terser-webpack-plugin";
 
 import { fileURLToPath } from "url";
+import { createRequire } from "module";
 import { Logger } from "@bundlekit/shared-utils";
 import { resolveSSRExternalsForWebpack } from "@bundlekit/shared-utils";
 import type { Configuration } from "webpack";
 import type { IBuildConfig, IBuildEnv, IBuildOutput } from "@bundlekit/shared-utils"
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
+const _require = createRequire(import.meta.url);
 
 const defaultAssetRules = [
     {
@@ -199,10 +201,16 @@ export default class TransformConfig {
     private transformFrameworkRules() {
         const framework = (this.buildConfig as any).framework as string;
         if (framework !== 'vue3') return [];
-        return [{
-            test: /\.vue$/,
-            loader: 'vue-loader',
-        }];
+        try {
+            _require.resolve('vue-loader');
+            return [{
+                test: /\.vue$/,
+                loader: 'vue-loader',
+            }];
+        } catch {
+            this.logger.warn('framework 为 vue3 但未找到 vue-loader，跳过 .vue 文件处理规则');
+            return [];
+        }
     }
 
     /** Vue 专用 plugin（VueLoaderPlugin） */
@@ -210,9 +218,10 @@ export default class TransformConfig {
         const framework = (this.buildConfig as any).framework as string;
         if (framework !== 'vue3') return [];
         try {
-            const { VueLoaderPlugin } = require('vue-loader');
+            const { VueLoaderPlugin } = _require('vue-loader');
             return [new VueLoaderPlugin()];
         } catch {
+            this.logger.warn('framework 为 vue3 但未找到 vue-loader，跳过 VueLoaderPlugin');
             return [];
         }
     }

@@ -3,14 +3,25 @@
   "version": "1.0.0",
   "description": "<%= description %>",
   "type": "module",
+<% if (library && (bundler === 'rollup' || bundler === 'rolldown')) { %>
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.mjs"
+    }
+  },
+<% } else { %>
   "main": "./dist/index.js",
   "exports": {
     ".": {
       "import": "./dist/index.js",
-      "require": "./dist/index.cjs",
       "default": "./dist/index.js"
     }
   },
+<% } %>
   "scripts": {
     "clean": "rimraf dist",
     "dev": "bundlekit-service serve --bundler <%= bundler %> --mode development",

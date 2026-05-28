@@ -217,10 +217,13 @@ importers:
         version: 1.7.11
       '@rspack/dev-server':
         specifier: ^1.1.1
-        version: 1.2.1(@rspack/core@1.7.11)(tslib@2.8.1)
+        version: 1.2.1(@rspack/core@1.7.11)(tslib@2.8.1)(webpack@5.106.2)
       schema-utils:
         specifier: ^4.3.0
         version: 4.3.3
+      vue-loader:
+        specifier: ^17.4.2
+        version: 17.4.2(webpack@5.106.2)
     devDependencies:
       '@rollup/plugin-json':
         specifier: ^6.1.0
@@ -316,6 +319,9 @@ importers:
       ts-loader:
         specifier: ^9.4.4
         version: 9.5.7(typescript@5.9.3)(webpack@5.106.2)
+      vue-loader:
+        specifier: ^17.4.2
+        version: 17.4.2(webpack@5.106.2)
       webpack:
         specifier: ^5.99.7
         version: 5.106.2(postcss@8.5.14)
@@ -9040,7 +9046,7 @@ packages:
       '@rspack/binding': 1.7.11
       '@rspack/lite-tapable': 1.1.0
 
-  /@rspack/dev-server@1.2.1(@rspack/core@1.7.11)(tslib@2.8.1):
+  /@rspack/dev-server@1.2.1(@rspack/core@1.7.11)(tslib@2.8.1)(webpack@5.106.2):
     resolution: {integrity: sha512-e/ARvskYn2Qdd02qLvc0i6H9BnOmzP0xGHS2XCr7GZ3t2k5uC5ZlLkeN1iEebU0FkAW+6ot89NahFo3nupKuww==}
     engines: {node: '>= 18.12.0'}
     peerDependencies:
@@ -16017,6 +16023,10 @@ packages:
       safe-buffer: 5.2.1
       to-buffer: 1.2.2
     dev: true
+
+  /hash-sum@2.0.0:
+    resolution: {integrity: sha512-WdZTbAByD+pHfl/g9QSsBIIwy8IT+EsPiKDs0KNX+zSHhdDLFKdZu0BQHljvO+0QI/BasbMSUa8wYNCZTvhslg==}
+    dev: false
 
   /hash.js@1.1.7:
     resolution: {integrity: sha512-taOaskGt4z4SOANNseOviYDvjEJinIkRgmp7LbKP2YTTmVxWBl87s/uzK9r+44BclBSp2X7K1hqeNfz9JbBeXA==}
@@ -25293,6 +25303,24 @@ packages:
 
   /vscode-uri@3.1.0:
     resolution: {integrity: sha512-/BpdSx+yCQGnCvecbyXdxHDkuk55/G3xwnC0GqY4gmQ3j+A+g8kzzgB4Nk/SINjqn6+waqw3EgbVF2QKExkRxQ==}
+    dev: false
+
+  /vue-loader@17.4.2(webpack@5.106.2):
+    resolution: {integrity: sha512-yTKOA4R/VN4jqjw4y5HrynFL8AK0Z3/Jt7eOJXEitsm0GMRHDBjCfCiuTiLP7OESvsZYo2pATCWhDqxC5ZrM6w==}
+    peerDependencies:
+      '@vue/compiler-sfc': '*'
+      vue: '*'
+      webpack: ^4.1.0 || ^5.0.0-0
+    peerDependenciesMeta:
+      '@vue/compiler-sfc':
+        optional: true
+      vue:
+        optional: true
+    dependencies:
+      chalk: 4.1.2
+      hash-sum: 2.0.0
+      watchpack: 2.5.1
+      webpack: 5.106.2(postcss@8.5.14)
     dev: false
 
   /vue-tsc@2.2.12(typescript@5.9.3):

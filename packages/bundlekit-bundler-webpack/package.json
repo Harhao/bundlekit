@@ -37,6 +37,7 @@
     "terser-webpack-plugin": "^5.3.14",
     "thread-loader": "^4.0.2",
     "ts-loader": "^9.4.4",
+    "vue-loader": "^17.4.2",
     "webpack": "^5.99.7",
     "webpack-bundle-analyzer": "^4.10.2",
     "webpack-dev-middleware": "^7.4.2",
