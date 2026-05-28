@@ -1,6 +1,6 @@
 {
   "name": "@bundlekit/bundler-webpack",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "A webpack bundler for @bundlekit/service",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",

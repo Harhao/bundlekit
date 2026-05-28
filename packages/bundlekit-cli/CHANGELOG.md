@@ -1,5 +1,12 @@
 # @bundlekit/cli
 
+## 0.0.13
+
+### Patch Changes
+
+- Updated dependencies [0179a7d]
+  - @bundlekit/plugin-node@0.0.3
+
 ## 0.0.12
 
 ### Patch Changes
