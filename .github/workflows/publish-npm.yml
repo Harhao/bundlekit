@@ -46,6 +46,9 @@ jobs:
       - name: Run integration tests
         run: pnpm test:integration
 
+      - name: Verify package contents
+        run: pnpm verify:pack
+
       - name: Publish to npm
         uses: changesets/action@v1
         with:
