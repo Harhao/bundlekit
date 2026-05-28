@@ -1,14 +1,14 @@
 export default {
-  mode: "development",
+  mode: "development" as const,
   bundler: "<%= bundler %>",
   plugins: ["@bundlekit/plugin-vue"],
   config: {
     development: {
-      target: "web",
+      target: "web" as const,
       publicPath: "/",
-      entry: <% if (ssr) { %>"src/entry-client.js"<% } else { %>"src/main.js"<% } %>,
+      entry: <% if (ssr) { %>"src/entry-client.ts"<% } else { %>"src/main.ts"<% } %>,
       pages: [
-        { entry: <% if (ssr) { %>"src/entry-client.js"<% } else { %>"src/main.js"<% } %>, filename: "index.html", template: "public/index.html", inject: "body" },
+        { entry: <% if (ssr) { %>"src/entry-client.ts"<% } else { %>"src/main.ts"<% } %>, filename: "index.html", template: "public/index.html", inject: "body" },
       ],
       output: { dir: "dist", filename: "[name].js" },
       alias: { "@": "src" },
@@ -16,13 +16,13 @@ export default {
       js: { sourcemap: true, minify: false, splitChunks: true },
       devServer: { open: true, proxy: {}, https: false, host: "0.0.0.0", port: 3000 },<% if (ssr) { %>
       ssr: {
-        entry: "src/entry-server.js",
-        output: { dir: "dist/server", filename: "server.cjs", formats: "commonjs" },
-        externals: "auto",
+        entry: "src/entry-server.ts",
+        output: { dir: "dist/server", filename: "server.cjs", formats: "commonjs" as const },
+        externals: "auto" as const,
         template: "public/index.html",
         placeholder: "<!--ssr-outlet-->",
         dev: true,
       },<% } %>
     },
-  },
+  } as any,
 };

@@ -1,5 +1,12 @@
 # @bundlekit/cli-mcp
 
+## 0.1.10
+
+### Patch Changes
+
+- Updated dependencies [fe2c801]
+  - @bundlekit/cli@0.0.15
+
 ## 0.1.9
 
 ### Patch Changes

@@ -1,5 +1,16 @@
 # @bundlekit/service
 
+## 0.0.13
+
+### Patch Changes
+
+- fe2c801: 修复所有的 bundler 打包问题
+- Updated dependencies [fe2c801]
+  - @bundlekit/bundler-rolldown@0.0.9
+  - @bundlekit/bundler-webpack@0.0.10
+  - @bundlekit/bundler-rollup@0.0.11
+  - @bundlekit/bundler-rspack@0.0.10
+
 ## 0.0.12
 
 ### Patch Changes

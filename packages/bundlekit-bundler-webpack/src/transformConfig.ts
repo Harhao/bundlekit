@@ -95,6 +95,11 @@ export default class TransformConfig {
             }
         };
         const serverFormat = primaryFormat === 'esm' ? 'module' : 'commonjs2';
+        // 应用模式（非 library、非 SSR server pass）：不下发 library 字段
+        //   - webpack 默认 IIFE chunk wrapping 即正确的浏览器 bundle 形态
+        //   - 模板的 output.formats 仅对 library / SSR 有语义，应用模式忽略
+        //   - 之前直接把 formats 透传到 library.type 会导致 'esm' 报
+        //     "Unsupported library type esm"，'umd' 缺 name 报错
         const libraryConfig: any = isServerPass
             ? { type: serverFormat }
             : isLibrary
@@ -106,7 +111,7 @@ export default class TransformConfig {
                     } : {}),
                     ...(formatToLibType(String(primaryFormat)) === 'umd' ? { umdNamedDefine: true } : {}),
                 }
-                : { type: primaryFormat };
+                : undefined;
 
         this.transformConfig = {
             mode: this.mode || "none",
@@ -117,13 +122,13 @@ export default class TransformConfig {
                 path: path.resolve(this.context, outDir),
                 filename: buildOutput?.filename || '[name].js',
                 publicPath: this.buildConfig.publicPath || '/',
-                library: libraryConfig,
-                ...(isLibrary && libraryConfig.type === 'umd'
+                ...(libraryConfig ? { library: libraryConfig } : {}),
+                ...(isLibrary && libraryConfig?.type === 'umd'
                     ? { globalObject: 'typeof self !== "undefined" ? self : this' }
                     : {}),
             },
             // ESM 输出（library 或 SSR module）需要开 experiments.outputModule
-            ...((libraryConfig.type === 'module')
+            ...((libraryConfig?.type === 'module')
                 ? { experiments: { outputModule: true } }
                 : {}),
             resolveLoader: {
@@ -325,40 +330,42 @@ export default class TransformConfig {
     }
 
     private transformCssConfig() {
-
-        if (!this.buildConfig.css) return [];
+        // 与 rspack 适配器对齐：始终下发 css 基础 loader
+        //   - Vue 的 <style scoped> 经 vue-loader 改写为虚拟 .css 模块，必须有规则匹配
+        //   - 用户没显式配 css 时，使用 style-loader + css-loader 默认值
+        const userCss = this.buildConfig.css || {};
 
         const cssLoaders: any[] = [
             {
                 loader: 'css-loader',
                 options: {
-                    modules: this.buildConfig.css.modules,
-                    sourceMap: this.buildConfig.css.sourcemap
+                    modules: userCss.modules,
+                    sourceMap: userCss.sourcemap
                 }
             }
         ];
 
-        if (this.buildConfig.css.loaders?.includes('less')) {
+        if (userCss.loaders?.includes('less')) {
             cssLoaders.push({
                 loader: 'less-loader',
-                options: { sourceMap: this.buildConfig.css.sourcemap }
+                options: { sourceMap: userCss.sourcemap }
             });
         }
 
-        if (this.buildConfig.css.loaders?.includes('sass') || this.buildConfig.css.loaders?.includes('scss')) {
+        if (userCss.loaders?.includes('sass') || userCss.loaders?.includes('scss')) {
             cssLoaders.push({
                 loader: 'sass-loader',
-                options: { sourceMap: this.buildConfig.css.sourcemap }
+                options: { sourceMap: userCss.sourcemap }
             });
         }
 
-        if (this.buildConfig.css.extract) {
+        if (userCss.extract) {
             cssLoaders.unshift({ loader: MiniCssExtractPlugin.loader });
         } else {
             cssLoaders.unshift({ loader: 'style-loader' });
         }
 
-        const testReg = this.buildConfig.css.loaders?.includes('sass') || this.buildConfig.css.loaders?.includes('scss')
+        const testReg = userCss.loaders?.includes('sass') || userCss.loaders?.includes('scss')
             ? /\.(css|less|scss|sass)$/
             : /\.(css|less)$/;
 

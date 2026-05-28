@@ -51,10 +51,12 @@ export function resolvePluginPkgName(template: string): string {
 
 export function normalizeTemplate(template: string): string {
     const aliases: Record<string, string> = {
-        react:      "react-js",
-        vue:        "vue3-js",
-        vue3:       "vue3-js",
+        react:      "react-ts",
+        vue:        "vue3-ts",
+        vue3:       "vue3-ts",
+        "react-ts": "react-ts",
         "react-js": "react-js",
+        "vue3-ts":  "vue3-ts",
         "vue3-js":  "vue3-js",
         node:       "node-ts",
         "node-ts":  "node-ts",
@@ -79,7 +81,7 @@ export function resolveTemplateDir(template: string): string {
     const monorepoDir = path.resolve(__dir, "../../../..", pluginDirName, "templates", `template-${normalized}`);
     if (fs.existsSync(monorepoDir)) return monorepoDir;
 
-    throw new Error(`模板 "${template}" 未找到，可用模板：react-js / vue3-js / node-ts`);
+    throw new Error(`模板 "${template}" 未找到，可用模板：react-ts / react-js / vue3-ts / vue3-js / node-ts`);
 }
 
 /** 渲染模板到 targetDir */

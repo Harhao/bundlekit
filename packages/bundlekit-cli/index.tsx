@@ -13,7 +13,9 @@ const require = createRequire(import.meta.url);
 const program = new Command();
 
 const TEMPLATES = [
+    { name: "react-ts", message: "React + TypeScript" },
     { name: "react-js", message: "React + JavaScript" },
+    { name: "vue3-ts", message: "Vue 3 + TypeScript" },
     { name: "vue3-js", message: "Vue 3 + JavaScript" },
     { name: "node-ts", message: "Node.js / 纯 TypeScript（无框架）" },
 ];
@@ -120,7 +122,7 @@ async function legacyCreate(name: string, options: Record<string, any>) {
 program
     .command("create <name>")
     .description("create a new project powered by bundlekit-service")
-    .option("-t, --template <template>", "模板类型 (react-js, vue3-js, node-ts)")
+    .option("-t, --template <template>", "模板类型 (react-ts, react-js, vue3-ts, vue3-js, node-ts)")
     .option("-b, --bundler <bundler>", "默认构建工具 (vite, webpack, rspack, rollup, rolldown, parcel, esbuild)")
     .option("-d, --description <desc>", "项目描述")
     .option("--pm <pm>", "包管理器 (pnpm, yarn, npm)")

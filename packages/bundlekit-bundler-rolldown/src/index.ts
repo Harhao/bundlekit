@@ -151,8 +151,9 @@ export default class RolldownBundler implements IBuildToolAdapter {
         this.mode    = mode;
         this.context = api.context || process.cwd();
     }
-    public transformConfig(config: IBuildConfig) {
+    public async transformConfig(config: IBuildConfig) {
         const rawEnvConfig = (config.config?.[this.mode] || config.config?.development || {}) as Record<string, any>;
+        const framework    = rawEnvConfig.framework as string | undefined;
 
         // SSR server pass 检测
         const isServerPass = rawEnvConfig.target === "node";
@@ -277,10 +278,30 @@ export default class RolldownBundler implements IBuildToolAdapter {
 
         this.logger.info("开始转换rolldown配置");
 
+        // 框架插件：Vue 3 SFC 支持。@vitejs/plugin-vue 是 rollup-API 兼容的 plugin，
+        // rolldown 兼容 rollup plugin 接口，可以直接复用
+        const frameworkPlugins: any[] = [];
+        if (framework === "vue3") {
+            try {
+                const { default: vue } = await import("@vitejs/plugin-vue");
+                frameworkPlugins.push((vue as any)());
+            } catch {
+                this.logger.warn("framework 为 vue3 但未安装 @vitejs/plugin-vue，跳过");
+            }
+        }
+
         return {
             input:   resolvedInput,
             output,
-            plugins: [cssPlugin],
+            plugins: [...frameworkPlugins, cssPlugin],
+            // rolldown 1.0 已移除 experimental CSS 支持（issue #4271）。
+            // Vue SFC 的 <style> 经 @vitejs/plugin-vue 输出含 lang.css 查询的虚拟模块，
+            // 此时被 rollup-plugin-postcss 转成 JS（含 styleInject），但 URL 仍带 .css 后缀，
+            // rolldown 的模块类型推断会把它当成原生 CSS → 报 UNSUPPORTED_FEATURE。
+            // 显式声明 .css 视作 JS，绕过原生 CSS bundling 限制
+            moduleTypes: framework === "vue3"
+                ? { ".css": "js" as const }
+                : undefined,
             // ── define（bundler 阶段） ──────────────────────────────────────────
             // 替换 process.env.NODE_ENV / import.meta.env.*
             define: {
@@ -315,7 +336,9 @@ export default class RolldownBundler implements IBuildToolAdapter {
                 },
             },
             resolve: {
-                extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
+                extensions: framework === "vue3"
+                    ? [".ts", ".tsx", ".js", ".jsx", ".json", ".vue"]
+                    : [".ts", ".tsx", ".js", ".jsx", ".json"],
                 alias: Object.entries(alias).reduce((acc, [key, val]) => {
                     acc[key] = path.resolve(this.context, String(val));
                     return acc;
@@ -481,7 +504,7 @@ export default class RolldownBundler implements IBuildToolAdapter {
 
         // ── 1) Client pass ─────────────────────────────────────────────────────
         // transformConfig 内部会按 isLibrary && !isServerPass 设置 htmlWriteConfig
-        const clientConfig = this.transformConfig(buildConfig);
+        const clientConfig = await this.transformConfig(buildConfig);
         // 抓取 client 这次 transformConfig 设置的 htmlWriteConfig；server pass 不会覆盖它
         const clientHtmlConfig = this.htmlWriteConfig;
         const clientOutDir =
@@ -518,7 +541,7 @@ export default class RolldownBundler implements IBuildToolAdapter {
 
         // ── 2) Server pass ─────────────────────────────────────────────────────
         const serverBuildConfig = buildSSRView(buildConfig, this.mode);
-        const serverConfig = this.transformConfig(serverBuildConfig);
+        const serverConfig = await this.transformConfig(serverBuildConfig);
 
         const serverOutDir = path.resolve(this.context, ssrConfig.output.dir);
         const serverFilename = ssrConfig.output.filename || "server.cjs";

@@ -1,6 +1,6 @@
 {
   "name": "@bundlekit/bundler-rollup",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "A rollup bundler for @bundlekit/service",
   "types": "./dist/index.d.ts",
   "main": "./dist/index.cjs",
@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@babel/preset-env": "^7.24.0",
+    "@babel/preset-react": "^7.24.0",
     "@babel/preset-typescript": "^7.24.0",
     "@bundlekit/shared-utils": "workspace:*",
     "@rollup/plugin-babel": "^6.0.4",
@@ -32,6 +33,7 @@
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-replace": "^6.0.0",
     "@rollup/plugin-typescript": "^12.1.2",
+    "@vitejs/plugin-vue": "^5.2.0",
     "rollup": "^4.40.0",
     "rollup-plugin-postcss": "^4.0.2",
     "schema-utils": "^4.3.0",
