@@ -1,5 +1,13 @@
 # @bundlekit/cli
 
+## 0.0.16
+
+### Patch Changes
+
+- Updated dependencies [6ce8afa]
+  - @bundlekit/plugin-react@0.0.11
+  - @bundlekit/plugin-vue@0.0.11
+
 ## 0.0.15
 
 ### Patch Changes
