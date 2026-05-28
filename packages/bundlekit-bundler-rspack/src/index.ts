@@ -1,5 +1,6 @@
 import path from "path";
 import { fileURLToPath } from "url";
+import { createRequire } from "module";
 import Rspack, { type RspackOptions } from "@rspack/core";
 import { RspackDevServer } from "@rspack/dev-server";
 
@@ -21,6 +22,7 @@ import type {
 } from "@bundlekit/shared-utils";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
+const _require = createRequire(import.meta.url);
 
 export default class RspackBundler implements IBuildToolAdapter<RspackOptions> {
 
@@ -69,15 +71,20 @@ export default class RspackBundler implements IBuildToolAdapter<RspackOptions> {
             },
         };
 
-        const frameworkRules: any[] = framework === "vue3" ? [{
-            test: /\.vue$/,
-            loader: "vue-loader",
-            type: "javascript/auto",
-        }] : [];
+        const frameworkRules: any[] = framework === "vue3" ? (() => {
+            try {
+                _require.resolve("vue-loader");
+                return [{
+                    test: /\.vue$/,
+                    loader: "vue-loader",
+                    type: "javascript/auto",
+                }];
+            } catch { return []; }
+        })() : [];
 
         const frameworkPlugins: any[] = framework === "vue3" ? (() => {
             try {
-                const { VueLoaderPlugin } = require("vue-loader");
+                const { VueLoaderPlugin } = _require("vue-loader");
                 return [new VueLoaderPlugin()];
             } catch { return []; }
         })() : [];

@@ -1,5 +1,13 @@
 # @bundlekit/service
 
+## 0.0.12
+
+### Patch Changes
+
+- Updated dependencies [0179a7d]
+  - @bundlekit/bundler-webpack@0.0.9
+  - @bundlekit/bundler-rspack@0.0.9
+
 ## 0.0.11
 
 ### Patch Changes

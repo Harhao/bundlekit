@@ -1,5 +1,11 @@
 # @bundlekit/plugin-node
 
+## 0.0.3
+
+### Patch Changes
+
+- 0179a7d: 修复 vue 项目的 loader
+
 ## 0.0.2
 
 ### Patch Changes

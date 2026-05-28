@@ -1,5 +1,11 @@
 # @bundlekit/bundler-webpack
 
+## 0.0.9
+
+### Patch Changes
+
+- 0179a7d: 修复 vue 项目的 loader
+
 ## 0.0.8
 
 ### Patch Changes
