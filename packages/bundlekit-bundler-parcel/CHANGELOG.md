@@ -1,5 +1,11 @@
 # @bundlekit/bundler-parcel
 
+## 0.0.6
+
+### Patch Changes
+
+- fe2c801: 修复所有的 bundler 打包问题
+
 ## 0.0.5
 
 ### Patch Changes

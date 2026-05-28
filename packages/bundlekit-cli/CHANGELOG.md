@@ -1,5 +1,11 @@
 # @bundlekit/cli
 
+## 0.0.15
+
+### Patch Changes
+
+- fe2c801: 修复所有的 bundler 打包问题
+
 ## 0.0.14
 
 ### Patch Changes

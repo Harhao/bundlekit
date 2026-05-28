@@ -1,5 +1,11 @@
 # @bundlekit/bundler-esbuild
 
+## 0.0.4
+
+### Patch Changes
+
+- fe2c801: 修复所有的 bundler 打包问题
+
 ## 0.0.3
 
 ### Patch Changes

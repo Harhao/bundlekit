@@ -1,5 +1,11 @@
 # @bundlekit/bundler-rolldown
 
+## 0.0.9
+
+### Patch Changes
+
+- fe2c801: 修复所有的 bundler 打包问题
+
 ## 0.0.8
 
 ### Patch Changes
