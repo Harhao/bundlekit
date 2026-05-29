@@ -14,9 +14,9 @@ describe(`dev-smoke: ${TEMPLATE} × 7 bundler`, () => {
                 await assertDevSmoke({ template: TEMPLATE, bundler, ssr: false });
             };
             if (known) {
-                it.skip(`${name}（已知失败：${known}）`, fn, 180_000);
+                it.skip(`${name}（已知失败：${known}）`, fn, 120_000);
             } else {
-                it(name, fn, 180_000);
+                it(name, fn, 120_000);
             }
         }
     });
@@ -29,9 +29,9 @@ describe(`dev-smoke: ${TEMPLATE} × 7 bundler`, () => {
                 await assertDevSmoke({ template: TEMPLATE, bundler, ssr: true });
             };
             if (known) {
-                it.skip(`${name}（已知失败：${known}）`, fn, 180_000);
+                it.skip(`${name}（已知失败：${known}）`, fn, 120_000);
             } else {
-                it(name, fn, 180_000);
+                it(name, fn, 120_000);
             }
         }
     });
