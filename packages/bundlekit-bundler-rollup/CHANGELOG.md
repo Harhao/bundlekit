@@ -1,5 +1,11 @@
 # @bundlekit/bundler-rollup
 
+## 0.0.16
+
+### Patch Changes
+
+- d544872: 修复安装依赖寻找路径的问题
+
 ## 0.0.15
 
 ### Patch Changes

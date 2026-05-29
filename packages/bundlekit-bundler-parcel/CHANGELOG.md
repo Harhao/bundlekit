@@ -1,5 +1,11 @@
 # @bundlekit/bundler-parcel
 
+## 0.0.9
+
+### Patch Changes
+
+- d544872: 修复安装依赖寻找路径的问题
+
 ## 0.0.8
 
 ### Patch Changes
