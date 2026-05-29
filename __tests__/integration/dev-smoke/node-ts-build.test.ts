@@ -22,9 +22,9 @@ describe(`build-smoke: ${TEMPLATE} × 7 bundler`, () => {
             await assertNodeBuild({ bundler });
         };
         if (known) {
-            it.skip(`${name}（已知失败：${known}）`, fn, 180_000);
+            it.skip(`${name}（已知失败：${known}）`, fn, 120_000);
         } else {
-            it(name, fn, 180_000);
+            it(name, fn, 120_000);
         }
     }
 });

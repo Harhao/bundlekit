@@ -15,7 +15,7 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
@@ -43,8 +43,12 @@ jobs:
       - name: Run unit tests
         run: pnpm test
 
-      - name: Run integration tests
-        run: pnpm test:integration
+      - name: Run integration tests (build + dev-spa + dev-ssr + cli)
+        run: pnpm vitest run --config vitest.integration.config.ts --reporter=verbose --testPathPattern="build|dev-spa|dev-ssr|cli"
+
+      - name: Run integration tests (dev-smoke)
+        run: pnpm vitest run --config vitest.integration.config.ts --reporter=verbose --testPathPattern="dev-smoke"
+        timeout-minutes: 15
 
       - name: Verify package contents
         run: pnpm verify:pack
