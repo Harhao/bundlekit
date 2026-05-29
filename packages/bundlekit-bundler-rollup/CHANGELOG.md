@@ -1,5 +1,11 @@
 # @bundlekit/bundler-rollup
 
+## 0.0.13
+
+### Patch Changes
+
+- 5303478: 修复 test 异常
+
 ## 0.0.12
 
 ### Patch Changes
