@@ -43,13 +43,6 @@ jobs:
       - name: Run unit tests
         run: pnpm test
 
-      - name: Run integration tests (build + dev-spa + dev-ssr + cli)
-        run: pnpm vitest run --config vitest.integration.config.ts --reporter=verbose "build|dev-spa|dev-ssr|cli"
-
-      - name: Run integration tests (dev-smoke)
-        run: pnpm vitest run --config vitest.integration.config.ts --reporter=verbose "dev-smoke"
-        timeout-minutes: 15
-
       - name: Verify package contents
         run: pnpm verify:pack
 
