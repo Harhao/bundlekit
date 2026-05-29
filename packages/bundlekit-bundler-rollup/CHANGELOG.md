@@ -1,5 +1,11 @@
 # @bundlekit/bundler-rollup
 
+## 0.0.15
+
+### Patch Changes
+
+- 27845b4: 修复切换 bundler 会报安装依赖失败问题
+
 ## 0.0.14
 
 ### Patch Changes

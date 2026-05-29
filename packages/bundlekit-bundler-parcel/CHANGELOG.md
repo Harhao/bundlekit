@@ -1,5 +1,11 @@
 # @bundlekit/bundler-parcel
 
+## 0.0.8
+
+### Patch Changes
+
+- 27845b4: 修复切换 bundler 会报安装依赖失败问题
+
 ## 0.0.7
 
 ### Patch Changes
