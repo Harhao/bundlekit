@@ -1,5 +1,11 @@
 # @bundlekit/bundler-rollup
 
+## 0.0.14
+
+### Patch Changes
+
+- 0a1b175: 修改 rollup pacth 版本
+
 ## 0.0.13
 
 ### Patch Changes
