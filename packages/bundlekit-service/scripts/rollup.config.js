@@ -80,7 +80,10 @@ module.exports = [
             sourcemap: false,
             entryFileNames: '[name].cjs',
             chunkFileNames: 'chunks/[name]-[hash].cjs',
-            dynamicImportInCjs: false,
+            // 保留 await import() 为真实动态导入，避免 rollup 把 import(file://...) 错转
+            // 为 require(file://...) 导致加载 ESM bundler 包失败
+            // （require 不支持 file:// URL，且仅能加载 CJS）
+            dynamicImportInCjs: true,
             interop: 'auto'
         },
     }

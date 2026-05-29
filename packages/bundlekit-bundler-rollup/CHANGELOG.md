@@ -1,5 +1,13 @@
 # @bundlekit/bundler-rollup
 
+## 0.0.12
+
+### Patch Changes
+
+- 8e12ab8: 修复项目初始化异常和启动开发环境异常
+- Updated dependencies [8e12ab8]
+  - @bundlekit/shared-utils@0.0.9
+
 ## 0.0.11
 
 ### Patch Changes

@@ -29,6 +29,21 @@ const defaultAssetRules = [
     }
 ];
 
+/**
+ * 从字符串 entry 派生 webpack chunk 名（去除目录与扩展名）。
+ *
+ *   - "src/index.ts"          → "index"
+ *   - "./src/entry-server.tsx" → "entry-server"
+ *   - "src/main.js"           → "main"
+ *
+ * 旧实现一律使用 "app"，导致 [name].js 输出与 package.json 中 ./dist/index.js
+ * 主入口字段不一致（node-ts 模板）。
+ */
+function deriveChunkName(entry: string): string {
+    const base = path.basename(entry, path.extname(entry));
+    return base || "app";
+}
+
 const defaultPlugins = [
     new Webpack.DefinePlugin({
         "process.env": JSON.stringify({
@@ -59,7 +74,7 @@ export default class TransformConfig {
 
         const entry = this.buildConfig.entry
             ? (typeof this.buildConfig.entry === "string"
-                ? { app: this.buildConfig.entry }
+                ? { [deriveChunkName(this.buildConfig.entry)]: this.buildConfig.entry }
                 : this.buildConfig.entry)
             : { app: "./src/index.tsx" };
 
@@ -76,8 +91,11 @@ export default class TransformConfig {
         const fmt = buildOutput?.formats;
         const primaryFormat = Array.isArray(fmt) ? fmt[0] : (fmt || 'umd');
 
-        // SSR server pass：target='node' 时输出 commonjs 模块，并 externalize node_modules
-        const isServerPass = this.buildConfig.target === 'node';
+        // SSR server pass：仅在 buildSSRView 注入 __isServerPass=true 时启用
+        // SSR 专属逻辑（commonjs2 输出、server externals 等）。单纯 target=node
+        // （node-ts 库模板）不再被误判为 SSR pass。
+        // target=node 的 webpack runtime（resolve、target 字段）仍按 target 判断。
+        const isServerPass = (this.buildConfig as any).__isServerPass === true;
 
         // Library 模式：从 envConfig 读 library / libraryName。
         //   - library=true 时跳过 HtmlWebpackPlugin（不产 dev shell HTML）

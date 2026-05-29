@@ -132,7 +132,7 @@ export default class ParcelBundler implements IBuildToolAdapter {
         ) as Record<string, any>;
 
         // ── SSR server pass 检测 ──────────────────────────────────────────────
-        const isServerPass = rawEnvConfig.target === "node";
+        const isServerPass = rawEnvConfig.__isServerPass === true;
 
         // ── Entry ────────────────────────────────────────────────────────────
         const entry = rawEnvConfig.entry
@@ -173,8 +173,9 @@ export default class ParcelBundler implements IBuildToolAdapter {
 
         this.logger.info("开始转换 Parcel 配置");
 
-        // ── HTML 写入配置（仅应用模式，SSR server pass 和 library 不需要）───────
-        if (!isLibrary && !isServerPass) {
+        // ── HTML 写入配置（应用模式用；library / server pass / target=node 都不写 HTML）
+        const isNodeTarget = rawEnvConfig.target === "node";
+        if (!isLibrary && !isServerPass && !isNodeTarget) {
             const pages = rawEnvConfig.pages as Array<{
                 template?: string;
                 filename?: string;

@@ -7,6 +7,8 @@ import type { IBuildConfig, IBuildEnv, IEnvBuildConfig, ISSRConfig } from "../ty
  * - 替换 envConfig.entry 为 ssr.entry
  * - 替换 envConfig.output 为 ssr.output（注意 formats 类型转换）
  * - 强制 target='node'
+ * - 注入 __isServerPass: true 标记 — 让 bundler 适配器把它和单纯
+ *   `target=node`（如 node-ts 库模板）区分开
  * - 不修改原对象，返回新对象
  */
 export function buildSSRView(buildConfig: IBuildConfig, mode: IBuildEnv): IBuildConfig {
@@ -30,7 +32,12 @@ export function buildSSRView(buildConfig: IBuildConfig, mode: IBuildEnv): IBuild
         inject: undefined,
         // js.splitChunks 在 server 上意义不大，关闭
         js: { ...(envConfig.js || {}), splitChunks: false },
-    };
+        // 关键：标记此份配置是 SSR server pass，不是普通的 Node target 库构建。
+        // 各 bundler 适配器据此选择 SSR-specific 的 output 文件名、format 转换、
+        // externals 处理；否则 node-ts 库（target=node 但非 SSR）会被错误地
+        // 当 SSR pass 处理，产物变 server.cjs，与模板 main 字段错位。
+        __isServerPass: true,
+    } as IEnvBuildConfig & { __isServerPass: boolean };
 
     return {
         ...buildConfig,

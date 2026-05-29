@@ -253,8 +253,10 @@ export default class WebpackBundler implements IBuildToolAdapter<Configuration> 
                 }
                 const publicPath = (clientConfig.output?.publicPath as string) || "/";
                 const entryFile = (clientConfig.output as any)?.filename || "[name].js";
-                // webpack adapter 把 string entry 包成 { app: entry }，chunk name = 'app'
-                const clientUrl = `${publicPath}${entryFile.replace(/\[name\]/g, "app").replace(/\[contenthash[^\]]*\]/g, "")}`;
+                // 取 client 编译 entry map 的第一个 key 作为 chunk 名（由 deriveChunkName 决定）
+                const clientEntry = clientConfig.entry as Record<string, string> | undefined;
+                const chunkName = clientEntry ? Object.keys(clientEntry)[0] || "app" : "app";
+                const clientUrl = `${publicPath}${entryFile.replace(/\[name\]/g, chunkName).replace(/\[contenthash[^\]]*\]/g, "")}`;
                 const scriptTag = `<script defer src="${clientUrl}"></script>`;
                 if (html.includes("</body>")) {
                     html = html.replace(/<\/body>/i, `${scriptTag}</body>`);
@@ -265,6 +267,30 @@ export default class WebpackBundler implements IBuildToolAdapter<Configuration> 
             },
         });
 
-        return [devMiddleware as IRequestHandler, hotMiddleware as IRequestHandler, ssrHandler];
+        return [makeSSRPageRouter(ssrHandler), devMiddleware as IRequestHandler, hotMiddleware as IRequestHandler];
     }
+}
+
+/**
+ * 把 SSR handler 包成 connect 风格 middleware：
+ *
+ *   - 仅处理 page 请求（path 没有文件扩展名 或 .html）→ 调 ssrHandler
+ *   - 资源请求（.js / .css / .png / chunk hash 等）→ next() 让 dev-middleware 服务
+ *
+ * 必须放在 webpack-dev-middleware 之前，否则 dev-middleware 的 index.html 兜底
+ * 会优先服务 HtmlWebpackPlugin 的产物（保留 <!--ssr-outlet--> 未替换），SSR
+ * 渲染永远不会触发。
+ */
+function makeSSRPageRouter(ssrHandler: IRequestHandler): IRequestHandler {
+    return (req, res, next) => {
+        const url = req.url || "/";
+        const cleaned = url.split("?")[0].split("#")[0];
+        // 文件扩展名（.js/.css/...）→ 不是 page 请求；.html 仍走 SSR
+        const m = /\.([a-z0-9]+)$/i.exec(cleaned);
+        const isAsset = !!m && m[1].toLowerCase() !== "html" && m[1].toLowerCase() !== "htm";
+        // webpack-hot-middleware 的事件流路径
+        if (cleaned === "/__webpack_hmr") return next();
+        if (isAsset) return next();
+        return ssrHandler(req, res, next);
+    };
 }

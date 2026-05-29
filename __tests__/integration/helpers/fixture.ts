@@ -13,11 +13,12 @@ import { spawnSync } from "node:child_process";
  *
  * mode 参数控制使用哪份 .bundlekitrc：
  *   - 'spa'     → .bundlekitrc.spa.ts → 复制为 .bundlekitrc.ts
+ *   - 'dev-spa' → .bundlekitrc.dev-spa.ts → 复制为 .bundlekitrc.ts（dev CSR HTTP smoke）
  *   - 'lib'     → .bundlekitrc.lib.ts → 复制为 .bundlekitrc.ts
  *   - 'lib-umd' → .bundlekitrc.lib-umd.ts → 复制为 .bundlekitrc.ts（library + UMD + libraryName）
  *   - 'ssr'     → .bundlekitrc.ssr.ts → 复制为 .bundlekitrc.ts
  */
-export type FixtureMode = "spa" | "lib" | "lib-umd" | "ssr";
+export type FixtureMode = "spa" | "dev-spa" | "lib" | "lib-umd" | "ssr";
 
 export interface IFixtureHandle {
     /** 临时项目根目录 */

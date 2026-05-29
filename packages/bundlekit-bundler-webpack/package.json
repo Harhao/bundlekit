@@ -1,6 +1,6 @@
 {
   "name": "@bundlekit/bundler-webpack",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "A webpack bundler for @bundlekit/service",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
@@ -37,6 +37,7 @@
     "terser-webpack-plugin": "^5.3.14",
     "thread-loader": "^4.0.2",
     "ts-loader": "^9.4.4",
+    "typescript": "^5.8.2",
     "vue-loader": "^17.4.2",
     "webpack": "^5.99.7",
     "webpack-bundle-analyzer": "^4.10.2",

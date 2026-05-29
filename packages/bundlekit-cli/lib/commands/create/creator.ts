@@ -33,6 +33,17 @@ export class Creator {
         const pm = (options.pm as PMName | undefined) || undefined;
         const depMode = resolveDepMode(cwd);
 
+        // node-ts 模板不支持 SSR — 防御性二道关。CLI 入口也有相同检查，但
+        // Creator 是更稳定的对外契约（直接 import 调用时还得有这一层）。
+        if (template === "node-ts" && options.ssr === true) {
+            this.logger.error(
+                "node-ts 模板不支持 SSR。\n" +
+                "  - node-ts 是 Node.js 库 / 服务模板，无 HTML 入口、无 hydration 概念\n" +
+                "  - 如需 SSR，请改用 react-ts / react-js / vue3-ts / vue3-js 之一",
+            );
+            throw new Error("node-ts 模板不支持 SSR");
+        }
+
         let targetDir: string;
         try {
             ({ targetDir } = validateProject(name, cwd));

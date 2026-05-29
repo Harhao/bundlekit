@@ -239,6 +239,15 @@ importers:
       vue-loader:
         specifier: ^17.4.2
         version: 17.4.2(webpack@5.106.2)
+      webpack:
+        specifier: ^5.99.7
+        version: 5.106.2(postcss@8.5.14)
+      webpack-dev-middleware:
+        specifier: ^7.4.2
+        version: 7.4.5(tslib@2.8.1)(webpack@5.106.2)
+      webpack-hot-middleware:
+        specifier: ^2.26.1
+        version: 2.26.1
     devDependencies:
       '@rollup/plugin-json':
         specifier: ^6.1.0
@@ -334,6 +343,9 @@ importers:
       ts-loader:
         specifier: ^9.4.4
         version: 9.5.7(typescript@5.9.3)(webpack@5.106.2)
+      typescript:
+        specifier: ^5.8.2
+        version: 5.9.3
       vue-loader:
         specifier: ^17.4.2
         version: 17.4.2(webpack@5.106.2)

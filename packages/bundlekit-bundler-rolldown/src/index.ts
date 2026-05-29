@@ -62,6 +62,15 @@ function normalizeEntryFileNames(tpl: string): string {
     );
 }
 
+/**
+ * 从字符串 entry 派生 chunk 名（去目录、去扩展名）。和 webpack/rspack 适配器保持
+ * 一致，避免 [name].js 永远输出 app.js 与模板 main 字段错位。
+ */
+function deriveChunkName(entry: string): string {
+    const base = path.basename(entry, path.extname(entry));
+    return base || "app";
+}
+
 // ─── 运行时保留的 devServer 配置 ────────────────────────────────────────────────
 interface StoredDevServerConfig {
     host: string;
@@ -156,12 +165,12 @@ export default class RolldownBundler implements IBuildToolAdapter {
         const framework    = rawEnvConfig.framework as string | undefined;
 
         // SSR server pass 检测
-        const isServerPass = rawEnvConfig.target === "node";
+        const isServerPass = rawEnvConfig.__isServerPass === true;
 
         // ── Entry ──────────────────────────────────────────────────────────────
         const entry = rawEnvConfig.entry
             ? (typeof rawEnvConfig.entry === "string"
-                ? { app: rawEnvConfig.entry }
+                ? { [deriveChunkName(rawEnvConfig.entry)]: rawEnvConfig.entry }
                 : rawEnvConfig.entry)
             : { app: path.resolve(this.context, "src/index.tsx") };
 
@@ -258,8 +267,9 @@ export default class RolldownBundler implements IBuildToolAdapter {
             library: isLibrary,
         };
 
-        // ── 存储 HTML 写入配置（应用模式用，server pass 不需要）─────────────────
-        if (!isLibrary && !isServerPass) {
+        // ── 存储 HTML 写入配置（应用模式用；server pass / library / target=node 都不写 HTML）
+        const isNodeTarget = rawEnvConfig.target === "node";
+        if (!isLibrary && !isServerPass && !isNodeTarget) {
             const pages = rawEnvConfig.pages as Array<{
                 template?: string;
                 filename?: string;
