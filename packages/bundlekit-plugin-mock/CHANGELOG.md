@@ -1,5 +1,12 @@
 # @bundlekit/plugin-mock
 
+## 0.0.10
+
+### Patch Changes
+
+- Updated dependencies [8e12ab8]
+  - @bundlekit/shared-utils@0.0.9
+
 ## 0.0.9
 
 ### Patch Changes

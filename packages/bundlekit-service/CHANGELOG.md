@@ -1,5 +1,18 @@
 # @bundlekit/service
 
+## 0.0.14
+
+### Patch Changes
+
+- 8e12ab8: 修复项目初始化异常和启动开发环境异常
+- Updated dependencies [8e12ab8]
+  - @bundlekit/bundler-rolldown@0.0.10
+  - @bundlekit/bundler-webpack@0.0.11
+  - @bundlekit/bundler-rollup@0.0.12
+  - @bundlekit/bundler-rspack@0.0.11
+  - @bundlekit/bundler-vite@0.0.9
+  - @bundlekit/shared-utils@0.0.9
+
 ## 0.0.13
 
 ### Patch Changes

@@ -1,5 +1,17 @@
 # @bundlekit/cli
 
+## 0.0.16
+
+### Patch Changes
+
+- 8e12ab8: 修复项目初始化异常和启动开发环境异常
+- Updated dependencies [8e12ab8]
+- Updated dependencies [6ce8afa]
+  - @bundlekit/shared-utils@0.0.9
+  - @bundlekit/plugin-react@0.0.11
+  - @bundlekit/plugin-vue@0.0.11
+  - @bundlekit/plugin-node@0.0.4
+
 ## 0.0.15
 
 ### Patch Changes
