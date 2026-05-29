@@ -2,14 +2,14 @@
   "name": "@bundlekit/bundler-webpack",
   "version": "0.0.11",
   "description": "A webpack bundler for @bundlekit/service",
-  "main": "./dist/index.cjs",
+  "main": "./dist/index.js",
   "module": "./dist/index.mjs",
-  "cjs": "./dist/index.cjs",
+  "cjs": "./dist/index.js",
   "exports": {
     ".": {
       "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs",
-      "default": "./dist/index.cjs",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js",
       "types": "./dist/index.d.ts"
     }
   },

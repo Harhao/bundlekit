@@ -19,7 +19,7 @@ const getRollupConfig = async() => {
                     format: "es",
                 },
                 {
-                    file: "dist/index.cjs", 
+                    file: "dist/index.js", 
                     format: "cjs",
                 },
             ],
