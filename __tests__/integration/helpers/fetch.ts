@@ -37,7 +37,11 @@ export async function waitUntilHttp(
     const start = Date.now();
     while (Date.now() - start < timeout) {
         try {
-            const r = await fetch(`http://127.0.0.1:${port}${pathname}`);
+            // 带 Accept: text/html — 模拟浏览器，触发 vite-plugin-html 等
+            // history-fallback 中间件的 rewrite 逻辑（只对 HTML accept 生效）
+            const r = await fetch(`http://127.0.0.1:${port}${pathname}`, {
+                headers: { Accept: "text/html" },
+            });
             if (r.status > 0) return;
         } catch {
             // ignore

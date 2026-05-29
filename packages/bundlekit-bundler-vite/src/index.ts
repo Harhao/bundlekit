@@ -8,6 +8,15 @@ import { Logger, validateBuildConfig } from "@bundlekit/shared-utils";
 import type { Plugin, InlineConfig } from "vite";
 import type { IBuildConfig, IBuildToolAdapter, IService, IBuildEnv } from "@bundlekit/shared-utils";
 
+/**
+ * 从字符串 entry 派生 chunk 名（去目录、去扩展名）。和 webpack/rspack 适配器保持
+ * 一致，避免 [name].js 永远输出 app.js 与模板 main 字段错位。
+ */
+function deriveChunkName(entry: string): string {
+    const base = path.basename(entry, path.extname(entry));
+    return base || "app";
+}
+
 export default class ViteBundler implements IBuildToolAdapter<InlineConfig> {
 
     public name: string = "@bundlekit/bundler-vite";
@@ -32,7 +41,7 @@ export default class ViteBundler implements IBuildToolAdapter<InlineConfig> {
 
         const entry = envConfig.entry
             ? (typeof envConfig.entry === "string"
-                ? { app: envConfig.entry }
+                ? { [deriveChunkName(envConfig.entry)]: envConfig.entry }
                 : envConfig.entry)
             : { app: path.resolve(this.context, "src/index.tsx") };
 
@@ -99,8 +108,10 @@ export default class ViteBundler implements IBuildToolAdapter<InlineConfig> {
             return createHtmlPlugin({ minify: false });
         };
 
-        // SSR server pass：target='node' 时使用 vite 原生 build.ssr
-        const isServerPass = envConfig.target === 'node';
+        // SSR server pass：仅在 buildSSRView 注入 __isServerPass=true 时启用
+        // vite 原生 build.ssr。单纯 target=node（如 node-ts 库模板）不再被
+        // 误判为 SSR pass — 它们走下面 application/library 输出分支。
+        const isServerPass = envConfig.__isServerPass === true;
         const ssrConfig = envConfig.ssr;
 
         // Library 模式：library=true 走 vite 原生 build.lib（支持多格式 + UMD name）
@@ -177,8 +188,8 @@ export default class ViteBundler implements IBuildToolAdapter<InlineConfig> {
                     }
                 },
             }),
-            plugins: isServerPass || isLibrary
-                ? [...frameworkPlugins]   // server / library 不需要 HTML plugin
+            plugins: isServerPass || isLibrary || envConfig.target === 'node'
+                ? [...frameworkPlugins]   // server / library / node 库都不需要 HTML plugin
                 : [...frameworkPlugins, buildHtmlPlugin()],
             build: {
                 outDir: outDir,
@@ -235,16 +246,27 @@ export default class ViteBundler implements IBuildToolAdapter<InlineConfig> {
                 } : {
                     rollupOptions: {
                         input: pages.length > 0 ? rollupInput : entry,
-                        output: {
-                            // umd/iife 不支持代码分割，不设置 format 和 manualChunks，由 vite 自行处理
-                            ...(['umd', 'iife'].includes(outputFormat) ? {} : { format: outputFormat }),
-                            manualChunks: (jsConfig.splitChunks && !['umd', 'iife'].includes(outputFormat)) ? {
-                                'react-vendor': ['react', 'react-dom'],
-                            } : undefined,
-                            chunkFileNames: 'assets/js/[name]-[hash].js',
-                            entryFileNames: 'assets/js/[name]-[hash].js',
-                            assetFileNames: 'assets/[ext]/[name]-[hash].[ext]'
-                        },
+                        output: (() => {
+                            // target=node 但非 SSR / 非 library（如 node-ts 默认模板）：
+                            //   - 不出 HTML / assets 目录
+                            //   - 用 envConfig.output.filename 作为 entryFileNames，
+                            //     默认 [name].js → dist/index.js（chunk 名 = entry basename，
+                            //     由 input map 决定）
+                            //   - format 跟随 outputFormat（ESM / CJS）
+                            const isNodeLibLike = envConfig.target === 'node';
+                            const baseFilename = (envConfig.output && !Array.isArray(envConfig.output)
+                                ? (envConfig.output as any).filename
+                                : undefined) || '[name].js';
+                            return {
+                                ...(['umd', 'iife'].includes(outputFormat) ? {} : { format: outputFormat }),
+                                manualChunks: (jsConfig.splitChunks && !['umd', 'iife'].includes(outputFormat) && !isNodeLibLike) ? {
+                                    'react-vendor': ['react', 'react-dom'],
+                                } : undefined,
+                                chunkFileNames: isNodeLibLike ? baseFilename : 'assets/js/[name]-[hash].js',
+                                entryFileNames: isNodeLibLike ? baseFilename : 'assets/js/[name]-[hash].js',
+                                assetFileNames: isNodeLibLike ? baseFilename.replace(/\[name\]/g, '[name]') : 'assets/[ext]/[name]-[hash].[ext]',
+                            } as Record<string, any>;
+                        })(),
                         onwarn: (warning, warn) => {
                             if (warning.code === 'ERROR') {
                                 this.logger.error(`构建过程中出现错误: ${warning.message}`);

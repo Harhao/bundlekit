@@ -20,6 +20,15 @@ import type {
 } from "@bundlekit/shared-utils";
 import { DevServer } from "./DevServer";
 
+/**
+ * 从字符串 entry 派生 chunk 名（去目录、去扩展名）。和 webpack/rspack/vite/rolldown
+ * 适配器保持一致，避免 [name].js 永远输出 app.js 与模板 main 字段错位。
+ */
+function deriveChunkName(entry: string): string {
+    const base = path.basename(entry, path.extname(entry));
+    return base || "app";
+}
+
 // Node.js 18+ 内置模块名单（含 node: 前缀变体），用于 SSR auto externals
 const NODE_BUILTINS: string[] = [
     "assert", "async_hooks", "buffer", "child_process", "cluster", "console",
@@ -164,7 +173,7 @@ export default class EsbuildBundler implements IBuildToolAdapter {
         ) as Record<string, any>;
         const framework = rawEnvConfig.framework as string | undefined;
 
-        const isServerPass = rawEnvConfig.target === "node";
+        const isServerPass = rawEnvConfig.__isServerPass === true;
 
         // ── Entry ─────────────────────────────────────────────────────────────
         const entryRaw = rawEnvConfig.entry;
@@ -172,7 +181,8 @@ export default class EsbuildBundler implements IBuildToolAdapter {
         if (!entryRaw) {
             entryPoints = { app: path.resolve(this.context, "src/index.tsx") };
         } else if (typeof entryRaw === "string") {
-            entryPoints = { app: path.resolve(this.context, entryRaw) };
+            // chunk 名按 entry basename 派生（与 webpack/rspack 适配器一致）
+            entryPoints = { [deriveChunkName(entryRaw)]: path.resolve(this.context, entryRaw) };
         } else {
             entryPoints = Object.fromEntries(
                 Object.entries(entryRaw as Record<string, string>).map(([k, v]) => [
@@ -252,8 +262,9 @@ export default class EsbuildBundler implements IBuildToolAdapter {
             library: isLibrary,
         };
 
-        // ── HTML 写入配置 ─────────────────────────────────────────────────────
-        if (!isLibrary && !isServerPass) {
+        // ── HTML 写入配置（应用模式用；library / server pass / target=node 都不写）
+        const isNodeTarget = rawEnvConfig.target === "node";
+        if (!isLibrary && !isServerPass && !isNodeTarget) {
             const pages  = rawEnvConfig.pages as Array<{ template?: string; filename?: string; inject?: "head" | "body" }> | undefined;
             const page   = pages?.[0];
             this.htmlWriteConfig = {
@@ -266,6 +277,20 @@ export default class EsbuildBundler implements IBuildToolAdapter {
         }
 
         this.logger.info("开始转换 esbuild 配置");
+
+        // 框架插件：Vue 3 SFC 支持。esbuild 没有官方 vue 插件，使用社区 esbuild-plugin-vue3。
+        // 提前到 SSR pass 分支前面 — server pass 也需要 .vue 编译能力，否则 server compiler
+        // 卡在 ".vue 文件没人处理" → dev SSR 启动 timeout。
+        const frameworkPlugins: esbuild.Plugin[] = [];
+        if (framework === "vue3") {
+            try {
+                const vue3Module = await import("esbuild-plugin-vue3");
+                const vuePluginFactory = (vue3Module as any).default || vue3Module;
+                frameworkPlugins.push(vuePluginFactory());
+            } catch {
+                this.logger.warn("framework 为 vue3 但未安装 esbuild-plugin-vue3，跳过");
+            }
+        }
 
         // ── SSR server pass ───────────────────────────────────────────────────
         if (isServerPass) {
@@ -286,20 +311,8 @@ export default class EsbuildBundler implements IBuildToolAdapter {
                 define,
                 alias,
                 external,
+                plugins:    frameworkPlugins,
             };
-        }
-
-        // 框架插件：Vue 3 SFC 支持。esbuild 没有官方 vue 插件，使用社区 esbuild-plugin-vue3。
-        // dynamic import 失败时仅 warn，让 .vue 文件按 esbuild 默认 loader 报错（更易诊断）
-        const frameworkPlugins: esbuild.Plugin[] = [];
-        if (framework === "vue3") {
-            try {
-                const vue3Module = await import("esbuild-plugin-vue3");
-                const vuePluginFactory = (vue3Module as any).default || vue3Module;
-                frameworkPlugins.push(vuePluginFactory());
-            } catch {
-                this.logger.warn("framework 为 vue3 但未安装 esbuild-plugin-vue3，跳过");
-            }
         }
 
         return {
@@ -590,6 +603,10 @@ export default class EsbuildBundler implements IBuildToolAdapter {
             // esbuild 生成 .js，所以 serverFilename 中的 .cjs 需要适配
             outExtension: { ".js": ".cjs" },
             plugins: [
+                // 先把 transformConfig 配进来的框架插件（如 esbuild-plugin-vue3）保留，
+                // 否则 server pass 编不动 .vue 文件，serverReady 永远拿不到 → dev SSR
+                // 启动 timeout
+                ...(serverEsbuildOpts.plugins ?? []),
                 {
                     name: "bundlekit-ssr-ready",
                     setup: (build) => {

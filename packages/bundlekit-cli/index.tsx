@@ -65,6 +65,18 @@ async function legacyCreate(name: string, options: Record<string, any>) {
         options.template = answer.template;
     }
 
+    // node-ts 不支持 SSR：早返回 + 明确报错（用户主动传 --ssr 时不要静默吞掉）
+    // node-ts 是 Node.js 库 / 服务模板（target=node、无 HTML 入口），SSR 概念
+    // 不适用；此模板只产 JS bundle，不存在「服务端渲染 HTML」语义。
+    if (options.template === "node-ts" && options.ssr === true) {
+        throw new Error(
+            `node-ts 模板不支持 SSR。\n` +
+            `  - node-ts 是 Node.js 库 / 服务模板，无 HTML 入口、无 hydration 概念\n` +
+            `  - 如需 SSR，请改用 react-ts / react-js / vue3-ts / vue3-js 之一\n` +
+            `  - 如需 Node 库多格式输出，使用 --lib 标志`,
+        );
+    }
+
     if (!options.bundler) {
         const answer = (await enquirer.prompt({
             type: "select",
@@ -130,6 +142,17 @@ program
     .option("--lib", "类库 / SDK 模式（仅 node-ts）：.bundlekitrc.ts 输出 esm/cjs 双格式，跳过 HTML 入口", false)
     .option("--library-name <name>", "UMD/IIFE 全局变量名（仅 --lib 时生效，默认取项目名 PascalCase）")
     .action(async (name: string, options: Record<string, any>) => {
+        // node-ts 不支持 SSR：在 ink/legacy 两条分支都最早做拦截
+        if (options.template === "node-ts" && options.ssr === true) {
+            console.error(
+                `\n[bundlekit-cli] node-ts 模板不支持 SSR。\n` +
+                `  - node-ts 是 Node.js 库 / 服务模板，无 HTML 入口、无 hydration 概念\n` +
+                `  - 如需 SSR，请改用 react-ts / react-js / vue3-ts / vue3-js 之一\n` +
+                `  - 如需 Node 库多格式输出，使用 --lib 标志\n`,
+            );
+            process.exit(1);
+        }
+
         if (!isInkEnabled()) {
             // Non-TTY / DEVKIT_NO_INK fallback
             await legacyCreate(name, options);

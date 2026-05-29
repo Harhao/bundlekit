@@ -160,7 +160,7 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
             : [".js", ".jsx", ".ts", ".tsx"];
 
         // SSR server pass 检测
-        const isServerPass = rawEnvConfig.target === "node";
+        const isServerPass = rawEnvConfig.__isServerPass === true;
 
         // ── Entry ──────────────────────────────────────────────────────────────
         const entry = rawEnvConfig.entry

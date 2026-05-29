@@ -24,6 +24,21 @@ import type {
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const _require = createRequire(import.meta.url);
 
+/**
+ * 从字符串 entry 派生 chunk 名（去目录、去扩展名）。
+ *
+ *   - "src/index.ts"           → "index"
+ *   - "./src/entry-server.tsx" → "entry-server"
+ *   - "src/main.js"            → "main"
+ *
+ * 旧实现一律使用 "app"，导致 [name].js 输出与 package.json 主入口字段不一致
+ * （如 node-ts 模板声明 ./dist/index.js 却实际产出 ./dist/app.js）。
+ */
+function deriveChunkName(entry: string): string {
+    const base = path.basename(entry, path.extname(entry));
+    return base || "app";
+}
+
 export default class RspackBundler implements IBuildToolAdapter<RspackOptions> {
 
     private context: string;
@@ -42,7 +57,7 @@ export default class RspackBundler implements IBuildToolAdapter<RspackOptions> {
         const rawEnvConfig = (config.config?.[this.mode] || config.config?.development || {}) as Record<string, any>;
 
         const entry = rawEnvConfig.entry
-            ? (typeof rawEnvConfig.entry === "string" ? { app: rawEnvConfig.entry } : rawEnvConfig.entry)
+            ? (typeof rawEnvConfig.entry === "string" ? { [deriveChunkName(rawEnvConfig.entry)]: rawEnvConfig.entry } : rawEnvConfig.entry)
             : { app: path.resolve(this.context, "src/index.ts") };
 
         const resolvedEntry: Record<string, string> = {};
@@ -104,8 +119,10 @@ export default class RspackBundler implements IBuildToolAdapter<RspackOptions> {
             ...extraLoaders,
         ];
 
-        // SSR server pass：target='node' 时输出 commonjs2 / module，并 externalize node_modules
-        const isServerPass = rawEnvConfig.target === 'node';
+        // SSR server pass：仅在 buildSSRView 注入 __isServerPass=true 时启用 SSR
+        // 专属逻辑（commonjs2/module 输出、server externals 等）。单纯
+        // target=node（node-ts 库模板）不再被误判为 SSR pass。
+        const isServerPass = rawEnvConfig.__isServerPass === true;
         const outputFormat = rawEnvConfig.output?.formats
             ? (Array.isArray(rawEnvConfig.output.formats) ? rawEnvConfig.output.formats[0] : rawEnvConfig.output.formats)
             : undefined;
@@ -326,26 +343,49 @@ export default class RspackBundler implements IBuildToolAdapter<RspackOptions> {
         const ssrConfig = (envConfig as any)?.ssr;
         if (!ssrConfig) throw new Error("ssr config not found in envConfig");
 
-        // 1) client config + middleware mode dev server
+        // 动态加载 dev / hot middleware（与 webpack adapter 对齐：rspack 编译器
+        // 实现了 webpack 兼容 API，可直接用 webpack-dev-middleware / -hot-middleware）。
+        // 之前依赖 RspackDevServer.app.callback() 的 hack 在不调 .start() 时
+        // 资源服务（/entry-client.js 等）链路并未完全装配，导致请求 hang。
+        const { default: webpackDevMiddleware } = await import("webpack-dev-middleware");
+        const { default: webpackHotMiddleware } = await import("webpack-hot-middleware");
+
+        // 1) client config + HMR 入口注入
         const clientConfig = this.transformConfig(buildConfig);
-        // rspack dev-server middleware mode + 不绑定端口
-        (clientConfig as any).devServer = {
-            ...(clientConfig.devServer || {}),
-            hot: true,
-            historyApiFallback: true,
-        };
+        let hotClientPath: string;
+        try {
+            hotClientPath = _require.resolve("webpack-hot-middleware/client");
+        } catch {
+            hotClientPath = "webpack-hot-middleware/client";
+        }
+        const hotEntry = `${hotClientPath}?path=/__webpack_hmr`;
+        const origEntry = (clientConfig as any).entry;
+        (clientConfig as any).entry = Array.isArray(origEntry)
+            ? [hotEntry, ...origEntry]
+            : typeof origEntry === "string"
+                ? [hotEntry, origEntry]
+                : (() => {
+                    const next: Record<string, any> = {};
+                    for (const k of Object.keys(origEntry || {})) {
+                        const v = origEntry[k];
+                        next[k] = Array.isArray(v) ? [hotEntry, ...v] : [hotEntry, v];
+                    }
+                    return next;
+                })();
+        (clientConfig as any).plugins = [
+            ...((clientConfig as any).plugins || []),
+            new Rspack.HotModuleReplacementPlugin(),
+        ];
+
         const clientCompiler = Rspack(clientConfig as any);
-        const devServer = new RspackDevServer(
-            {
-                ...((clientConfig as any).devServer),
-                // middleware-only：rspack-dev-server 没有 middlewareMode，但通过不调 start() 仅取 middleware
-            } as any,
-            clientCompiler as any,
-        );
-        // RspackDevServer 暴露的 middleware 链
-        // @ts-expect-error - rspack-dev-server middleware API 内部
-        const devMiddleware = devServer.app?.callback?.()
-            || ((req: any, res: any, next: any) => next());
+        const devMiddleware = webpackDevMiddleware(clientCompiler as any, {
+            publicPath: ((clientConfig as any).output?.publicPath as string) || "/",
+            stats: "errors-warnings",
+        });
+        const hotMiddleware = webpackHotMiddleware(clientCompiler as any, {
+            log: false,
+            path: "/__webpack_hmr",
+        });
 
         // 2) server compiler watch
         const serverBuildConfig = buildSSRView(buildConfig, this.mode);
@@ -379,23 +419,22 @@ export default class RspackBundler implements IBuildToolAdapter<RspackOptions> {
             serverBundlePath: () => serverBundlePath,
             waitUntilReady,
             onError: (e) => this.logger.error(`SSR 渲染失败: ${e?.message ?? e}`),
-            // 与 webpack adapter 镜像：注入 client bundle <script>，让浏览器加载客户端 JS
-            // 触发 hydration，否则页面只有 SSR 出来的静态 HTML，事件绑定丢失。
-            // 防御：若用户把 ssr.template 指到 prod 编译产物（已含 <script>），就跳过手工注入。
             getTemplate: async (_url) => {
                 const fsp = await import("node:fs/promises");
                 const templatePath = ssrConfig.template
                     ? path.resolve(this.context, ssrConfig.template)
                     : path.resolve(this.context, "public/index.html");
                 let html = await fsp.readFile(templatePath, "utf-8");
-                // 模板自带 <script> 标签时直接返回，避免重复加载入口造成双挂载。
                 if (/<script\b[^>]*\bsrc\s*=/i.test(html)) {
                     return html;
                 }
                 const publicPath = ((clientConfig as any).output?.publicPath as string) || "/";
                 const entryFile = ((clientConfig as any).output as any)?.filename || "[name].js";
-                // rspack adapter 把 string entry 包成 { app: entry }，chunk name = 'app'
-                const clientUrl = `${publicPath}${entryFile.replace(/\[name\]/g, "app").replace(/\[contenthash[^\]]*\]/g, "")}`;
+                const clientEntry = (clientConfig as any).entry as Record<string, string> | undefined;
+                const chunkName = clientEntry && !Array.isArray(clientEntry)
+                    ? Object.keys(clientEntry).find((k) => k !== "0") || "app"
+                    : "app";
+                const clientUrl = `${publicPath}${entryFile.replace(/\[name\]/g, chunkName).replace(/\[contenthash[^\]]*\]/g, "")}`;
                 const scriptTag = `<script defer src="${clientUrl}"></script>`;
                 if (html.includes("</body>")) {
                     html = html.replace(/<\/body>/i, `${scriptTag}</body>`);
@@ -406,6 +445,27 @@ export default class RspackBundler implements IBuildToolAdapter<RspackOptions> {
             },
         });
 
-        return [devMiddleware as IRequestHandler, ssrHandler];
+        return [makeSSRPageRouter(ssrHandler), devMiddleware as IRequestHandler, hotMiddleware as IRequestHandler];
     }
+}
+
+/**
+ * 把 SSR handler 包成 connect 风格 middleware：
+ *
+ *   - 仅处理 page 请求（path 无文件扩展名 或 .html）→ 调 ssrHandler
+ *   - 资源请求（.js / .css / .png / chunk hash 等）→ next() 让 dev-middleware 服务
+ *
+ * 与 webpack adapter 的 `makeSSRPageRouter` 行为一致。必须放在 dev-middleware
+ * 前面，否则 history-api-fallback 会把 /entry-client.js 错误回退成 HTML 文档。
+ */
+function makeSSRPageRouter(ssrHandler: IRequestHandler): IRequestHandler {
+    return (req, res, next) => {
+        const url = req.url || "/";
+        const cleaned = url.split("?")[0].split("#")[0];
+        const m = /\.([a-z0-9]+)$/i.exec(cleaned);
+        const isAsset = !!m && m[1].toLowerCase() !== "html" && m[1].toLowerCase() !== "htm";
+        if (cleaned === "/__webpack_hmr") return next();
+        if (isAsset) return next();
+        return ssrHandler(req, res, next);
+    };
 }
