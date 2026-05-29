@@ -257,6 +257,11 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
                     tsconfig:    path.resolve(this.context, "tsconfig.json"),
                     outDir:      resolvedOutDir,
                     declaration: isLibrary,
+                    // declaration 与 declarationMap 必须同步：用户 tsconfig 写了
+                    // declarationMap: true 但我们这里把 declaration 关掉时，TS 会
+                    // 报 TS5069 ("Option 'declarationMap' cannot be specified
+                    // without 'declaration'")，构建死循环 stderr 直到 timeout。
+                    declarationMap: isLibrary,
                     noEmit:      false,
                     // 与 rollup output.sourcemap 保持一致，避免 "Rollup 'sourcemap' option must be set" 警告
                     sourceMap:   rawEnvConfig.js?.sourcemap ?? false,
