@@ -20,7 +20,7 @@ ds serve [options]
 | 选项 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
 | `--mode` | `string` | `development` | 构建环境 |
-| `--bundler` | `string` | `webpack` | 打包器，可选 `vite` / `webpack` / `rollup` / `rspack` / `rolldown` |
+| `--bundler` | `string` | `webpack` | 打包器，可选 `vite` / `webpack` / `rspack` / `rollup` / `rolldown` / `parcel` / `esbuild` |
 | `--host` | `string` | `0.0.0.0` | 主机地址 |
 | `--port` | `number` | `3000` | 端口号 |
 | `--open` | `boolean` | `false` | 自动打开浏览器 |
@@ -100,14 +100,16 @@ bundlekit-cli create <name> [options]
 | `-b, --bundler` | `string` | 默认构建工具，不传则交互选择 |
 | `-d, --description` | `string` | 项目描述 |
 | `--pm` | `string` | 包管理器（`pnpm` / `yarn` / `npm`），不传则交互选择 |
-| `--ssr` | `boolean` | 启用 SSR 骨架（含 `entry-client` / `entry-server` + `<!--ssr-outlet-->` 占位）。不传则交互选择 |
+| `--ssr` | `boolean` | 启用 SSR 骨架（含 `entry-client` / `entry-server` + `<!--ssr-outlet-->` 占位）。不传则交互选择。`node-ts` 模板不支持，传入会报错退出 |
+| `--lib` | `boolean` | 类库 / SDK 模式（仅 `node-ts`）：跳过 HTML 入口，`.bundlekitrc.ts` 输出 esm/cjs 双格式 |
+| `--library-name <name>` | `string` | UMD/IIFE 全局变量名（仅 `--lib` 时生效，默认取项目名 PascalCase） |
 
 **交互式创建流程（TTY）：**
 
 ```
-Step 1/5 · 模板        → 选择 React/Vue + TS/JS
-Step 2/5 · 打包器      → 选择 Vite/Webpack/Rspack 等
-Step 3/5 · SSR         → 选择是否启用服务端渲染（默认：否）
+Step 1/5 · 模板        → 选择 React/Vue + TS/JS 或 Node.js（无框架）
+Step 2/5 · 打包器      → 选择 Vite/Webpack/Rspack/Rollup/Rolldown/Parcel/esbuild
+Step 3/5 · SSR         → 选择是否启用服务端渲染（默认：否；node-ts / --lib 时跳过此步）
 Step 4/5 · 包管理器    → 选择 pnpm/yarn/npm
 Step 5/5 · 项目描述    → 可选，按回车跳过
 ```
@@ -122,6 +124,9 @@ Step 5/5 · 项目描述    → 可选，按回车跳过
 | `react-js` | React 18 + JavaScript |
 | `vue3-ts` | Vue 3 + TypeScript + Composition API |
 | `vue3-js` | Vue 3 + JavaScript + Composition API |
+| `node-ts` | Node.js / 纯 TypeScript（无框架，库 / CLI / SDK 场景） |
+
+> 短名别名：`react` → `react-ts`，`vue` / `vue3` → `vue3-ts`，`node` → `node-ts`。
 
 ```bash
 # 交互式模式（推荐）
@@ -136,6 +141,10 @@ bc create my-app -t react-ts -b vite --pm pnpm
 
 # 生成 SSR 骨架
 bc create my-app -t react-ts -b vite --ssr
+
+# Node.js 库（esm+cjs 双格式输出，跳过 HTML 入口）
+bc create my-sdk -t node-ts -b rollup --lib
+bc create my-sdk -t node-ts -b rollup --lib --library-name MySDK
 ```
 
 #### 环境变量
@@ -171,6 +180,7 @@ bundlekit-cli add <name>
 | `vue` | `@bundlekit/plugin-vue` | 构建插件 |
 | `request` | `@bundlekit/request` | 运行时库 |
 | `@bundlekit/plugin-mock` | `@bundlekit/plugin-mock` | 构建插件 |
+| `@bundlekit/plugin-node` | `@bundlekit/plugin-node` | 构建插件（无短名，需全名） |
 
 **支持短名和全名（bundler 适配器）：**
 
@@ -181,6 +191,8 @@ bundlekit-cli add <name>
 | `rspack` | `@bundlekit/bundler-rspack` | 构建工具适配器 |
 | `rollup` | `@bundlekit/bundler-rollup` | 构建工具适配器 |
 | `rolldown` | `@bundlekit/bundler-rolldown` | 构建工具适配器 |
+| `parcel` | `@bundlekit/bundler-parcel` | 构建工具适配器 |
+| `esbuild` | `@bundlekit/bundler-esbuild` | 构建工具适配器 |
 | `bundler-vite` | `@bundlekit/bundler-vite` | 构建工具适配器 |
 | `@bundlekit/bundler-vite` | `@bundlekit/bundler-vite` | 构建工具适配器 |
 

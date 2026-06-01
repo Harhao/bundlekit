@@ -37,7 +37,7 @@ export interface IBuildToolAdapter<T = any> {
 ## 2. 创建包目录
 
 ```bash
-# 假设新增 esbuild adapter
+# 假设新增 esbuild adapter（注：esbuild / parcel 已实现，此处仅作为示例，实际新增时替换为目标 bundler 名）
 mkdir -p packages/bundlekit-bundler-esbuild/src
 mkdir packages/bundlekit-bundler-esbuild/scripts
 ```
@@ -123,35 +123,42 @@ export default class EsbuildBundler implements IBuildToolAdapter<esbuild.BuildOp
 
 `packages/bundlekit-shared-utils/lib/types/cli-init/index.ts`：
 
-```diff
-  export const BUNDLER_PACKAGE_MAP: Record<IBuildTools, string> = {
-      webpack:  "@bundlekit/bundler-webpack",
-      vite:     "@bundlekit/bundler-vite",
-      rspack:   "@bundlekit/bundler-rspack",
-      rollup:   "@bundlekit/bundler-rollup",
-      rolldown: "@bundlekit/bundler-rolldown",
-+     esbuild:  "@bundlekit/bundler-esbuild",
-  };
+```ts
+export const BUNDLER_PACKAGE_MAP: Record<IBuildTools, string> = {
+    webpack:  "@bundlekit/bundler-webpack",
+    vite:     "@bundlekit/bundler-vite",
+    rspack:   "@bundlekit/bundler-rspack",
+    rollup:   "@bundlekit/bundler-rollup",
+    rolldown: "@bundlekit/bundler-rolldown",
+    parcel:   "@bundlekit/bundler-parcel",
+    esbuild:  "@bundlekit/bundler-esbuild",
+    // 在此追加新 bundler，例如：
+    // turbopack: "@bundlekit/bundler-turbopack",
+};
 ```
 
-同步更新 `IBuildTools` 类型 union（adapter.ts）：
+同步更新 `IBuildTools` 类型 union（`packages/bundlekit-shared-utils/lib/types/cli-service/adapter.ts`）：
 
-```diff
-- export type IBuildTools = "vite" | "webpack" | "rollup" | "rspack" | "rolldown";
-+ export type IBuildTools = "vite" | "webpack" | "rollup" | "rspack" | "rolldown" | "esbuild";
+```ts
+export type IBuildTools =
+    | "vite" | "webpack" | "rollup" | "rspack" | "rolldown" | "parcel" | "esbuild"
+    // | "turbopack"   ← 追加
+;
 ```
 
-`IBundlerConfigMap` 加新条目：
+`IBundlerConfigMap` 加新条目（`packages/bundlekit-shared-utils/lib/types/cli-service/config.ts`）：
 
-```diff
-  export type IBundlerConfigMap = {
-      webpack: import("webpack").Configuration;
-      vite: import("vite").InlineConfig;
-      rspack: import("@rspack/core").RspackOptions;
-      rollup: import("rollup").RollupOptions;
-      rolldown: unknown;
-+     esbuild: import("esbuild").BuildOptions;
-  };
+```ts
+export type IBundlerConfigMap = {
+    webpack:  import("webpack").Configuration;
+    vite:     import("vite").InlineConfig;
+    rspack:   import("@rspack/core").RspackOptions;
+    rollup:   import("rollup").RollupOptions;
+    rolldown: unknown;
+    parcel:   unknown;
+    esbuild:  unknown;
+    // turbopack: unknown;  ← 追加
+};
 ```
 
 ## 5. cli 集成

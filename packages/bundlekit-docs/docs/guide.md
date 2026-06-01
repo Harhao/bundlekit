@@ -35,10 +35,11 @@ bc create my-app
 
 cli 会引导你完成以下步骤（TTY 终端使用 ink 渲染 banner + 步骤选择）：
 
-1. 选择模板：`react-ts` / `react-js` / `vue3-ts` / `vue3-js`
+1. 选择模板：`react-ts` / `react-js` / `vue3-ts` / `vue3-js` / `node-ts`
 2. 选择默认 bundler：`vite` / `webpack` / `rspack` / `rollup` / `rolldown` / `parcel` / `esbuild`
-3. 输入项目描述（可选）
-4. 选择包管理器：`pnpm`（推荐）/ `yarn` / `npm`
+3. 选择是否启用 SSR（`node-ts` 与 `--lib` 模式自动跳过）
+4. 输入项目描述（可选）
+5. 选择包管理器：`pnpm`（推荐）/ `yarn` / `npm`
 
 cli 会自动：
 
@@ -73,6 +74,20 @@ bc add bundler-vite # → @bundlekit/bundler-vite
 #    "dev": "ds serve --bundler vite",
 #    "build": "ds build --bundler vite --mode production"
 ```
+
+## Node.js / 纯 TS 库快速创建
+
+非浏览器场景（CLI 工具、SDK、Node 服务端库）使用 `node-ts` 模板 + `--lib` 标志：
+
+```bash
+# 生成纯 TS 库骨架（esm + cjs 双格式输出，无 HTML 入口）
+bc create my-sdk -t node-ts -b rollup --lib
+
+# 可选：自定义 UMD/IIFE 全局变量名
+bc create my-sdk -t node-ts -b rollup --lib --library-name MySDK
+```
+
+> `node-ts` 模板由 `@bundlekit/plugin-node` 提供，向 `framework` 字段写入 `"node"`，bundler 适配器据此切换 Node 平台编译参数并自动 externalize 内置模块。详见[插件系统 → Node.js 插件](/guide/plugins#node-js-插件)。
 
 ## 全局安装 cli（可选）
 

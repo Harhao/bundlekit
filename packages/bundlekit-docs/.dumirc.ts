@@ -10,6 +10,8 @@ export default defineConfig({
             { title: 'CLI', link: '/guide/cli' },
             { title: '打包器', link: '/guide/bundlers' },
             { title: '插件', link: '/guide/plugins' },
+            { title: 'SSR', link: '/guide/ssr' },
+            { title: 'AI Agent', link: '/guide/cli-mcp' },
             { title: '架构设计', link: '/guide/architecture' },
             { title: '贡献', link: '/contributing' },
         ],

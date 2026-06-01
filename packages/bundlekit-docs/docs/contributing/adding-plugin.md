@@ -7,10 +7,10 @@ order: 5
 
 bundlekit 的插件分两种：
 
-- **构建插件**（`@bundlekit/plugin-react` / `@bundlekit/plugin-vue`）：通过 `framework` 字段告知 bundler 如何处理 jsx/vue
+- **构建插件**（`@bundlekit/plugin-react` / `@bundlekit/plugin-vue` / `@bundlekit/plugin-node`）：通过 `framework` 字段告知 bundler 如何处理 jsx / vue / Node 平台
 - **运行时插件**（`@bundlekit/plugin-mock`）：用户项目运行时挂钩
 
-本指南聚焦"构建插件"。
+本指南聚焦"构建插件"。已有的 plugin-react / plugin-vue / plugin-node 三个仓库内插件可作为示例参考。
 
 ## 1. PluginAPI 接口
 
