@@ -10,7 +10,7 @@
  */
 import http from "http";
 import https from "https";
-import { createReadStream, statSync, readFileSync } from "fs";
+import { createReadStream, statSync, readFileSync, readdirSync } from "fs";
 import path from "path";
 import os from "os";
 import { spawn } from "child_process";
@@ -199,7 +199,6 @@ export class DevServer {
         const candidates = [
             path.join(outDir, p),
             path.join(outDir, p, "index.html"),
-            path.join(outDir, "index.html"),          // SPA fallback
         ];
 
         for (const c of candidates) {
@@ -207,6 +206,26 @@ export class DevServer {
                 if (statSync(c).isFile()) return c;
             } catch { /* ignore */ }
         }
+
+        // 精确匹配失败：请求的是 .js 文件时，尝试查找 outDir 中的第一个 JS 文件
+        // 解决 Angular 等框架入口名与 HTML 引用不一致的问题（如 main.ts → index.js）
+        const ext = path.extname(p).toLowerCase();
+        if (ext === ".js" || ext === ".mjs") {
+            try {
+                const files = readdirSync(outDir);
+                const jsFile = files.find(f => /\.(js|mjs)$/i.test(f) && !f.includes(".map"));
+                if (jsFile) {
+                    return path.join(outDir, jsFile);
+                }
+            } catch { /* ignore */ }
+        }
+
+        // SPA fallback
+        const indexPath = path.join(outDir, "index.html");
+        try {
+            if (statSync(indexPath).isFile()) return indexPath;
+        } catch { /* ignore */ }
+
         return null;
     }
 

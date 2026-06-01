@@ -103,10 +103,13 @@ export async function assertDevSmoke(opts: IDevSmokeOptions): Promise<void> {
             );
         }
 
-        // 2) 挂载点（不同模板挂载点不同：react #root / vue #app / 我们 fixture #app-root）
-        if (!/id\s*=\s*["'](?:root|app|app-root)["']/i.test(r.text)) {
+        // 2) 挂载点（不同模板挂载点不同：react #root / vue #app / angular <app-root>）
+        const hasMountPoint =
+            /id\s*=\s*["'](?:root|app|app-root)["']/i.test(r.text) ||
+            /<app-root[\s>]/i.test(r.text);
+        if (!hasMountPoint) {
             throw new Error(
-                `[${tag}] response 缺少挂载点 (#root / #app / #app-root)\nbody[0..600]: ${r.text.slice(0, 600)}`,
+                `[${tag}] response 缺少挂载点 (#root / #app / <app-root>)\nbody[0..600]: ${r.text.slice(0, 600)}`,
             );
         }
 
@@ -133,9 +136,11 @@ export async function assertDevSmoke(opts: IDevSmokeOptions): Promise<void> {
 
         // 5) 第一个 client script URL 必须能被 dev server 200 服务
         let firstSrc = scriptMatches[0][1];
-        // 过滤掉 vite-specific 的 /@vite/client 与 /@react-refresh —— 这些是 dev runtime
-        // 注入，不是用户入口；找第一个非框架内部脚本
-        const userScript = scriptMatches.find(([, src]) => !/^\/?@(vite|react-refresh)/i.test(src));
+        // 过滤掉框架内部脚本和 webpack vendor chunks
+        const userScript = scriptMatches.find(([, src]) =>
+            !/^\/?@(vite|react-refresh)/i.test(src) &&
+            !/vendors-|node_modules.*\.js$/i.test(src)
+        );
         if (userScript) firstSrc = userScript[1];
 
         if (!/^https?:\/\//.test(firstSrc)) {

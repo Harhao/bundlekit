@@ -3,11 +3,15 @@
     "version": "0.0.0",
     "private": true,
     "dependencies": {
+        "@analogjs/vite-plugin-angular": "^2.4.10",
+        "@angular-devkit/build-angular": "^17.3.0",
         "@angular/common": "^17.3.0",
         "@angular/compiler": "^17.3.0",
+        "@angular/compiler-cli": "^17.3.12",
         "@angular/core": "^17.3.0",
         "@angular/platform-browser": "^17.3.0",
         "@angular/platform-server": "^17.3.0",
+        "@ngtools/webpack": "^17.3.0",
         "rxjs": "~7.8.0",
         "tslib": "^2.6.0",
         "zone.js": "~0.14.0"
