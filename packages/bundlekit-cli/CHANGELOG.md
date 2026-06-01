@@ -1,5 +1,19 @@
 # @bundlekit/cli
 
+## 0.0.18
+
+### Patch Changes
+
+- 71acfd9: 增加 angular 得模版
+- c00d434: 增加 svelte 模版支持
+- Updated dependencies [71acfd9]
+- Updated dependencies [c00d434]
+  - @bundlekit/plugin-svelte@0.0.2
+  - @bundlekit/shared-utils@0.0.10
+  - @bundlekit/plugin-node@0.0.5
+  - @bundlekit/plugin-react@0.0.13
+  - @bundlekit/plugin-vue@0.0.13
+
 ## 0.0.17
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "@bundlekit/plugin-angular",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Angular plugin for bundlekit - provides Angular 17+ standalone build support and project templates (SPA / SSR / MPA)",
   "main": "./index.ts",
   "type": "module",

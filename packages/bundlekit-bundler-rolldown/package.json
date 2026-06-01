@@ -1,6 +1,6 @@
 {
   "name": "@bundlekit/bundler-rolldown",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "Rolldown bundler adapter for @bundlekit/service",
   "types": "./dist/index.d.ts",
   "main": "./dist/index.js",
