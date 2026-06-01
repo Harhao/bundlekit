@@ -1,5 +1,12 @@
 # @bundlekit/service
 
+## 0.0.22
+
+### Patch Changes
+
+- Updated dependencies [64cf1a0]
+  - @bundlekit/bundler-vite@0.0.14
+
 ## 0.0.21
 
 ### Patch Changes
