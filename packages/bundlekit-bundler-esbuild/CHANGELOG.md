@@ -1,5 +1,12 @@
 # @bundlekit/bundler-esbuild
 
+## 0.0.9
+
+### Patch Changes
+
+- Updated dependencies [29e8509]
+  - @bundlekit/shared-utils@0.0.11
+
 ## 0.0.8
 
 ### Patch Changes

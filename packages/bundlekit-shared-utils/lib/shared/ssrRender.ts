@@ -82,12 +82,24 @@ export function createSSRRequestHandler(opts: ISSRHandlerOptions): IRequestHandl
             clearRequireCache(bundlePath);
 
             // 3. require server bundle，拿到 render 函数
+            // 兼容多种模块格式：
+            //   - ESM compiled to CJS: mod.render
+            //   - ESM default export:  mod.default.render
+            //   - Webpack CommonJS2:   mod.exports.render 或 mod.exports.default.render
+            //   - @ngtools/webpack:    mod 可能有多层嵌套
             const require = createRequire(import.meta.url);
             const mod = require(bundlePath);
-            const render = mod?.render || mod?.default?.render;
+            const render = mod?.render
+                || mod?.default?.render
+                || mod?.exports?.render
+                || mod?.exports?.default?.render
+                || (typeof mod === "function" ? mod : undefined);
             if (typeof render !== "function") {
+                // 调试：打印 mod 的结构帮助定位
+                const modKeys = mod ? Object.keys(mod) : [];
+                const defaultKeys = mod?.default ? Object.keys(mod.default) : [];
                 throw new Error(
-                    `${opts.ssrConfig.entry} 必须 export 一个 \`render(url): string | Promise<string>\` 函数（实际产物：${bundlePath}）`,
+                    `${opts.ssrConfig.entry} 必须 export 一个 \`render(url): string | Promise<string>\` 函数（实际产物：${bundlePath}，keys: ${modKeys.join(",")}，default.keys: ${defaultKeys.join(",")}）`,
                 );
             }
 

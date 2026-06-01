@@ -1,6 +1,6 @@
 {
   "name": "@bundlekit/plugin-svelte",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Svelte plugin for bundlekit - provides Svelte build support and project templates",
   "main": "./index.ts",
   "type": "module",

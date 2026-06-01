@@ -61,8 +61,9 @@ function writeHtmlFile(opts: HtmlWriteConfig): void {
     } catch { /* outDir 不存在时静默跳过 */ }
 
     // ES 格式 + code-splitting：只注入入口 chunk（其他 chunk 由 import() 动态加载）
+    // entryFilename 可能是固定文件名（如 index.js）或含 [name] 占位符
     const isESM = opts.format === "es";
-    if (isESM && opts.entryFilename) {
+    if (isESM && opts.entryFilename && !opts.entryFilename.includes("[name]")) {
         jsFiles = jsFiles.filter((f) => f === opts.entryFilename);
     }
 
@@ -192,8 +193,11 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
 
         // ── Base filename ─────────────────────────────────────────────────────
         const rawFilename    = rawEnvConfig.output?.filename || "index.js";
-        // 应用模式：去掉 webpack 模板变量（如 [contenthash:8]）
-        const singleFilename = /\[.+?\]/.test(rawFilename) ? "index.js" : rawFilename;
+        // 应用模式：去掉 webpack 模板变量（如 [contenthash:8]），保留 [name] 让 rollup
+        // 用入口文件名（main / entry-client 等）作为 chunk 名
+        const singleFilename = /\[.+?\]/.test(rawFilename)
+            ? rawFilename.replace(/\[contenthash[^]]*\]/g, "").replace(/\[hash[^]]*\]/g, "")
+            : rawFilename;
         // 类库模式：去掉扩展名作为 base name
         const baseName       = rawFilename.replace(/\[.+?\]/g, "").replace(/\.[^.]+$/, "") || "index";
 

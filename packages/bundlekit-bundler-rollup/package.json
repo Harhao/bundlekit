@@ -1,6 +1,6 @@
 {
   "name": "@bundlekit/bundler-rollup",
-  "version": "0.0.17",
+  "version": "0.0.18",
   "description": "A rollup bundler for @bundlekit/service",
   "types": "./dist/index.d.ts",
   "main": "./dist/index.js",

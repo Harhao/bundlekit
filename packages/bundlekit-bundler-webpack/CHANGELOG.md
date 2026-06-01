@@ -1,5 +1,12 @@
 # @bundlekit/bundler-webpack
 
+## 0.0.14
+
+### Patch Changes
+
+- Updated dependencies [29e8509]
+  - @bundlekit/shared-utils@0.0.11
+
 ## 0.0.13
 
 ### Patch Changes

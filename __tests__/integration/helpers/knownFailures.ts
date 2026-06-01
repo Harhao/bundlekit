@@ -58,24 +58,48 @@ const REGISTRY: ReadonlyArray<IFailureKey & { reason: string }> = [
     { template: "svelte-js", bundler: "parcel", mode: "ssr",
       reason: "CLI 主动拦截：parcel 无官方 svelte transformer" },
 
-    // angular × *：Angular 模板需要 @angular/* 运行时 + bundler 专用编译插件，按照
-    // plugin-angular 的"用户项目侧 deps + bundler 软依赖"设计，monorepo 不预装这些
-    // 包。dev-smoke 在用户项目里跑 pnpm install 时会下载 @angular/*（约 30MB），但
-    // bundler 适配器需要的 @analogjs/vite-plugin-angular（vite/rollup/rolldown）和
-    // @ngtools/webpack（webpack/rspack）不在 fixture 的 package.json 中。
-    //
-    // 第一版：所有 angular × bundler 组合标注为 known-failure，理由统一，待 PR2/PR3
-    // 实施 + 给 fixture 增加对应插件依赖后，再分组移除此清单。
-    ...(["webpack", "vite", "rspack", "rollup", "rolldown", "parcel", "esbuild"] as const).flatMap(
+    // ── 不支持的组合（无技术路径） ──────────────────────────────────────────────
+
+    // angular × rollup：@analogjs/vite-plugin-angular 是 vite 插件，不兼容 rollup
+    // rollup 生态无原生 Angular AOT 编译插件
+    { template: "angular-ts", bundler: "rollup", mode: "csr",
+      reason: "不支持：rollup 无原生 Angular 编译插件（@analogjs/vite-plugin-angular 仅支持 vite）" },
+    { template: "angular-ts", bundler: "rollup", mode: "ssr",
+      reason: "不支持：rollup 无原生 Angular 编译插件" },
+
+    // angular × parcel：parcel 无官方 Angular transformer
+    { template: "angular-ts", bundler: "parcel", mode: "csr",
+      reason: "不支持：parcel 无 Angular transformer" },
+    { template: "angular-ts", bundler: "parcel", mode: "ssr",
+      reason: "不支持：parcel 无 Angular transformer" },
+    { template: "angular-js", bundler: "parcel", mode: "csr",
+      reason: "不支持：parcel 无 Angular transformer" },
+    { template: "angular-js", bundler: "parcel", mode: "ssr",
+      reason: "不支持：parcel 无 Angular transformer" },
+
+    // ── 不支持的组合（无技术路径） ──────────────────────────────────────────────
+
+    // angular × rollup：@analogjs/vite-plugin-angular 是 vite 插件，不兼容 rollup
+    // rollup 生态无原生 Angular AOT 编译插件
+    { template: "angular-ts", bundler: "rollup", mode: "csr",
+      reason: "不支持：rollup 无原生 Angular 编译插件（@analogjs/vite-plugin-angular 仅支持 vite）" },
+    { template: "angular-ts", bundler: "rollup", mode: "ssr",
+      reason: "不支持：rollup 无原生 Angular 编译插件" },
+
+    // angular × rspack：@ngtools/webpack 与 rspack 不兼容（官方标注 Incompatible），
+    // @nx/angular-rspack 需要 Angular 19+，不兼容 Angular 17
+    { template: "angular-ts", bundler: "rspack", mode: "csr",
+      reason: "不支持：rspack 无兼容 Angular 17 的编译方案" },
+    { template: "angular-ts", bundler: "rspack", mode: "ssr",
+      reason: "不支持：rspack 无兼容 Angular 17 的编译方案" },
+
+    // angular × parcel：parcel 无官方 Angular transformer
+    ...(["webpack", "vite", "rspack", "rollup", "rolldown", "esbuild"] as const).flatMap(
         (bundler) => [
-            { template: "angular-ts", bundler, mode: "csr" as const,
-              reason: "PR1：Angular 编译插件未在 fixture 安装（@analogjs/vite-plugin-angular / @ngtools/webpack），待 PR2/PR3 启用" },
-            { template: "angular-ts", bundler, mode: "ssr" as const,
-              reason: "PR1：Angular 编译插件未在 fixture 安装（@analogjs/vite-plugin-angular / @ngtools/webpack），待 PR2/PR3 启用" },
             { template: "angular-js", bundler, mode: "csr" as const,
-              reason: "PR1：Angular 编译插件未在 fixture 安装；JS 模板还需 babel 装饰器栈" },
+              reason: "待实现：angular-js 需要 babel 装饰器栈" },
             { template: "angular-js", bundler, mode: "ssr" as const,
-              reason: "PR1：Angular 编译插件未在 fixture 安装；JS 模板还需 babel 装饰器栈" },
+              reason: "待实现：angular-js 需要 babel 装饰器栈" },
         ],
     ),
 ];
