@@ -196,10 +196,21 @@ export default class TransformConfig {
         const framework = (this.buildConfig as any).framework as string;
         const extensions = ['.ts', '.js', '.jsx', '.tsx', '.json'];
         if (framework === 'vue3') extensions.push('.vue');
+        if (framework === 'svelte') {
+            extensions.push('.svelte');
+        }
         return {
             alias: this.buildConfig.alias || {},
             mainFiles: ['index'],
             extensions,
+            // svelte 包必须用 ESM 入口（"svelte/internal" 等子路径只走 module 字段），
+            // 否则 svelte-loader 编出来的代码引用不到运行时
+            ...(framework === 'svelte'
+                ? {
+                    mainFields: ['svelte', 'browser', 'module', 'main'],
+                    conditionNames: ['svelte', 'browser', 'import', 'require'],
+                }
+                : {}),
         };
     }
 
@@ -220,23 +231,66 @@ export default class TransformConfig {
         }];
     }
 
-    /** Vue 专用 loader */
+    /** 框架专用 loader（Vue / Svelte） */
     private transformFrameworkRules() {
         const framework = (this.buildConfig as any).framework as string;
-        if (framework !== 'vue3') return [];
-        try {
-            _require.resolve('vue-loader');
-            return [{
-                test: /\.vue$/,
-                loader: 'vue-loader',
-            }];
-        } catch {
-            this.logger.warn('framework 为 vue3 但未找到 vue-loader，跳过 .vue 文件处理规则');
-            return [];
+        if (framework === 'vue3') {
+            try {
+                _require.resolve('vue-loader');
+                return [{
+                    test: /\.vue$/,
+                    loader: 'vue-loader',
+                }];
+            } catch {
+                this.logger.warn('framework 为 vue3 但未找到 vue-loader，跳过 .vue 文件处理规则');
+                return [];
+            }
         }
+        if (framework === 'svelte') {
+            try {
+                _require.resolve('svelte-loader');
+                const isServerPass = (this.buildConfig as any).__isServerPass === true;
+                const enableHydratable = !!(this.buildConfig as any).ssr;
+                // svelte-preprocess 让 .svelte 内部 <script lang="ts"> / <style lang="scss"> 等被识别。
+                // 注意 svelte-loader 的 preprocess 选项接受函数对象，需在外面就近实例化好
+                let preprocess: any = undefined;
+                try {
+                    const preprocessFactory = _require('svelte-preprocess');
+                    const factory = preprocessFactory.default || preprocessFactory;
+                    preprocess = typeof factory === 'function' ? factory() : factory;
+                } catch {
+                    this.logger.warn('framework 为 svelte 但未安装 svelte-preprocess，<script lang="ts"> 将无法编译');
+                }
+                return [{
+                    test: /\.svelte$/,
+                    use: {
+                        loader: 'svelte-loader',
+                        options: {
+                            // 与 vite / rollup 适配器对齐：server pass 输出 SSR 组件
+                            //（含静态 render() 方法），client pass 输出 DOM 组件
+                            compilerOptions: {
+                                generate: isServerPass ? 'ssr' : 'dom',
+                                hydratable: enableHydratable,
+                            },
+                            ...(preprocess ? { preprocess } : {}),
+                            emitCss: false,
+                        },
+                    },
+                }, {
+                    // svelte 5 / 4 在 ESM 包内部使用 .mjs 但不带 type=module 标记，
+                    // 给 webpack 一个明确的兜底以避免 fullySpecified 错误
+                    test: /node_modules\/svelte\/.*\.m?js$/,
+                    resolve: { fullySpecified: false },
+                }];
+            } catch {
+                this.logger.warn('framework 为 svelte 但未找到 svelte-loader，跳过 .svelte 文件处理规则');
+                return [];
+            }
+        }
+        return [];
     }
 
-    /** Vue 专用 plugin（VueLoaderPlugin） */
+    /** 框架专用 plugin（VueLoaderPlugin / Svelte 暂无需要） */
     private transformFrameworkPlugins(): Webpack.WebpackPluginInstance[] {
         const framework = (this.buildConfig as any).framework as string;
         if (framework !== 'vue3') return [];

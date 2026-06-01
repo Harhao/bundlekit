@@ -23,7 +23,7 @@ bundlekit-cli create <name>
 创建一个新的前端项目
 
 选项：
-  -t, --template <template>  模板类型 (react-ts, react-js, vue3-ts, vue3-js)
+  -t, --template <template>  模板类型 (react-ts, react-js, vue3-ts, vue3-js, svelte-ts, svelte-js)
   -b, --bundler <bundler>    默认构建工具 (vite, webpack, rspack, rollup, rolldown)
   -d, --description <desc>   项目描述
   --pm <pm>                  包管理器 (pnpm, yarn, npm)
@@ -39,6 +39,7 @@ bundlekit-cli add <plugin>
 可用插件：
   - react: React 框架插件
   - vue: Vue 框架插件
+  - svelte: Svelte 框架插件
   - mock: Mock 数据插件
   - request: 请求库插件
 

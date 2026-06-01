@@ -76,6 +76,7 @@ export default class RspackBundler implements IBuildToolAdapter<RspackOptions> {
 
         const extensions = [".ts", ".tsx", ".js", ".jsx", ".json"];
         if (framework === "vue3") extensions.push(".vue");
+        if (framework === "svelte") extensions.push(".svelte");
 
         const swcOptions: any = {
             jsc: {
@@ -94,6 +95,43 @@ export default class RspackBundler implements IBuildToolAdapter<RspackOptions> {
                     loader: "vue-loader",
                     type: "javascript/auto",
                 }];
+            } catch { return []; }
+        })() : framework === "svelte" ? (() => {
+            try {
+                _require.resolve("svelte-loader");
+                const isServerPassLocal = rawEnvConfig.__isServerPass === true;
+                const enableHydratable = !!rawEnvConfig.ssr;
+                // svelte-preprocess：让 .svelte 内部 <script lang="ts"> 被处理
+                let preprocess: any = undefined;
+                try {
+                    const preprocessFactory = _require("svelte-preprocess");
+                    const factory = preprocessFactory.default || preprocessFactory;
+                    preprocess = typeof factory === "function" ? factory() : factory;
+                } catch {
+                    /* svelte-preprocess 缺失时只跳过 lang="ts" 处理，纯 JS 仍可工作 */
+                }
+                return [
+                    {
+                        test: /\.svelte$/,
+                        use: [{
+                            loader: "svelte-loader",
+                            options: {
+                                compilerOptions: {
+                                    generate: isServerPassLocal ? "ssr" : "dom",
+                                    hydratable: enableHydratable,
+                                },
+                                ...(preprocess ? { preprocess } : {}),
+                                emitCss: false,
+                            },
+                        }],
+                        type: "javascript/auto",
+                    },
+                    {
+                        // svelte 内部 .mjs/.js 模块需要禁用 fullySpecified
+                        test: /node_modules[\\/]svelte[\\/].*\.m?js$/,
+                        resolve: { fullySpecified: false },
+                    },
+                ];
             } catch { return []; }
         })() : [];
 
@@ -182,6 +220,12 @@ export default class RspackBundler implements IBuildToolAdapter<RspackOptions> {
                     acc[key] = path.resolve(this.context, String(val));
                     return acc;
                 }, {} as Record<string, string>),
+                ...(framework === "svelte"
+                    ? {
+                        mainFields: ["svelte", "browser", "module", "main"],
+                        conditionNames: ["svelte", "browser", "import", "require"],
+                    }
+                    : {}),
             },
             module: {
                 rules: [

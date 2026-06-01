@@ -8,8 +8,8 @@ import { Creator } from "../../packages/bundlekit-cli/lib/commands/create/creato
 /**
  * 模板 × 包管理器 × 打包工具 全组合矩阵测试
  *
- * 维度：5 × 3 × 7 = 105 个组合
- *   - 模板：react-ts / react-js / vue3-ts / vue3-js / node-ts
+ * 维度：7 × 3 × 7 = 147 个组合
+ *   - 模板：react-ts / react-js / vue3-ts / vue3-js / svelte-ts / svelte-js / node-ts
  *   - 包管理器：pnpm / yarn / npm
  *   - 打包工具：webpack / vite / rspack / rollup / rolldown / parcel / esbuild
  *
@@ -28,39 +28,45 @@ import { Creator } from "../../packages/bundlekit-cli/lib/commands/create/creato
  * 每个组合仅做模板渲染 + 依赖规范化 + generator 静默调用，<200ms。
  */
 
-type Template = "react-ts" | "react-js" | "vue3-ts" | "vue3-js" | "node-ts";
+type Template = "react-ts" | "react-js" | "vue3-ts" | "vue3-js" | "svelte-ts" | "svelte-js" | "node-ts";
 type PM = "pnpm" | "yarn" | "npm";
 type Bundler = "webpack" | "vite" | "rspack" | "rollup" | "rolldown" | "parcel" | "esbuild";
 
-const TEMPLATES: Template[] = ["react-ts", "react-js", "vue3-ts", "vue3-js", "node-ts"];
+const TEMPLATES: Template[] = ["react-ts", "react-js", "vue3-ts", "vue3-js", "svelte-ts", "svelte-js", "node-ts"];
 const PMS: PM[] = ["pnpm", "yarn", "npm"];
 const BUNDLERS: Bundler[] = ["webpack", "vite", "rspack", "rollup", "rolldown", "parcel", "esbuild"];
 
 /** 模板 → 期望的 plugin npm 包名 */
 const PLUGIN_PKG: Record<Template, string> = {
-    "react-ts": "@bundlekit/plugin-react",
-    "react-js": "@bundlekit/plugin-react",
-    "vue3-ts":  "@bundlekit/plugin-vue",
-    "vue3-js":  "@bundlekit/plugin-vue",
-    "node-ts":  "@bundlekit/plugin-node",
+    "react-ts":  "@bundlekit/plugin-react",
+    "react-js":  "@bundlekit/plugin-react",
+    "vue3-ts":   "@bundlekit/plugin-vue",
+    "vue3-js":   "@bundlekit/plugin-vue",
+    "svelte-ts": "@bundlekit/plugin-svelte",
+    "svelte-js": "@bundlekit/plugin-svelte",
+    "node-ts":   "@bundlekit/plugin-node",
 };
 
 /** 模板 → CSR 默认入口源文件（无 SSR 时） */
 const TEMPLATE_ENTRY: Record<Template, string> = {
-    "react-ts": "src/index.tsx",
-    "react-js": "src/index.jsx",
-    "vue3-ts":  "src/main.ts",
-    "vue3-js":  "src/main.js",
-    "node-ts":  "src/index.ts",
+    "react-ts":  "src/index.tsx",
+    "react-js":  "src/index.jsx",
+    "vue3-ts":   "src/main.ts",
+    "vue3-js":   "src/main.js",
+    "svelte-ts": "src/index.ts",
+    "svelte-js": "src/index.js",
+    "node-ts":   "src/index.ts",
 };
 
 /** 模板 → 期望的 .bundlekitrc 文件名 */
 const TEMPLATE_RC: Record<Template, string> = {
-    "react-ts": ".bundlekitrc.ts",
-    "react-js": ".bundlekitrc.js",
-    "vue3-ts":  ".bundlekitrc.ts",
-    "vue3-js":  ".bundlekitrc.js",
-    "node-ts":  ".bundlekitrc.ts",
+    "react-ts":  ".bundlekitrc.ts",
+    "react-js":  ".bundlekitrc.js",
+    "vue3-ts":   ".bundlekitrc.ts",
+    "vue3-js":   ".bundlekitrc.js",
+    "svelte-ts": ".bundlekitrc.ts",
+    "svelte-js": ".bundlekitrc.js",
+    "node-ts":   ".bundlekitrc.ts",
 };
 
 let rootTmpDir: string;
@@ -157,21 +163,36 @@ function assertCommonInvariants(opts: {
 // 矩阵：5 × 3 × 7 = 105 组合
 // ---------------------------------------------------------------------------
 
-describe("Create matrix (5 templates × 3 PMs × 7 bundlers = 105 combos)", () => {
+// ---------------------------------------------------------------------------
+// 矩阵：7 模板 × 3 PM × 7 bundler = 147 组合
+// 减去 2 个已知不兼容（svelte-ts/js × parcel）= 实际 145 组合（参与跑的 + 跳过 6 个）
+// ---------------------------------------------------------------------------
+
+/** 已知不兼容组合：cli create 会主动拒绝，不应参与"产出可用模板"矩阵 */
+function isIncompatibleCombo(template: Template, bundler: Bundler): boolean {
+    if ((template === "svelte-ts" || template === "svelte-js") && bundler === "parcel") return true;
+    return false;
+}
+
+describe("Create matrix (7 templates × 3 PMs × 7 bundlers = 147 combos)", () => {
     // 矩阵测试可能耗时 20-30s，提升 timeout
-    const allCombos: Array<{ template: Template; pm: PM; bundler: Bundler; label: string }> = [];
+    const allCombos: Array<{ template: Template; pm: PM; bundler: Bundler; label: string; incompatible: boolean }> = [];
     for (const template of TEMPLATES) {
         for (const pm of PMS) {
             for (const bundler of BUNDLERS) {
                 allCombos.push({
                     template, pm, bundler,
                     label: `${template} · ${pm} · ${bundler}`,
+                    incompatible: isIncompatibleCombo(template, bundler),
                 });
             }
         }
     }
 
-    it.each(allCombos)(
+    const validCombos = allCombos.filter((c) => !c.incompatible);
+    const incompatCombos = allCombos.filter((c) => c.incompatible);
+
+    it.each(validCombos)(
         "[$label] cli create 产出可用模板",
         async ({ template, pm, bundler, label }) => {
             const safeLabel = label.replace(/[^a-z0-9-]+/gi, "-");
@@ -179,6 +200,28 @@ describe("Create matrix (5 templates × 3 PMs × 7 bundlers = 105 combos)", () =
             assertCommonInvariants({ proj, template, bundler });
         },
         15_000,
+    );
+
+    // 不兼容组合：Creator 应主动 throw 并清理半成品目录
+    it.each(incompatCombos)(
+        "[$label] cli create 主动报错（不兼容组合）",
+        async ({ template, pm, bundler, label }) => {
+            const safeLabel = label.replace(/[^a-z0-9-]+/gi, "-");
+            const cwd = await fsp.mkdtemp(path.join(rootTmpDir, `incompat-${safeLabel}-`));
+            const creator = new Creator();
+            await expect(
+                creator.create("demo-app", {
+                    cwd,
+                    template,
+                    bundler,
+                    pm,
+                    description: "incompat test",
+                }),
+            ).rejects.toThrow();
+            // 失败时不应残留项目目录
+            expect(fs.existsSync(path.join(cwd, "demo-app"))).toBe(false);
+        },
+        10_000,
     );
 });
 
@@ -220,10 +263,12 @@ describe("node-ts: package.json main / module 路径与 entry basename 对齐", 
 
 describe("SSR 模式：CSR 入口被替换为 entry-client/entry-server", () => {
     const ssrCombos: Array<{ template: Template; clientFile: string; serverFile: string }> = [
-        { template: "react-ts", clientFile: "src/entry-client.tsx", serverFile: "src/entry-server.tsx" },
-        { template: "react-js", clientFile: "src/entry-client.jsx", serverFile: "src/entry-server.jsx" },
-        { template: "vue3-ts",  clientFile: "src/entry-client.ts",  serverFile: "src/entry-server.ts" },
-        { template: "vue3-js",  clientFile: "src/entry-client.js",  serverFile: "src/entry-server.js" },
+        { template: "react-ts",  clientFile: "src/entry-client.tsx", serverFile: "src/entry-server.tsx" },
+        { template: "react-js",  clientFile: "src/entry-client.jsx", serverFile: "src/entry-server.jsx" },
+        { template: "vue3-ts",   clientFile: "src/entry-client.ts",  serverFile: "src/entry-server.ts" },
+        { template: "vue3-js",   clientFile: "src/entry-client.js",  serverFile: "src/entry-server.js" },
+        { template: "svelte-ts", clientFile: "src/entry-client.ts",  serverFile: "src/entry-server.ts" },
+        { template: "svelte-js", clientFile: "src/entry-client.js",  serverFile: "src/entry-server.js" },
     ];
 
     it.each(ssrCombos)(
@@ -294,4 +339,47 @@ describe("node-ts × --ssr：明确报错（不支持 SSR）", () => {
         expect(fs.existsSync(path.join(cwd, "demo-ok/src/entry-server.ts"))).toBe(false);
         expect(fs.existsSync(path.join(cwd, "demo-ok/src/entry-client.ts"))).toBe(false);
     }, 15_000);
+});
+
+// ---------------------------------------------------------------------------
+// 模板 × 打包器组合校验：svelte × parcel 应在 cli 层早早拦截
+// （根因：Parcel 没有官方 svelte transformer，社区版仅兼容 svelte 3）
+// ---------------------------------------------------------------------------
+
+describe("svelte × parcel：明确报错（不兼容组合）", () => {
+    it.each(["svelte-ts", "svelte-js"] as const)(
+        "Creator.create(template=%s, bundler=parcel) 抛出含 'parcel' 的错误",
+        async (template) => {
+            const cwd = await fsp.mkdtemp(path.join(rootTmpDir, `${template}-parcel-`));
+            const creator = new Creator();
+            await expect(
+                creator.create("demo-bad", {
+                    cwd,
+                    template,
+                    bundler: "parcel",
+                    pm: "pnpm",
+                }),
+            ).rejects.toThrow(/parcel/i);
+
+            // 失败时不应残留半成品项目目录
+            expect(fs.existsSync(path.join(cwd, "demo-bad"))).toBe(false);
+        },
+        10_000,
+    );
+
+    it("checkTemplateBundlerCombo 工具函数行为正确", async () => {
+        const { checkTemplateBundlerCombo } = await import(
+            "../../packages/bundlekit-cli/lib/commands/create/actions"
+        );
+        // svelte × parcel：不兼容
+        expect(checkTemplateBundlerCombo("svelte-ts", "parcel")).toMatch(/parcel/);
+        expect(checkTemplateBundlerCombo("svelte-js", "parcel")).toMatch(/parcel/);
+        expect(checkTemplateBundlerCombo("svelte", "parcel")).toMatch(/parcel/);
+        // 其他组合：返回 null
+        expect(checkTemplateBundlerCombo("svelte-ts", "vite")).toBeNull();
+        expect(checkTemplateBundlerCombo("svelte-ts", "webpack")).toBeNull();
+        expect(checkTemplateBundlerCombo("react-ts", "parcel")).toBeNull();
+        expect(checkTemplateBundlerCombo("vue3-ts", "parcel")).toBeNull();
+        expect(checkTemplateBundlerCombo("node-ts", "parcel")).toBeNull();
+    });
 });

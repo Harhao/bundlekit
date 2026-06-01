@@ -1,0 +1,47 @@
+{
+  "name": "@bundlekit/plugin-svelte",
+  "version": "0.0.1",
+  "description": "Svelte plugin for bundlekit - provides Svelte build support and project templates",
+  "main": "./index.ts",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./generator": "./generator/index.ts"
+  },
+  "files": [
+    "index.ts",
+    "generator",
+    "templates",
+    "package.json"
+  ],
+  "scripts": {
+    "plugin:svelte:build": "echo 'plugin:svelte built successfully'"
+  },
+  "keywords": [
+    "svelte",
+    "bundlekit-plugin",
+    "bundlekit"
+  ],
+  "author": "harhao@163.com",
+  "license": "MIT",
+  "website": "https://bundlekit.harhao.workers.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Harhao/bundlekit.git",
+    "directory": "packages/bundlekit-plugin-svelte"
+  },
+  "dependencies": {
+    "@bundlekit/shared-utils": "workspace:*",
+    "svelte": "^4.2.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.2"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "engines": {
+    "node": ">= 18.0.0"
+  }
+}

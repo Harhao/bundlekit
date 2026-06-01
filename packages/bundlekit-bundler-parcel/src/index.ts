@@ -1,6 +1,5 @@
 import path from "path";
 import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync } from "fs";
-import { createRequire } from "module";
 import { Parcel, createWorkerFarm } from "@parcel/core";
 
 import {

@@ -2,14 +2,14 @@ import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { spawnSync } from 'child_process';
 
-const PLUGINS = ['mock', 'react', 'vue', 'request'] as const;
+const PLUGINS = ['mock', 'react', 'vue', 'svelte', 'request'] as const;
 const BUNDLERS = ['vite', 'webpack', 'rspack', 'rollup', 'rolldown'] as const;
 
 export const addPluginTool = createTool({
   id: 'addPlugin',
-  description: '向已有的 bundlekit 项目添加插件或构建工具适配器。支持框架插件（react、vue、mock、request）和构建工具适配器。',
+  description: '向已有的 bundlekit 项目添加插件或构建工具适配器。支持框架插件（react、vue、svelte、mock、request）和构建工具适配器。',
   inputSchema: z.object({
-    plugin: z.string().describe('要添加的插件或构建工具名称（例如：react、vue、mock、request、vite、webpack、rspack、rollup、rolldown）'),
+    plugin: z.string().describe('要添加的插件或构建工具名称（例如：react、vue、svelte、mock、request、vite、webpack、rspack、rollup、rolldown）'),
     cwd: z.string().optional().describe('已有项目的工作目录'),
   }),
   outputSchema: z.object({

@@ -45,6 +45,18 @@ const REGISTRY: ReadonlyArray<IFailureKey & { reason: string }> = [
     //
     //   { template: "...", bundler: "...", mode: "csr"|"ssr"|"build",
     //     reason: "<根因 + GitHub issue 链接>" },
+
+    // parcel × svelte：parcel 官方未维护 *.svelte transformer，社区 parcel-transformer-svelte
+    // 仅兼容 svelte 3，与本仓库 svelte 4 不兼容。CLI 已在 checkTemplateBundlerCombo 主动拦截
+    // 此组合（svelte-ts/svelte-js × parcel），smoke 测试用 it.skip 与 cli 行为对齐。
+    { template: "svelte-ts", bundler: "parcel", mode: "csr",
+      reason: "CLI 主动拦截：parcel 无官方 svelte transformer" },
+    { template: "svelte-ts", bundler: "parcel", mode: "ssr",
+      reason: "CLI 主动拦截：parcel 无官方 svelte transformer" },
+    { template: "svelte-js", bundler: "parcel", mode: "csr",
+      reason: "CLI 主动拦截：parcel 无官方 svelte transformer" },
+    { template: "svelte-js", bundler: "parcel", mode: "ssr",
+      reason: "CLI 主动拦截：parcel 无官方 svelte transformer" },
 ];
 
 /**

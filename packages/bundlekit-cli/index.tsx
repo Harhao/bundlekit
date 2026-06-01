@@ -6,7 +6,7 @@ import { createRequire } from "module";
 import { Creator } from "./lib/commands/create/creator";
 import { AddCommand } from "./lib/commands/add";
 import { App } from "./lib/ui/App";
-import { detectAvailablePMs, PMName } from "./lib/commands/create/actions";
+import { detectAvailablePMs, PMName, checkTemplateBundlerCombo } from "./lib/commands/create/actions";
 
 const require = createRequire(import.meta.url);
 
@@ -17,6 +17,8 @@ const TEMPLATES = [
     { name: "react-js", message: "React + JavaScript" },
     { name: "vue3-ts", message: "Vue 3 + TypeScript" },
     { name: "vue3-js", message: "Vue 3 + JavaScript" },
+    { name: "svelte-ts", message: "Svelte + TypeScript" },
+    { name: "svelte-js", message: "Svelte + JavaScript" },
     { name: "node-ts", message: "Node.js / 纯 TypeScript（无框架）" },
 ];
 
@@ -72,19 +74,29 @@ async function legacyCreate(name: string, options: Record<string, any>) {
         throw new Error(
             `node-ts 模板不支持 SSR。\n` +
             `  - node-ts 是 Node.js 库 / 服务模板，无 HTML 入口、无 hydration 概念\n` +
-            `  - 如需 SSR，请改用 react-ts / react-js / vue3-ts / vue3-js 之一\n` +
+            `  - 如需 SSR，请改用 react-ts / react-js / vue3-ts / vue3-js / svelte-ts / svelte-js 之一\n` +
             `  - 如需 Node 库多格式输出，使用 --lib 标志`,
         );
     }
 
     if (!options.bundler) {
+        // svelte 模板下过滤掉不兼容的 parcel
+        const choices = checkTemplateBundlerCombo(options.template, "parcel")
+            ? BUNDLERS.filter((b) => b.name !== "parcel")
+            : BUNDLERS;
         const answer = (await enquirer.prompt({
             type: "select",
             name: "bundler",
             message: "请选择默认构建工具:",
-            choices: BUNDLERS,
+            choices,
         })) as { bundler: string };
         options.bundler = answer.bundler;
+    } else {
+        // 用户主动传了 -b：校验组合可用性
+        const comboError = checkTemplateBundlerCombo(options.template, options.bundler);
+        if (comboError) {
+            throw new Error(comboError);
+        }
     }
 
     // SSR 选择：library 模式和 node-ts 模板没有 SSR 概念，跳过 prompt
@@ -134,7 +146,7 @@ async function legacyCreate(name: string, options: Record<string, any>) {
 program
     .command("create <name>")
     .description("create a new project powered by bundlekit-service")
-    .option("-t, --template <template>", "模板类型 (react-ts, react-js, vue3-ts, vue3-js, node-ts)")
+    .option("-t, --template <template>", "模板类型 (react-ts, react-js, vue3-ts, vue3-js, svelte-ts, svelte-js, node-ts)")
     .option("-b, --bundler <bundler>", "默认构建工具 (vite, webpack, rspack, rollup, rolldown, parcel, esbuild)")
     .option("-d, --description <desc>", "项目描述")
     .option("--pm <pm>", "包管理器 (pnpm, yarn, npm)")
@@ -147,10 +159,20 @@ program
             console.error(
                 `\n[bundlekit-cli] node-ts 模板不支持 SSR。\n` +
                 `  - node-ts 是 Node.js 库 / 服务模板，无 HTML 入口、无 hydration 概念\n` +
-                `  - 如需 SSR，请改用 react-ts / react-js / vue3-ts / vue3-js 之一\n` +
+                `  - 如需 SSR，请改用 react-ts / react-js / vue3-ts / vue3-js / svelte-ts / svelte-js 之一\n` +
                 `  - 如需 Node 库多格式输出，使用 --lib 标志\n`,
             );
             process.exit(1);
+        }
+
+        // 模板 × 打包器组合校验：用户同时传了 -t 与 -b 时，最早拦截
+        // （只检查显式传参的情况，未传参由后续 prompt / Ink UI 引导）
+        if (options.template && options.bundler) {
+            const comboError = checkTemplateBundlerCombo(options.template, options.bundler);
+            if (comboError) {
+                console.error(`\n[bundlekit-cli] ${comboError}\n`);
+                process.exit(1);
+            }
         }
 
         if (!isInkEnabled()) {

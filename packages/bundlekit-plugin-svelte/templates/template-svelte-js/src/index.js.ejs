@@ -1,0 +1,11 @@
+import App from "./App.svelte";
+
+const target = document.getElementById("app");
+
+if (target) {
+  // SPA 模式：浏览器端实例化组件并挂载到目标 DOM
+  // eslint-disable-next-line no-unused-vars
+  const app = new App({
+    target,
+  });
+}

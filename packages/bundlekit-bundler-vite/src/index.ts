@@ -70,6 +70,34 @@ export default class ViteBundler implements IBuildToolAdapter<InlineConfig> {
             } catch {
                 this.logger.warn("framework 为 vue3 但未安装 @vitejs/plugin-vue，跳过");
             }
+        } else if (framework === "svelte") {
+            try {
+                // @sveltejs/vite-plugin-svelte 是 svelte 官方维护的 vite 插件
+                // 它内部根据 vite 的 ssrLoadModule 自动设置 generate=ssr/dom，
+                // 用户不能再显式覆盖（vite-plugin-svelte 会 warn 并忽略）
+                const sveltePlugin = await import("@sveltejs/vite-plugin-svelte");
+                const svelte = (sveltePlugin as any).svelte || (sveltePlugin as any).default;
+                // svelte-preprocess 让 .svelte 内部 <script lang="ts"> / <style lang="scss">
+                // 等也能被识别。dynamic import 失败时不阻断（svelte 4 默认能处理纯 JS）
+                let preprocess: any = undefined;
+                try {
+                    const preprocessMod = await import("svelte-preprocess");
+                    const factory = (preprocessMod as any).default || (preprocessMod as any);
+                    preprocess = typeof factory === "function" ? factory() : factory;
+                } catch {
+                    this.logger.warn("framework 为 svelte 但未安装 svelte-preprocess，将无法处理 <script lang=\"ts\">");
+                }
+                frameworkPlugins.push(
+                    svelte({
+                        ...(preprocess ? { preprocess: [preprocess] } : {}),
+                        compilerOptions: {
+                            hydratable: !!envConfig.ssr,
+                        },
+                    }),
+                );
+            } catch {
+                this.logger.warn("framework 为 svelte 但未安装 @sveltejs/vite-plugin-svelte，跳过");
+            }
         }
 
         const rollupInput: Record<string, string> = {};
@@ -155,7 +183,7 @@ export default class ViteBundler implements IBuildToolAdapter<InlineConfig> {
             mode: this.mode === "development" ? "development" : "production",
             configFile: false,
             resolve: {
-                extensions: ['.tsx', '.ts', '.js', '.mjs', '.mts', '.jsx', '.json', '.less', '.scss', '.css'],
+                extensions: ['.tsx', '.ts', '.js', '.mjs', '.mts', '.jsx', '.json', '.svelte', '.less', '.scss', '.css'],
                 alias: Object.entries(alias).reduce((acc, [key, val]) => {
                     acc[key] = path.resolve(this.context, String(val));
                     return acc;

@@ -3,16 +3,16 @@ import { z } from 'zod';
 import { spawnSync } from 'child_process';
 import path from 'path';
 
-const TEMPLATES = ['react-ts', 'react-js', 'vue3-ts', 'vue3-js'] as const;
+const TEMPLATES = ['react-ts', 'react-js', 'vue3-ts', 'vue3-js', 'svelte-ts', 'svelte-js'] as const;
 const BUNDLERS = ['vite', 'webpack', 'rspack', 'rollup', 'rolldown'] as const;
 const PACKAGE_MANAGERS = ['pnpm', 'yarn', 'npm'] as const;
 
 export const createProjectTool = createTool({
   id: 'createProject',
-  description: '创建一个新的前端项目，由 bundlekit 驱动。支持 React 和 Vue 模板，可选择多种构建工具。',
+  description: '创建一个新的前端项目，由 bundlekit 驱动。支持 React、Vue、Svelte 模板，可选择多种构建工具。',
   inputSchema: z.object({
     name: z.string().describe('项目名称（允许小写字母、数字、@、.、-、_）'),
-    template: z.enum(TEMPLATES).optional().describe('项目模板：react-ts、react-js、vue3-ts 或 vue3-js'),
+    template: z.enum(TEMPLATES).optional().describe('项目模板：react-ts、react-js、vue3-ts、vue3-js、svelte-ts 或 svelte-js'),
     bundler: z.enum(BUNDLERS).optional().describe('构建工具：vite、webpack、rspack、rollup 或 rolldown'),
     description: z.string().optional().describe('项目描述'),
     packageManager: z.enum(PACKAGE_MANAGERS).optional().describe('包管理器：pnpm、yarn 或 npm'),
@@ -26,6 +26,21 @@ export const createProjectTool = createTool({
   }),
   execute: async (inputData) => {
     const { name, template, bundler, description, packageManager, ssr, cwd } = inputData;
+
+    // 拦截已知不兼容组合（svelte × parcel）：parcel 没有官方 svelte transformer，
+    // 与 cli 的 checkTemplateBundlerCombo 行为对齐
+    if (template && bundler) {
+        const isSvelte = template.startsWith('svelte');
+        if (isSvelte && bundler === 'parcel') {
+            return {
+                success: false,
+                message:
+                    'Svelte 模板暂不支持 parcel 打包器：' +
+                    'parcel 官方未维护 .svelte transformer，社区方案不兼容 svelte 4。' +
+                    '请改用 vite / webpack / rspack / rollup / rolldown 之一。',
+            };
+        }
+    }
 
     try {
       // 构建参数

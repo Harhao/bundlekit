@@ -157,7 +157,9 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
         const framework    = rawEnvConfig.framework as string | undefined;
         const extensions   = framework === "vue3"
             ? [".js", ".jsx", ".ts", ".tsx", ".vue"]
-            : [".js", ".jsx", ".ts", ".tsx"];
+            : framework === "svelte"
+                ? [".js", ".jsx", ".ts", ".tsx", ".svelte"]
+                : [".js", ".jsx", ".ts", ".tsx"];
 
         // SSR server pass 检测
         const isServerPass = rawEnvConfig.__isServerPass === true;
@@ -196,8 +198,7 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
         // ── Plugins ───────────────────────────────────────────────────────────
         const nodeEnv = this.mode === "production" ? "production" : "development";
 
-        // 框架插件：Vue 3 SFC 支持。@vitejs/plugin-vue 是 rollup-API 兼容的，
-        // 直接放到 rollup plugins 列表即可。dynamic import 失败时仅 warn。
+        // 框架插件：Vue 3 / Svelte SFC 支持。
         const frameworkPlugins: Plugin[] = [];
         if (framework === "vue3") {
             try {
@@ -205,6 +206,31 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
                 frameworkPlugins.push((vue as any)());
             } catch {
                 this.logger.warn("framework 为 vue3 但未安装 @vitejs/plugin-vue，跳过");
+            }
+        } else if (framework === "svelte") {
+            try {
+                const sveltePluginMod = await import("rollup-plugin-svelte");
+                const sveltePlugin = (sveltePluginMod as any).default || sveltePluginMod;
+                let preprocess: any = undefined;
+                try {
+                    const preprocessMod = await import("svelte-preprocess");
+                    const factory = (preprocessMod as any).default || (preprocessMod as any);
+                    preprocess = typeof factory === "function" ? factory() : factory;
+                } catch {
+                    this.logger.warn("framework 为 svelte 但未安装 svelte-preprocess，将无法处理 <script lang=\"ts\">");
+                }
+                frameworkPlugins.push(
+                    sveltePlugin({
+                        ...(preprocess ? { preprocess } : {}),
+                        compilerOptions: {
+                            generate: isServerPass ? "ssr" : "dom",
+                            hydratable: !!rawEnvConfig.ssr,
+                        },
+                        emitCss: false,
+                    }),
+                );
+            } catch {
+                this.logger.warn("framework 为 svelte 但未安装 rollup-plugin-svelte，跳过");
             }
         }
 

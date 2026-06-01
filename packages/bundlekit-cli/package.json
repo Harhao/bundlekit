@@ -43,6 +43,7 @@
   "dependencies": {
     "@bundlekit/plugin-react": "workspace:*",
     "@bundlekit/plugin-vue": "workspace:*",
+    "@bundlekit/plugin-svelte": "workspace:*",
     "@bundlekit/plugin-node": "workspace:*",
     "@bundlekit/shared-utils": "workspace:*",
     "commander": "^13.1.0",
