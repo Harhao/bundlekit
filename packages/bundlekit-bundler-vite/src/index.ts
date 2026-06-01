@@ -210,6 +210,19 @@ export default class ViteBundler implements IBuildToolAdapter<InlineConfig> {
                     return acc;
                 }, {} as Record<string, string>),
             },
+            optimizeDeps: framework === "angular" ? {
+                exclude: [
+                    '@angular/platform-browser',
+                    '@angular/platform-browser-dynamic',
+                    '@angular/core',
+                    '@angular/common',
+                    '@angular/compiler',
+                    '@angular/router',
+                    '@angular/forms',
+                    '@angular/animations',
+                    '@angular/platform-browser/animations',
+                ],
+            } : undefined,
             css: {
                 modules: { localsConvention: 'camelCase' },
                 preprocessorOptions: {
