@@ -1,5 +1,11 @@
 # @bundlekit/service
 
+## 0.0.19
+
+### Patch Changes
+
+- d9ad331: 修复 service 的下载的问题
+
 ## 0.0.18
 
 ### Patch Changes

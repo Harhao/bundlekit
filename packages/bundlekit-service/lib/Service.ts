@@ -352,12 +352,48 @@ export default class Service {
             if (!installed) {
                 throw new Error(`打包工具 ${packageName} 安装失败，无法继续`);
             }
-            // 清除缓存以便重新解析刚安装的包
-            this.bundlerPluginCache.delete(packageName);
-            bundlerPlugin = await this.loadBundlerPlugin(packageName);
-            if (!bundlerPlugin) {
-                throw new Error(`安装后仍无法加载 ${packageName}，请检查 node_modules`);
-            }
+
+            // ⚠️ 不能在同一个进程里重新 loadBundlerPlugin：
+            // Node 的 package.json 解析结果是进程级缓存（packageJsonCache / packageJsonReader），
+            // 且对"未找到"的负面查找永不失效。第一次 resolve 失败时，
+            // 该路径下的 package.json 被标记为"不存在"，即使后续 yarn / pnpm / npm
+            // 真的把文件写到了磁盘，本进程内的 require.resolve / import.meta.resolve
+            // 仍然会沿用旧缓存，回退到 <pkg>/index.js（注意没有 dist 前缀），
+            // 最终抛 "Cannot find package '/.../<pkg>/index.js' imported from service/dist/index.cjs"。
+            //
+            // 唯一可靠的解决办法是丢掉整个进程：用 spawn 重新执行同一条命令，
+            // 让新进程从干净的缓存状态去解析刚装好的包。
+            this.logger.log(
+                `已安装 ${packageName}，重新启动命令以加载新依赖...`,
+                "构建工具",
+            );
+            const { spawn } = await import("node:child_process");
+            await new Promise<void>((resolve) => {
+                const child = spawn(process.execPath, process.argv.slice(1), {
+                    stdio: "inherit",
+                    cwd: process.cwd(),
+                    env: process.env,
+                });
+                child.on("exit", (code, signal) => {
+                    if (signal) {
+                        process.kill(process.pid, signal);
+                        return;
+                    }
+                    process.exit(code ?? 0);
+                });
+                child.on("error", (err) => {
+                    this.logger.error(
+                        `重新启动子进程失败: ${err?.message ?? err}`,
+                        "构建工具",
+                    );
+                    resolve();
+                });
+            });
+            // 子进程会接管输出，本进程在 child exit 时 process.exit。
+            // 走到这里说明 spawn 自身报错，把控制权交回上层。
+            throw new Error(
+                `安装 ${packageName} 后无法自动重启进程，请手动重新执行原命令`,
+            );
         }
 
         this.logger.log(`使用的构建：${finalBundler}`, "构建工具");
