@@ -1,5 +1,11 @@
 # @bundlekit/cli
 
+## 0.0.19
+
+### Patch Changes
+
+- f1e4328: 修复 angular 模版找不到的问题
+
 ## 0.0.18
 
 ### Patch Changes
