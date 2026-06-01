@@ -28,6 +28,8 @@ export const listTemplatesTool = createTool({
         { name: 'vue3-js', description: 'Vue 3 + JavaScript 模板' },
         { name: 'svelte-ts', description: 'Svelte + TypeScript 模板' },
         { name: 'svelte-js', description: 'Svelte + JavaScript 模板' },
+        { name: 'angular-ts', description: 'Angular 17+ + TypeScript 模板（standalone）' },
+        { name: 'angular-js', description: 'Angular 17+ + JavaScript 模板（standalone）' },
       ],
       bundlers: [
         { name: 'vite', description: 'Vite - 下一代前端构建工具' },

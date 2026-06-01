@@ -325,6 +325,23 @@ export default class RolldownBundler implements IBuildToolAdapter {
             } catch {
                 this.logger.warn("framework 为 svelte 但未安装 rollup-plugin-svelte，跳过");
             }
+        } else if (framework === "angular") {
+            // Angular：复用 @analogjs/vite-plugin-angular（rollup-API 兼容；rolldown 兼容 rollup plugin 接口）
+            // 软依赖：不进 bundler-rolldown 的 dependencies（避免给非 angular 用户拉
+            // 入 ~50MB 的 @angular/compiler-cli），tsc 找不到声明时用 ts-ignore 兜底。
+            try {
+                // @ts-ignore - optional peer dep, may not be installed
+                const angularMod = await import("@analogjs/vite-plugin-angular");
+                const angular = (angularMod as any).default || (angularMod as any).angular;
+                if (typeof angular !== "function") {
+                    this.logger.warn("framework 为 angular 但 @analogjs/vite-plugin-angular 未导出 angular() 工厂函数，跳过");
+                } else {
+                    const result = angular();
+                    frameworkPlugins.push(...(([] as any[]).concat(result)));
+                }
+            } catch {
+                this.logger.warn("framework 为 angular 但未安装 @analogjs/vite-plugin-angular，跳过");
+            }
         }
 
         return {
@@ -377,7 +394,9 @@ export default class RolldownBundler implements IBuildToolAdapter {
                     ? [".ts", ".tsx", ".js", ".jsx", ".json", ".vue"]
                     : framework === "svelte"
                         ? [".ts", ".tsx", ".js", ".jsx", ".json", ".svelte"]
-                        : [".ts", ".tsx", ".js", ".jsx", ".json"],
+                        : framework === "angular"
+                            ? [".ts", ".tsx", ".js", ".jsx", ".json"]
+                            : [".ts", ".tsx", ".js", ".jsx", ".json"],
                 alias: Object.entries(alias).reduce((acc, [key, val]) => {
                     acc[key] = path.resolve(this.context, String(val));
                     return acc;

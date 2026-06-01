@@ -1,0 +1,28 @@
+module.exports = {
+  mode: "development",
+  bundler: "<%= bundler %>",
+  plugins: ["@bundlekit/plugin-angular"],
+  config: {
+    development: {
+      target: "web",
+      publicPath: "/",
+      entry: <% if (ssr) { %>"src/entry-client.js"<% } else { %>"src/main.js"<% } %>,
+      pages: [
+        { entry: <% if (ssr) { %>"src/entry-client.js"<% } else { %>"src/main.js"<% } %>, filename: "index.html", template: "public/index.html", inject: "body" },
+      ],
+      output: { dir: "dist", filename: "[name].js" },
+      alias: { "@": "src" },
+      externals: [],
+      js: { sourcemap: true, minify: false, splitChunks: true },
+      devServer: { open: true, proxy: {}, https: false, host: "0.0.0.0", port: 3000 },<% if (ssr) { %>
+      ssr: {
+        entry: "src/entry-server.js",
+        output: { dir: "dist/server", filename: "server.cjs", formats: "commonjs" },
+        externals: "auto",
+        template: "public/index.html",
+        placeholder: "<!--ssr-outlet-->",
+        dev: true,
+      },<% } %>
+    },
+  },
+};

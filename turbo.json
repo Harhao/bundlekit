@@ -58,6 +58,10 @@
       "dependsOn": ["^shared:build"],
       "outputs": []
     },
+    "plugin:angular:build": {
+      "dependsOn": ["^shared:build"],
+      "outputs": []
+    },
     "plugin:node:build": {
       "dependsOn": ["^shared:build"],
       "outputs": []

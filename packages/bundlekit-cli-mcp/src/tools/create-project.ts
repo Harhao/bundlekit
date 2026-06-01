@@ -3,16 +3,16 @@ import { z } from 'zod';
 import { spawnSync } from 'child_process';
 import path from 'path';
 
-const TEMPLATES = ['react-ts', 'react-js', 'vue3-ts', 'vue3-js', 'svelte-ts', 'svelte-js'] as const;
+const TEMPLATES = ['react-ts', 'react-js', 'vue3-ts', 'vue3-js', 'svelte-ts', 'svelte-js', 'angular-ts', 'angular-js'] as const;
 const BUNDLERS = ['vite', 'webpack', 'rspack', 'rollup', 'rolldown'] as const;
 const PACKAGE_MANAGERS = ['pnpm', 'yarn', 'npm'] as const;
 
 export const createProjectTool = createTool({
   id: 'createProject',
-  description: '创建一个新的前端项目，由 bundlekit 驱动。支持 React、Vue、Svelte 模板，可选择多种构建工具。',
+  description: '创建一个新的前端项目，由 bundlekit 驱动。支持 React、Vue、Svelte、Angular 模板，可选择多种构建工具。',
   inputSchema: z.object({
     name: z.string().describe('项目名称（允许小写字母、数字、@、.、-、_）'),
-    template: z.enum(TEMPLATES).optional().describe('项目模板：react-ts、react-js、vue3-ts、vue3-js、svelte-ts 或 svelte-js'),
+    template: z.enum(TEMPLATES).optional().describe('项目模板：react-ts、react-js、vue3-ts、vue3-js、svelte-ts、svelte-js、angular-ts 或 angular-js'),
     bundler: z.enum(BUNDLERS).optional().describe('构建工具：vite、webpack、rspack、rollup 或 rolldown'),
     description: z.string().optional().describe('项目描述'),
     packageManager: z.enum(PACKAGE_MANAGERS).optional().describe('包管理器：pnpm、yarn 或 npm'),

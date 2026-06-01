@@ -46,6 +46,7 @@ export function resolvePluginPkgName(template: string): string {
     const normalized = normalizeTemplate(template);
     if (normalized.startsWith("vue")) return "@bundlekit/plugin-vue";
     if (normalized.startsWith("svelte")) return "@bundlekit/plugin-svelte";
+    if (normalized.startsWith("angular")) return "@bundlekit/plugin-angular";
     if (normalized.startsWith("node")) return "@bundlekit/plugin-node";
     return "@bundlekit/plugin-react";
 }
@@ -56,12 +57,15 @@ export function normalizeTemplate(template: string): string {
         vue:          "vue3-ts",
         vue3:         "vue3-ts",
         svelte:       "svelte-ts",
+        angular:      "angular-ts",
         "react-ts":   "react-ts",
         "react-js":   "react-js",
         "vue3-ts":    "vue3-ts",
         "vue3-js":    "vue3-js",
         "svelte-ts":  "svelte-ts",
         "svelte-js":  "svelte-js",
+        "angular-ts": "angular-ts",
+        "angular-js": "angular-js",
         node:         "node-ts",
         "node-ts":    "node-ts",
     };
@@ -113,7 +117,7 @@ export function resolveTemplateDir(template: string): string {
     const monorepoDir = path.resolve(__dir, "../../../..", pluginDirName, "templates", `template-${normalized}`);
     if (fs.existsSync(monorepoDir)) return monorepoDir;
 
-    throw new Error(`模板 "${template}" 未找到，可用模板：react-ts / react-js / vue3-ts / vue3-js / svelte-ts / svelte-js / node-ts`);
+    throw new Error(`模板 "${template}" 未找到，可用模板：react-ts / react-js / vue3-ts / vue3-js / svelte-ts / svelte-js / angular-ts / angular-js / node-ts`);
 }
 
 /** 渲染模板到 targetDir */

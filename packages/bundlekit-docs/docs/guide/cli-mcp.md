@@ -43,7 +43,7 @@ npx @bundlekit/cli-mcp
 | 参数 | 类型 | 必填 | 说明 |
 |---|---|---|---|
 | `name` | `string` | ✅ | 项目名（小写字母 / 数字 / `@` / `.` / `-` / `_`） |
-| `template` | `string` |  | `react-ts` / `react-js` / `vue3-ts` / `vue3-js` / `node-ts` |
+| `template` | `string` |  | `react-ts` / `react-js` / `vue3-ts` / `vue3-js` / `svelte-ts` / `svelte-js` / `angular-ts` / `angular-js` / `node-ts` |
 | `bundler` | `string` |  | `vite` / `webpack` / `rspack` / `rollup` / `rolldown` / `parcel` / `esbuild` |
 | `description` | `string` |  | 项目描述 |
 | `packageManager` | `string` |  | `pnpm` / `yarn` / `npm` |

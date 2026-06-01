@@ -314,6 +314,14 @@ export default class EsbuildBundler implements IBuildToolAdapter {
             } catch {
                 this.logger.warn("framework 为 svelte 但未安装 esbuild-svelte，跳过");
             }
+        } else if (framework === "angular") {
+            // esbuild 原生支持 TypeScript decorators 与 emitDecoratorMetadata（通过 tsconfig）；
+            // 但不做 AOT 模板编译。第一版仅保证 JIT 可跑，logger.warn 标注实验性。
+            // 未来若要加 AOT，可对接社区 esbuild-angular plugin（目前维护停滞）。
+            this.logger.warn(
+                "experimental: angular on esbuild uses JIT mode (no AOT template compilation). " +
+                "Bundle size will be larger; for production prefer vite / webpack / rspack / rollup / rolldown.",
+            );
         }
 
         // ── SSR server pass ───────────────────────────────────────────────────

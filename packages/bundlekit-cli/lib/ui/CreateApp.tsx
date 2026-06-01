@@ -29,6 +29,8 @@ const TEMPLATES: ISelectItem[] = [
     { label: "Vue 3 + JavaScript", value: "vue3-js" },
     { label: "Svelte + TypeScript", value: "svelte-ts" },
     { label: "Svelte + JavaScript", value: "svelte-js" },
+    { label: "Angular + TypeScript", value: "angular-ts" },
+    { label: "Angular + JavaScript", value: "angular-js" },
     { label: "Node.js / 纯 TypeScript（无框架）", value: "node-ts" },
 ];
 

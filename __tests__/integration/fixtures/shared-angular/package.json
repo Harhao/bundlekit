@@ -1,0 +1,15 @@
+{
+    "name": "bundlekit-fixture-shared-angular",
+    "version": "0.0.0",
+    "private": true,
+    "dependencies": {
+        "@angular/common": "^17.3.0",
+        "@angular/compiler": "^17.3.0",
+        "@angular/core": "^17.3.0",
+        "@angular/platform-browser": "^17.3.0",
+        "@angular/platform-server": "^17.3.0",
+        "rxjs": "~7.8.0",
+        "tslib": "^2.6.0",
+        "zone.js": "~0.14.0"
+    }
+}

@@ -199,6 +199,10 @@ export default class TransformConfig {
         if (framework === 'svelte') {
             extensions.push('.svelte');
         }
+        if (framework === 'angular') {
+            // Angular 项目以 .ts 为主，把 .ts 排到最前面优先解析
+            extensions.unshift('.ts');
+        }
         return {
             alias: this.buildConfig.alias || {},
             mainFiles: ['index'],
@@ -221,6 +225,39 @@ export default class TransformConfig {
         if (framework === 'react') {
             tsCompilerOptions.jsx = 'react-jsx';
             tsCompilerOptions.jsxImportSource = 'react';
+        }
+        // Angular 模板用 @ngtools/webpack（Angular CLI 自身使用的方案）替代 ts-loader：
+        // 它处理装饰器元数据、AOT 模板编译、组件 inline 样式 / 模板路径等。
+        // 失败时（ngtools 未安装）回退到 ts-loader + 装饰器开关，让用户起码能跑 JIT。
+        if (framework === 'angular') {
+            try {
+                _require.resolve('@ngtools/webpack');
+                return [{
+                    test: /\.[cm]?[jt]sx?$/,
+                    loader: '@ngtools/webpack',
+                }];
+            } catch {
+                this.logger.warn('framework 为 angular 但未找到 @ngtools/webpack，回退 ts-loader（仅 JIT，无 AOT 模板编译）');
+                return [{
+                    test: new RegExp('\\.(js|jsx|ts|tsx)$'),
+                    exclude: /node_modules/,
+                    use: [
+                        {
+                            loader: 'ts-loader',
+                            options: {
+                                happyPackMode: true,
+                                compilerOptions: {
+                                    ...tsCompilerOptions,
+                                    target: 'ES2022',
+                                    experimentalDecorators: true,
+                                    emitDecoratorMetadata: true,
+                                },
+                                transpileOnly: true,
+                            },
+                        },
+                    ],
+                }];
+            }
         }
         return [{
             test: new RegExp('\\.(js|jsx|ts|tsx)$'),
@@ -290,17 +327,32 @@ export default class TransformConfig {
         return [];
     }
 
-    /** 框架专用 plugin（VueLoaderPlugin / Svelte 暂无需要） */
+    /** 框架专用 plugin（VueLoaderPlugin / AngularWebpackPlugin / Svelte 暂无需要） */
     private transformFrameworkPlugins(): Webpack.WebpackPluginInstance[] {
         const framework = (this.buildConfig as any).framework as string;
-        if (framework !== 'vue3') return [];
-        try {
-            const { VueLoaderPlugin } = _require('vue-loader');
-            return [new VueLoaderPlugin()];
-        } catch {
-            this.logger.warn('framework 为 vue3 但未找到 vue-loader，跳过 VueLoaderPlugin');
-            return [];
+        if (framework === 'vue3') {
+            try {
+                const { VueLoaderPlugin } = _require('vue-loader');
+                return [new VueLoaderPlugin()];
+            } catch {
+                this.logger.warn('framework 为 vue3 但未找到 vue-loader，跳过 VueLoaderPlugin');
+                return [];
+            }
         }
+        if (framework === 'angular') {
+            try {
+                const { AngularWebpackPlugin } = _require('@ngtools/webpack');
+                const tsconfigPath = path.resolve(this.context, 'tsconfig.json');
+                return [new AngularWebpackPlugin({ tsconfig: tsconfigPath })];
+            } catch (err) {
+                this.logger.warn(
+                    'framework 为 angular 但 @ngtools/webpack 注册失败，跳过 AngularWebpackPlugin（仅 JIT 模式）：' +
+                    String((err as Error)?.message ?? err),
+                );
+                return [];
+            }
+        }
+        return [];
     }
 
 

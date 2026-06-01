@@ -19,6 +19,8 @@ const TEMPLATES = [
     { name: "vue3-js", message: "Vue 3 + JavaScript" },
     { name: "svelte-ts", message: "Svelte + TypeScript" },
     { name: "svelte-js", message: "Svelte + JavaScript" },
+    { name: "angular-ts", message: "Angular + TypeScript" },
+    { name: "angular-js", message: "Angular + JavaScript" },
     { name: "node-ts", message: "Node.js / 纯 TypeScript（无框架）" },
 ];
 

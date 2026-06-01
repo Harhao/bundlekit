@@ -1,7 +1,7 @@
 import { IBuildTools } from "./adapter";
 import { IBuildEnv } from "./env";
 
-export type IBuildFramework = "react" | "vue3" | "svelte";
+export type IBuildFramework = "react" | "vue3" | "svelte" | "angular";
 
 export type IBuildFormat = "esm" | "commonjs" | "umd" | "iife";
 

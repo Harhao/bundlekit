@@ -15,7 +15,7 @@ features:
 
   - title: 框架感知插件系统
     emoji: 🔌
-    description: 构建插件（plugin-react / plugin-vue / plugin-node / plugin-mock）写入 framework 字段，各打包器自动加载对应 loader / 插件，无需手动配置
+    description: 构建插件（plugin-react / plugin-vue / plugin-svelte / plugin-angular / plugin-node / plugin-mock）写入 framework 字段，各打包器自动加载对应 loader / 插件，无需手动配置
 
   - title: CLI 脚手架（ink 美化）
     emoji: 🚀
@@ -32,6 +32,10 @@ features:
   - title: SSR 全 bundler 支持
     emoji: 🌐
     description: 7 个 bundler 都支持 build SSR 双产物（client + server）；vite 提供原生 dev SSR middleware
+
+  - title: Angular 17+ 一等公民
+    emoji: 🅰️
+    description: standalone components + provideClientHydration + renderApplication；vite/webpack/rspack/rollup/rolldown 完整 AOT 编译，esbuild/parcel 提供 JIT fallback
 
   - title: AI Agent 友好
     emoji: 🤖

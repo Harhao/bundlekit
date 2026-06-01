@@ -654,6 +654,12 @@ importers:
         specifier: ^5.8.2
         version: 5.9.3
 
+  packages/bundlekit-plugin-angular:
+    dependencies:
+      '@bundlekit/shared-utils':
+        specifier: workspace:*
+        version: link:../bundlekit-shared-utils
+
   packages/bundlekit-plugin-mock:
     dependencies:
       '@bundlekit/shared-utils':

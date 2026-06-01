@@ -80,9 +80,21 @@ export default class RspackBundler implements IBuildToolAdapter<RspackOptions> {
 
         const swcOptions: any = {
             jsc: {
-                parser: { syntax: "typescript", tsx: framework === "react" || framework === "vue3" },
+                parser: {
+                    syntax: "typescript",
+                    tsx: framework === "react" || framework === "vue3",
+                    // Angular 强依赖装饰器 + 装饰器元数据（@Component / @Injectable）
+                    decorators: framework === "angular",
+                },
                 ...(framework === "react" ? {
                     transform: { react: { runtime: "automatic" } },
+                } : {}),
+                ...(framework === "angular" ? {
+                    transform: {
+                        legacyDecorator: true,
+                        decoratorMetadata: true,
+                    },
+                    target: "es2022",
                 } : {}),
             },
         };
@@ -140,6 +152,26 @@ export default class RspackBundler implements IBuildToolAdapter<RspackOptions> {
                 const { VueLoaderPlugin } = _require("vue-loader");
                 return [new VueLoaderPlugin()];
             } catch { return []; }
+        })() : framework === "angular" ? (() => {
+            // 尝试加载 @ngtools/webpack 的 AngularWebpackPlugin（rspack 兼容大部分 webpack
+            // plugin hook）。注册失败时静默降级到 SWC-only（JIT）模式，build 不阻断
+            // 但产物会缺 AOT 模板预编译。
+            try {
+                const ngtools = _require("@ngtools/webpack");
+                const AngularWebpackPlugin = ngtools.AngularWebpackPlugin;
+                if (typeof AngularWebpackPlugin !== "function") {
+                    this.logger.warn("framework 为 angular 但 @ngtools/webpack 未导出 AngularWebpackPlugin，跳过 AOT（仅 SWC JIT 模式）");
+                    return [];
+                }
+                const tsconfigPath = path.resolve(this.context, "tsconfig.json");
+                return [new AngularWebpackPlugin({ tsconfig: tsconfigPath })];
+            } catch (err) {
+                this.logger.warn(
+                    "framework 为 angular 但 @ngtools/webpack 注册失败，降级 SWC JIT 模式：" +
+                    String((err as Error)?.message ?? err),
+                );
+                return [];
+            }
         })() : [];
 
         const htmlPlugins = (rawEnvConfig.library === true ? [] : pages).map((page: any) =>

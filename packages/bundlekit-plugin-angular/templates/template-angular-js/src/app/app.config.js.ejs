@@ -1,0 +1,9 @@
+import { provideZoneChangeDetection } from "@angular/core";<% if (ssr) { %>
+import { provideClientHydration } from "@angular/platform-browser";<% } %>
+
+export const appConfig = {
+  providers: [
+    provideZoneChangeDetection({ eventCoalescing: true }),<% if (ssr) { %>
+    provideClientHydration(),<% } %>
+  ],
+};

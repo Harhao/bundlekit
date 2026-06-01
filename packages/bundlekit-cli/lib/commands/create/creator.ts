@@ -40,7 +40,7 @@ export class Creator {
             this.logger.error(
                 "node-ts 模板不支持 SSR。\n" +
                 "  - node-ts 是 Node.js 库 / 服务模板，无 HTML 入口、无 hydration 概念\n" +
-                "  - 如需 SSR，请改用 react-ts / react-js / vue3-ts / vue3-js / svelte-ts / svelte-js 之一",
+                "  - 如需 SSR，请改用 react-ts / react-js / vue3-ts / vue3-js / svelte-ts / svelte-js / angular-ts / angular-js 之一",
             );
             throw new Error("node-ts 模板不支持 SSR");
         }

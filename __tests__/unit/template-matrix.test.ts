@@ -8,8 +8,8 @@ import { Creator } from "../../packages/bundlekit-cli/lib/commands/create/creato
 /**
  * 模板 × 包管理器 × 打包工具 全组合矩阵测试
  *
- * 维度：7 × 3 × 7 = 147 个组合
- *   - 模板：react-ts / react-js / vue3-ts / vue3-js / svelte-ts / svelte-js / node-ts
+ * 维度：9 × 3 × 7 = 189 个组合
+ *   - 模板：react-ts / react-js / vue3-ts / vue3-js / svelte-ts / svelte-js / angular-ts / angular-js / node-ts
  *   - 包管理器：pnpm / yarn / npm
  *   - 打包工具：webpack / vite / rspack / rollup / rolldown / parcel / esbuild
  *
@@ -28,45 +28,51 @@ import { Creator } from "../../packages/bundlekit-cli/lib/commands/create/creato
  * 每个组合仅做模板渲染 + 依赖规范化 + generator 静默调用，<200ms。
  */
 
-type Template = "react-ts" | "react-js" | "vue3-ts" | "vue3-js" | "svelte-ts" | "svelte-js" | "node-ts";
+type Template = "react-ts" | "react-js" | "vue3-ts" | "vue3-js" | "svelte-ts" | "svelte-js" | "angular-ts" | "angular-js" | "node-ts";
 type PM = "pnpm" | "yarn" | "npm";
 type Bundler = "webpack" | "vite" | "rspack" | "rollup" | "rolldown" | "parcel" | "esbuild";
 
-const TEMPLATES: Template[] = ["react-ts", "react-js", "vue3-ts", "vue3-js", "svelte-ts", "svelte-js", "node-ts"];
+const TEMPLATES: Template[] = ["react-ts", "react-js", "vue3-ts", "vue3-js", "svelte-ts", "svelte-js", "angular-ts", "angular-js", "node-ts"];
 const PMS: PM[] = ["pnpm", "yarn", "npm"];
 const BUNDLERS: Bundler[] = ["webpack", "vite", "rspack", "rollup", "rolldown", "parcel", "esbuild"];
 
 /** 模板 → 期望的 plugin npm 包名 */
 const PLUGIN_PKG: Record<Template, string> = {
-    "react-ts":  "@bundlekit/plugin-react",
-    "react-js":  "@bundlekit/plugin-react",
-    "vue3-ts":   "@bundlekit/plugin-vue",
-    "vue3-js":   "@bundlekit/plugin-vue",
-    "svelte-ts": "@bundlekit/plugin-svelte",
-    "svelte-js": "@bundlekit/plugin-svelte",
-    "node-ts":   "@bundlekit/plugin-node",
+    "react-ts":   "@bundlekit/plugin-react",
+    "react-js":   "@bundlekit/plugin-react",
+    "vue3-ts":    "@bundlekit/plugin-vue",
+    "vue3-js":    "@bundlekit/plugin-vue",
+    "svelte-ts":  "@bundlekit/plugin-svelte",
+    "svelte-js":  "@bundlekit/plugin-svelte",
+    "angular-ts": "@bundlekit/plugin-angular",
+    "angular-js": "@bundlekit/plugin-angular",
+    "node-ts":    "@bundlekit/plugin-node",
 };
 
 /** 模板 → CSR 默认入口源文件（无 SSR 时） */
 const TEMPLATE_ENTRY: Record<Template, string> = {
-    "react-ts":  "src/index.tsx",
-    "react-js":  "src/index.jsx",
-    "vue3-ts":   "src/main.ts",
-    "vue3-js":   "src/main.js",
-    "svelte-ts": "src/index.ts",
-    "svelte-js": "src/index.js",
-    "node-ts":   "src/index.ts",
+    "react-ts":   "src/index.tsx",
+    "react-js":   "src/index.jsx",
+    "vue3-ts":    "src/main.ts",
+    "vue3-js":    "src/main.js",
+    "svelte-ts":  "src/index.ts",
+    "svelte-js":  "src/index.js",
+    "angular-ts": "src/main.ts",
+    "angular-js": "src/main.js",
+    "node-ts":    "src/index.ts",
 };
 
 /** 模板 → 期望的 .bundlekitrc 文件名 */
 const TEMPLATE_RC: Record<Template, string> = {
-    "react-ts":  ".bundlekitrc.ts",
-    "react-js":  ".bundlekitrc.js",
-    "vue3-ts":   ".bundlekitrc.ts",
-    "vue3-js":   ".bundlekitrc.js",
-    "svelte-ts": ".bundlekitrc.ts",
-    "svelte-js": ".bundlekitrc.js",
-    "node-ts":   ".bundlekitrc.ts",
+    "react-ts":   ".bundlekitrc.ts",
+    "react-js":   ".bundlekitrc.js",
+    "vue3-ts":    ".bundlekitrc.ts",
+    "vue3-js":    ".bundlekitrc.js",
+    "svelte-ts":  ".bundlekitrc.ts",
+    "svelte-js":  ".bundlekitrc.js",
+    "angular-ts": ".bundlekitrc.ts",
+    "angular-js": ".bundlekitrc.js",
+    "node-ts":    ".bundlekitrc.ts",
 };
 
 let rootTmpDir: string;
@@ -263,12 +269,14 @@ describe("node-ts: package.json main / module 路径与 entry basename 对齐", 
 
 describe("SSR 模式：CSR 入口被替换为 entry-client/entry-server", () => {
     const ssrCombos: Array<{ template: Template; clientFile: string; serverFile: string }> = [
-        { template: "react-ts",  clientFile: "src/entry-client.tsx", serverFile: "src/entry-server.tsx" },
-        { template: "react-js",  clientFile: "src/entry-client.jsx", serverFile: "src/entry-server.jsx" },
-        { template: "vue3-ts",   clientFile: "src/entry-client.ts",  serverFile: "src/entry-server.ts" },
-        { template: "vue3-js",   clientFile: "src/entry-client.js",  serverFile: "src/entry-server.js" },
-        { template: "svelte-ts", clientFile: "src/entry-client.ts",  serverFile: "src/entry-server.ts" },
-        { template: "svelte-js", clientFile: "src/entry-client.js",  serverFile: "src/entry-server.js" },
+        { template: "react-ts",   clientFile: "src/entry-client.tsx", serverFile: "src/entry-server.tsx" },
+        { template: "react-js",   clientFile: "src/entry-client.jsx", serverFile: "src/entry-server.jsx" },
+        { template: "vue3-ts",    clientFile: "src/entry-client.ts",  serverFile: "src/entry-server.ts" },
+        { template: "vue3-js",    clientFile: "src/entry-client.js",  serverFile: "src/entry-server.js" },
+        { template: "svelte-ts",  clientFile: "src/entry-client.ts",  serverFile: "src/entry-server.ts" },
+        { template: "svelte-js",  clientFile: "src/entry-client.js",  serverFile: "src/entry-server.js" },
+        { template: "angular-ts", clientFile: "src/entry-client.ts",  serverFile: "src/entry-server.ts" },
+        { template: "angular-js", clientFile: "src/entry-client.js",  serverFile: "src/entry-server.js" },
     ];
 
     it.each(ssrCombos)(
