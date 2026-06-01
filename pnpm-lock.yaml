@@ -452,6 +452,9 @@ importers:
 
   packages/bundlekit-cli:
     dependencies:
+      '@bundlekit/plugin-angular':
+        specifier: workspace:*
+        version: link:../bundlekit-plugin-angular
       '@bundlekit/plugin-node':
         specifier: workspace:*
         version: link:../bundlekit-plugin-node
