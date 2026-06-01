@@ -1,6 +1,6 @@
 {
   "name": "@bundlekit/cli",
-  "version": "0.0.17",
+  "version": "0.0.18",
   "description": "a cli tool serve for generate frontend project",
   "type": "module",
   "main": "./dist/index.mjs",
@@ -43,6 +43,7 @@
   "dependencies": {
     "@bundlekit/plugin-react": "workspace:*",
     "@bundlekit/plugin-vue": "workspace:*",
+    "@bundlekit/plugin-svelte": "workspace:*",
     "@bundlekit/plugin-node": "workspace:*",
     "@bundlekit/shared-utils": "workspace:*",
     "commander": "^13.1.0",

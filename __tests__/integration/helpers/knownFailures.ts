@@ -45,6 +45,39 @@ const REGISTRY: ReadonlyArray<IFailureKey & { reason: string }> = [
     //
     //   { template: "...", bundler: "...", mode: "csr"|"ssr"|"build",
     //     reason: "<根因 + GitHub issue 链接>" },
+
+    // parcel × svelte：parcel 官方未维护 *.svelte transformer，社区 parcel-transformer-svelte
+    // 仅兼容 svelte 3，与本仓库 svelte 4 不兼容。CLI 已在 checkTemplateBundlerCombo 主动拦截
+    // 此组合（svelte-ts/svelte-js × parcel），smoke 测试用 it.skip 与 cli 行为对齐。
+    { template: "svelte-ts", bundler: "parcel", mode: "csr",
+      reason: "CLI 主动拦截：parcel 无官方 svelte transformer" },
+    { template: "svelte-ts", bundler: "parcel", mode: "ssr",
+      reason: "CLI 主动拦截：parcel 无官方 svelte transformer" },
+    { template: "svelte-js", bundler: "parcel", mode: "csr",
+      reason: "CLI 主动拦截：parcel 无官方 svelte transformer" },
+    { template: "svelte-js", bundler: "parcel", mode: "ssr",
+      reason: "CLI 主动拦截：parcel 无官方 svelte transformer" },
+
+    // angular × *：Angular 模板需要 @angular/* 运行时 + bundler 专用编译插件，按照
+    // plugin-angular 的"用户项目侧 deps + bundler 软依赖"设计，monorepo 不预装这些
+    // 包。dev-smoke 在用户项目里跑 pnpm install 时会下载 @angular/*（约 30MB），但
+    // bundler 适配器需要的 @analogjs/vite-plugin-angular（vite/rollup/rolldown）和
+    // @ngtools/webpack（webpack/rspack）不在 fixture 的 package.json 中。
+    //
+    // 第一版：所有 angular × bundler 组合标注为 known-failure，理由统一，待 PR2/PR3
+    // 实施 + 给 fixture 增加对应插件依赖后，再分组移除此清单。
+    ...(["webpack", "vite", "rspack", "rollup", "rolldown", "parcel", "esbuild"] as const).flatMap(
+        (bundler) => [
+            { template: "angular-ts", bundler, mode: "csr" as const,
+              reason: "PR1：Angular 编译插件未在 fixture 安装（@analogjs/vite-plugin-angular / @ngtools/webpack），待 PR2/PR3 启用" },
+            { template: "angular-ts", bundler, mode: "ssr" as const,
+              reason: "PR1：Angular 编译插件未在 fixture 安装（@analogjs/vite-plugin-angular / @ngtools/webpack），待 PR2/PR3 启用" },
+            { template: "angular-js", bundler, mode: "csr" as const,
+              reason: "PR1：Angular 编译插件未在 fixture 安装；JS 模板还需 babel 装饰器栈" },
+            { template: "angular-js", bundler, mode: "ssr" as const,
+              reason: "PR1：Angular 编译插件未在 fixture 安装；JS 模板还需 babel 装饰器栈" },
+        ],
+    ),
 ];
 
 /**

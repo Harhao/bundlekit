@@ -9,6 +9,7 @@ import {
     installDeps,
     runGenerator,
     resolveDepMode,
+    checkTemplateBundlerCombo,
     PMName,
 } from "./actions";
 
@@ -39,9 +40,16 @@ export class Creator {
             this.logger.error(
                 "node-ts 模板不支持 SSR。\n" +
                 "  - node-ts 是 Node.js 库 / 服务模板，无 HTML 入口、无 hydration 概念\n" +
-                "  - 如需 SSR，请改用 react-ts / react-js / vue3-ts / vue3-js 之一",
+                "  - 如需 SSR，请改用 react-ts / react-js / vue3-ts / vue3-js / svelte-ts / svelte-js / angular-ts / angular-js 之一",
             );
             throw new Error("node-ts 模板不支持 SSR");
+        }
+
+        // 模板 × 打包器组合校验：拦截已知不兼容的组合（如 svelte × parcel）
+        const comboError = checkTemplateBundlerCombo(template, bundler);
+        if (comboError) {
+            this.logger.error(comboError);
+            throw new Error(comboError.split("\n")[0]);
         }
 
         let targetDir: string;

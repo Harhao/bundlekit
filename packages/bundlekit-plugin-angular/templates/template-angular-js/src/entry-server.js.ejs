@@ -1,0 +1,29 @@
+import "zone.js/node";
+import "@angular/compiler";
+import { bootstrapApplication } from "@angular/platform-browser";
+import { renderApplication } from "@angular/platform-server";
+import { AppComponent } from "./app/app.component";
+import { config } from "./app/app.config.server";
+
+const TEMPLATE = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= projectName %></title>
+</head>
+<body>
+  <app-root><!--ssr-outlet--></app-root>
+</body>
+</html>`;
+
+/**
+ * 服务端渲染入口
+ *
+ * @param {string} url 当前请求路径，用于路由匹配
+ * @returns {Promise<string>} HTML 字符串
+ */
+export async function render(url) {
+  const bootstrap = () => bootstrapApplication(AppComponent, config);
+  return renderApplication(bootstrap, { document: TEMPLATE, url });
+}

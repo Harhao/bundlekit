@@ -322,3 +322,111 @@ export async function render(url: string): Promise<string> {
 ```
 
 > 💡 vue 模板用 `bc create my-app -t vue3-ts --ssr` 自动生成。
+
+### angular-ts：Angular 17+ standalone SSR
+
+Angular 的 SSR API 与 React/Vue 有结构差异：`render(url)` 返回 **`Promise<string>`**（不是同步 string）。bundlekit 的 SSR runtime 已统一 `await` render 调用，所以模板写出来的 entry 可以直接用 `renderApplication`。
+
+**1. `src/app/app.component.ts`** — standalone component：
+
+```ts
+import { Component } from "@angular/core";
+
+@Component({
+  selector: "app-root",
+  standalone: true,
+  template: `<h1>Hello, {{ name }}!</h1>`,
+})
+export class AppComponent {
+  name = "my-app";
+}
+```
+
+**2. `src/app/app.config.ts`** — 共享 ApplicationConfig，SSR 项目需加 `provideClientHydration()`：
+
+```ts
+import type { ApplicationConfig } from "@angular/core";
+import { provideZoneChangeDetection } from "@angular/core";
+import { provideClientHydration } from "@angular/platform-browser";
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideZoneChangeDetection({ eventCoalescing: true }),
+    provideClientHydration(),
+  ],
+};
+```
+
+**3. `src/app/app.config.server.ts`** — 仅 server pass 用，注入 `provideServerRendering()`：
+
+```ts
+import { mergeApplicationConfig } from "@angular/core";
+import { provideServerRendering } from "@angular/platform-server";
+import { appConfig } from "./app.config";
+
+export const config = mergeApplicationConfig(appConfig, {
+  providers: [provideServerRendering()],
+});
+```
+
+**4. `src/entry-client.ts`** — 客户端 hydration 入口：
+
+```ts
+import "zone.js";
+import { bootstrapApplication } from "@angular/platform-browser";
+import { AppComponent } from "./app/app.component";
+import { appConfig } from "./app/app.config";
+
+bootstrapApplication(AppComponent, appConfig);
+```
+
+**5. `src/entry-server.ts`** — 服务端入口，导出 `async render(url)`：
+
+```ts
+import "zone.js/node";
+import "@angular/compiler";
+import { bootstrapApplication } from "@angular/platform-browser";
+import { renderApplication } from "@angular/platform-server";
+import { AppComponent } from "./app/app.component";
+import { config } from "./app/app.config.server";
+
+const TEMPLATE = `<!DOCTYPE html>
+<html><body><app-root><!--ssr-outlet--></app-root></body></html>`;
+
+export async function render(url: string): Promise<string> {
+  const bootstrap = () => bootstrapApplication(AppComponent, config);
+  return renderApplication(bootstrap, { document: TEMPLATE, url });
+}
+```
+
+**6. HTML 模板**：与 React/Vue 不同，Angular 用 `<app-root>` 作为挂载点：
+
+```html
+<!DOCTYPE html>
+<html>
+<body>
+  <app-root><!--ssr-outlet--></app-root>
+</body>
+</html>
+```
+
+**7. `.bundlekitrc.ts`**（与 React/Vue SSR 配置同构）：
+
+```ts
+config: {
+  production: {
+    entry: "src/entry-client.ts",
+    ssr: {
+      entry: "src/entry-server.ts",
+      output: { dir: "dist/server", filename: "server.cjs", formats: "commonjs" },
+      externals: "auto",
+      template: "public/index.html",
+      placeholder: "<!--ssr-outlet-->",
+    },
+  },
+}
+```
+
+> 💡 angular 模板用 `bc create my-app -t angular-ts --ssr` 自动生成所有上述文件。
+>
+> ⚠️ Angular SSR 当前完整支持的 bundler：vite / webpack / rspack / rollup / rolldown。esbuild / parcel 在 PR3 标注为实验性，仅支持 JIT 模式（无 AOT 模板编译）。详见 [Bundler 适配器矩阵](/guide/bundlers#ssr-支持矩阵)。

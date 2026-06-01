@@ -1,0 +1,24 @@
+import { Component } from "@angular/core";
+
+@Component({
+  selector: "app-root",
+  standalone: true,
+  template: `
+    <div>
+      <h1>
+        <span>Hello, {{ name }}!</span>
+        <button type="button" (click)="increment()">
+          Clicked {{ count }} times
+        </button>
+      </h1>
+    </div>
+  `,
+})
+export class AppComponent {
+  name = "<%= projectName %>";
+  count = 0;
+
+  increment(): void {
+    this.count += 1;
+  }
+}

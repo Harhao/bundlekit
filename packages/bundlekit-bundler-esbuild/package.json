@@ -1,6 +1,6 @@
 {
   "name": "@bundlekit/bundler-esbuild",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "esbuild bundler adapter for @bundlekit/service",
   "types": "./dist/index.d.ts",
   "main": "./dist/index.js",
@@ -25,7 +25,10 @@
   "dependencies": {
     "@bundlekit/shared-utils": "workspace:*",
     "esbuild": "^0.20.0",
-    "esbuild-plugin-vue3": "^0.4.2"
+    "esbuild-plugin-vue3": "^0.4.2",
+    "esbuild-svelte": "^0.8.2",
+    "svelte": "^4.2.0",
+    "svelte-preprocess": "^5.1.0"
   },
   "devDependencies": {
     "@rollup/plugin-json": "^6.1.0",

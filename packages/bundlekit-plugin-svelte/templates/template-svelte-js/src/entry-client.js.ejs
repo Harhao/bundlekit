@@ -1,0 +1,13 @@
+import App from "./App.svelte";
+
+const target = document.getElementById("app");
+
+if (target) {
+  // SSR 模式：服务端已经吐出 HTML，hydrate=true 复用 DOM
+  // CSR 模式（target 为空）：直接渲染
+  // eslint-disable-next-line no-unused-vars
+  const app = new App({
+    target,
+    hydrate: !!target.firstChild,
+  });
+}

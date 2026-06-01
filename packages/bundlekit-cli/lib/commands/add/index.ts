@@ -4,6 +4,9 @@ const PLUGIN_MAP: Record<string, string> = {
     mock:    "@bundlekit/plugin-mock",
     react:   "@bundlekit/plugin-react",
     vue:     "@bundlekit/plugin-vue",
+    svelte:  "@bundlekit/plugin-svelte",
+    angular: "@bundlekit/plugin-angular",
+    node:    "@bundlekit/plugin-node",
     request: "@bundlekit/request",
 };
 

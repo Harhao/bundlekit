@@ -1,7 +1,7 @@
 import { IBuildTools } from "./adapter";
 import { IBuildEnv } from "./env";
 
-export type IBuildFramework = "react" | "vue3";
+export type IBuildFramework = "react" | "vue3" | "svelte" | "angular";
 
 export type IBuildFormat = "esm" | "commonjs" | "umd" | "iife";
 
@@ -195,7 +195,7 @@ export interface IEnvBuildConfig {
     }[];
     /** 多页面配置 */
     pages?: IBuildPageConfig[];
-    /** 前端框架，由构建插件写入（plugin-react / plugin-vue） */
+    /** 前端框架，由构建插件写入（plugin-react / plugin-vue / plugin-svelte） */
     framework?: IBuildFramework;
     /**
      * 类库打包模式（rollup / rolldown 专用）

@@ -124,9 +124,13 @@ Step 5/5 · 项目描述    → 可选，按回车跳过
 | `react-js` | React 18 + JavaScript |
 | `vue3-ts` | Vue 3 + TypeScript + Composition API |
 | `vue3-js` | Vue 3 + JavaScript + Composition API |
+| `svelte-ts` | Svelte 4 + TypeScript |
+| `svelte-js` | Svelte 4 + JavaScript |
+| `angular-ts` | Angular 17+ standalone + TypeScript |
+| `angular-js` | Angular 17+ standalone + JavaScript（需 Babel 装饰器栈） |
 | `node-ts` | Node.js / 纯 TypeScript（无框架，库 / CLI / SDK 场景） |
 
-> 短名别名：`react` → `react-ts`，`vue` / `vue3` → `vue3-ts`，`node` → `node-ts`。
+> 短名别名：`react` → `react-ts`，`vue` / `vue3` → `vue3-ts`，`svelte` → `svelte-ts`，`angular` → `angular-ts`，`node` → `node-ts`。
 
 ```bash
 # 交互式模式（推荐）

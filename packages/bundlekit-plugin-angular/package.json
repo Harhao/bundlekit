@@ -1,0 +1,43 @@
+{
+  "name": "@bundlekit/plugin-angular",
+  "version": "0.0.2",
+  "description": "Angular plugin for bundlekit - provides Angular 17+ standalone build support and project templates (SPA / SSR / MPA)",
+  "main": "./index.ts",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./generator": "./generator/index.ts"
+  },
+  "files": [
+    "index.ts",
+    "generator",
+    "templates",
+    "package.json"
+  ],
+  "scripts": {
+    "plugin:angular:build": "echo 'plugin:angular built successfully'"
+  },
+  "keywords": [
+    "angular",
+    "bundlekit-plugin",
+    "bundlekit"
+  ],
+  "author": "harhao@163.com",
+  "license": "MIT",
+  "website": "https://bundlekit.harhao.workers.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Harhao/bundlekit.git",
+    "directory": "packages/bundlekit-plugin-angular"
+  },
+  "dependencies": {
+    "@bundlekit/shared-utils": "workspace:*"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "engines": {
+    "node": ">= 18.0.0"
+  }
+}

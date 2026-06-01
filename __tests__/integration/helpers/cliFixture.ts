@@ -7,7 +7,7 @@ import { Creator } from "../../../packages/bundlekit-cli/lib/commands/create/cre
 
 export interface ICliFixtureOptions {
     /** cli create -t 参数 */
-    template: "react-ts" | "react-js" | "vue3-ts" | "vue3-js" | "node-ts";
+    template: "react-ts" | "react-js" | "vue3-ts" | "vue3-js" | "svelte-ts" | "svelte-js" | "angular-ts" | "angular-js" | "node-ts";
     /** cli create -b 参数 */
     bundler: "webpack" | "vite" | "rspack" | "rollup" | "rolldown" | "parcel" | "esbuild";
     /** cli create --ssr 参数（不传等同 false） */

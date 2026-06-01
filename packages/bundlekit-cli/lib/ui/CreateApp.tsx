@@ -19,6 +19,7 @@ import {
     runGenerator,
     detectAvailablePMs,
     resolveDepMode,
+    checkTemplateBundlerCombo,
 } from "../commands/create/actions";
 
 const TEMPLATES: ISelectItem[] = [
@@ -26,6 +27,10 @@ const TEMPLATES: ISelectItem[] = [
     { label: "React + JavaScript", value: "react-js" },
     { label: "Vue 3 + TypeScript", value: "vue3-ts" },
     { label: "Vue 3 + JavaScript", value: "vue3-js" },
+    { label: "Svelte + TypeScript", value: "svelte-ts" },
+    { label: "Svelte + JavaScript", value: "svelte-js" },
+    { label: "Angular + TypeScript", value: "angular-ts" },
+    { label: "Angular + JavaScript", value: "angular-js" },
     { label: "Node.js / 纯 TypeScript（无框架）", value: "node-ts" },
 ];
 
@@ -167,6 +172,15 @@ export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) =>
             // 否则 setTasks 会和后续 updateTask("render", running) 合批，用户看不到"全 pending"
             await yieldFrame();
             const cwd = params.cwd || process.cwd();
+
+            // 防御性二道关：模板 × 打包器组合不兼容（如 svelte × parcel）
+            // bundler 步骤已在 UI 层灰掉这些选项，此处兜底防止参数注入路径绕过。
+            const comboError = checkTemplateBundlerCombo(template!, bundler!);
+            if (comboError) {
+                setError({ step: "校验组合", message: comboError });
+                return;
+            }
+
             let targetDir: string;
             try {
                 ({ targetDir } = validateProject(params.name, cwd));
@@ -338,7 +352,19 @@ export const CreateApp: React.FC<{ params: ICreateAppParams }> = ({ params }) =>
                         />
                     ) : (
                         <Select
-                            items={BUNDLERS_SECONDARY}
+                            items={BUNDLERS_SECONDARY.map((item) => {
+                                // 已选模板与打包器组合不兼容时（如 svelte × parcel）
+                                // 在 Select 列表里灰掉该项并提示原因
+                                if (typeof item.value !== "string" || !template) return item;
+                                if (item.value === "__back__") return item;
+                                const incompat = checkTemplateBundlerCombo(template, item.value);
+                                if (!incompat) return item;
+                                return {
+                                    ...item,
+                                    disabled: true,
+                                    disabledReason: "(暂不兼容当前模板)",
+                                };
+                            })}
                             onSelect={(v) => {
                                 if (v === "__back__") {
                                     setBundlerLevel("primary");

@@ -1,0 +1,29 @@
+{
+  "name": "<%= projectName %>",
+  "version": "1.0.0",
+  "description": "<%= description %>",
+  "private": true,
+  "scripts": {
+    "clean": "rimraf dist",
+    "dev": "bundlekit-service serve --bundler <%= bundler %> --mode development",
+    "build": "bundlekit-service build --bundler <%= bundler %> --mode production"
+  },
+  "dependencies": {
+    "@angular/common": "^17.3.0",
+    "@angular/compiler": "^17.3.0",
+    "@angular/core": "^17.3.0",
+    "@angular/platform-browser": "^17.3.0",<% if (ssr) { %>
+    "@angular/platform-server": "^17.3.0",<% } %>
+    "rxjs": "~7.8.0",
+    "tslib": "^2.6.0",
+    "zone.js": "~0.14.0"
+  },
+  "devDependencies": {
+    "@bundlekit/service": "workspace:^",
+    "@bundlekit/plugin-angular": "workspace:^",
+    "@babel/core": "^7.24.0",
+    "@babel/preset-env": "^7.24.0",
+    "@babel/plugin-proposal-decorators": "^7.24.0",
+    "@babel/plugin-transform-class-properties": "^7.24.0"
+  }
+}

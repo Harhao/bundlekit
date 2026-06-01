@@ -1,0 +1,28 @@
+<script>
+  let count = 0;
+
+  function increment() {
+    count += 1;
+  }
+</script>
+
+<main>
+  <h1>
+    <span>Hello, <%= projectName %>!</span>
+    <button on:click={increment}>
+      Clicked {count} times
+    </button>
+  </h1>
+</main>
+
+<style>
+  main {
+    font-family: system-ui, -apple-system, sans-serif;
+    padding: 2rem;
+  }
+  button {
+    margin-left: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    cursor: pointer;
+  }
+</style>

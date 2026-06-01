@@ -1,6 +1,6 @@
 {
   "name": "@bundlekit/bundler-rollup",
-  "version": "0.0.16",
+  "version": "0.0.17",
   "description": "A rollup bundler for @bundlekit/service",
   "types": "./dist/index.d.ts",
   "main": "./dist/index.js",
@@ -37,7 +37,10 @@
     "@vitejs/plugin-vue": "^5.2.0",
     "rollup": "^4.40.0",
     "rollup-plugin-postcss": "^4.0.2",
+    "rollup-plugin-svelte": "^7.2.0",
     "schema-utils": "^4.3.0",
+    "svelte": "^4.2.0",
+    "svelte-preprocess": "^5.1.0",
     "tslib": "^2.6.2"
   },
   "devDependencies": {

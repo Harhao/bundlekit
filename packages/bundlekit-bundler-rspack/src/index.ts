@@ -76,12 +76,25 @@ export default class RspackBundler implements IBuildToolAdapter<RspackOptions> {
 
         const extensions = [".ts", ".tsx", ".js", ".jsx", ".json"];
         if (framework === "vue3") extensions.push(".vue");
+        if (framework === "svelte") extensions.push(".svelte");
 
         const swcOptions: any = {
             jsc: {
-                parser: { syntax: "typescript", tsx: framework === "react" || framework === "vue3" },
+                parser: {
+                    syntax: "typescript",
+                    tsx: framework === "react" || framework === "vue3",
+                    // Angular 强依赖装饰器 + 装饰器元数据（@Component / @Injectable）
+                    decorators: framework === "angular",
+                },
                 ...(framework === "react" ? {
                     transform: { react: { runtime: "automatic" } },
+                } : {}),
+                ...(framework === "angular" ? {
+                    transform: {
+                        legacyDecorator: true,
+                        decoratorMetadata: true,
+                    },
+                    target: "es2022",
                 } : {}),
             },
         };
@@ -95,6 +108,43 @@ export default class RspackBundler implements IBuildToolAdapter<RspackOptions> {
                     type: "javascript/auto",
                 }];
             } catch { return []; }
+        })() : framework === "svelte" ? (() => {
+            try {
+                _require.resolve("svelte-loader");
+                const isServerPassLocal = rawEnvConfig.__isServerPass === true;
+                const enableHydratable = !!rawEnvConfig.ssr;
+                // svelte-preprocess：让 .svelte 内部 <script lang="ts"> 被处理
+                let preprocess: any = undefined;
+                try {
+                    const preprocessFactory = _require("svelte-preprocess");
+                    const factory = preprocessFactory.default || preprocessFactory;
+                    preprocess = typeof factory === "function" ? factory() : factory;
+                } catch {
+                    /* svelte-preprocess 缺失时只跳过 lang="ts" 处理，纯 JS 仍可工作 */
+                }
+                return [
+                    {
+                        test: /\.svelte$/,
+                        use: [{
+                            loader: "svelte-loader",
+                            options: {
+                                compilerOptions: {
+                                    generate: isServerPassLocal ? "ssr" : "dom",
+                                    hydratable: enableHydratable,
+                                },
+                                ...(preprocess ? { preprocess } : {}),
+                                emitCss: false,
+                            },
+                        }],
+                        type: "javascript/auto",
+                    },
+                    {
+                        // svelte 内部 .mjs/.js 模块需要禁用 fullySpecified
+                        test: /node_modules[\\/]svelte[\\/].*\.m?js$/,
+                        resolve: { fullySpecified: false },
+                    },
+                ];
+            } catch { return []; }
         })() : [];
 
         const frameworkPlugins: any[] = framework === "vue3" ? (() => {
@@ -102,6 +152,26 @@ export default class RspackBundler implements IBuildToolAdapter<RspackOptions> {
                 const { VueLoaderPlugin } = _require("vue-loader");
                 return [new VueLoaderPlugin()];
             } catch { return []; }
+        })() : framework === "angular" ? (() => {
+            // 尝试加载 @ngtools/webpack 的 AngularWebpackPlugin（rspack 兼容大部分 webpack
+            // plugin hook）。注册失败时静默降级到 SWC-only（JIT）模式，build 不阻断
+            // 但产物会缺 AOT 模板预编译。
+            try {
+                const ngtools = _require("@ngtools/webpack");
+                const AngularWebpackPlugin = ngtools.AngularWebpackPlugin;
+                if (typeof AngularWebpackPlugin !== "function") {
+                    this.logger.warn("framework 为 angular 但 @ngtools/webpack 未导出 AngularWebpackPlugin，跳过 AOT（仅 SWC JIT 模式）");
+                    return [];
+                }
+                const tsconfigPath = path.resolve(this.context, "tsconfig.json");
+                return [new AngularWebpackPlugin({ tsconfig: tsconfigPath })];
+            } catch (err) {
+                this.logger.warn(
+                    "framework 为 angular 但 @ngtools/webpack 注册失败，降级 SWC JIT 模式：" +
+                    String((err as Error)?.message ?? err),
+                );
+                return [];
+            }
         })() : [];
 
         const htmlPlugins = (rawEnvConfig.library === true ? [] : pages).map((page: any) =>
@@ -182,6 +252,12 @@ export default class RspackBundler implements IBuildToolAdapter<RspackOptions> {
                     acc[key] = path.resolve(this.context, String(val));
                     return acc;
                 }, {} as Record<string, string>),
+                ...(framework === "svelte"
+                    ? {
+                        mainFields: ["svelte", "browser", "module", "main"],
+                        conditionNames: ["svelte", "browser", "import", "require"],
+                    }
+                    : {}),
             },
             module: {
                 rules: [

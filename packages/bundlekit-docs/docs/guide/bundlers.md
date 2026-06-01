@@ -193,3 +193,19 @@ bundlekit-service build --bundler parcel     # 零配置首选
 | esbuild | ✅ | ✅ | ❌ | ❌ |
 
 > dev SSR = 开发模式下通过 `createSSRMiddleware` 提供 HTTP SSR 渲染能力。Vite 提供全双工 HMR；webpack/rspack 支持 client HMR（React Fast Refresh），server 侧进程级更新；rollup/rolldown/esbuild 无原生 HMR，修改后需重启进程；parcel 使用其原生 HMR websocket 方案（仅 client）。详见 [SSR 指南](/guide/ssr)。
+
+## Angular 框架支持矩阵
+
+Angular 模板的编译链与 React/Vue/Svelte 不同（强依赖装饰器 + AOT 模板编译）。各 bundler 的接入方式与限制：
+
+| Bundler | SPA build | SSR build | dev SSR | 接入方式 | 备注 |
+|---|---|---|---|---|---|
+| vite | ✅ | ✅ | ✅ | `@analogjs/vite-plugin-angular`（dynamic import） | PR1 已落地 |
+| webpack | ✅ | ✅ | ✅ | `@ngtools/webpack` 的 `AngularWebpackPlugin`（fallback：ts-loader JIT） | PR2 已落地 |
+| rspack | ✅ | ✅ | ✅ | `@ngtools/webpack` + SWC 装饰器（fallback：JIT） | PR2 已落地 |
+| rollup | ✅ | ✅ | ✅ | `@analogjs/vite-plugin-angular`（rollup-API 兼容） | PR3 已落地 |
+| rolldown | ✅ | ✅ | ✅ | 同 rollup（rolldown 兼容 rollup plugin 接口） | PR3 已落地 |
+| esbuild | ⚠️ JIT only | ❌ | ❌ | esbuild 内置装饰器，不接 AOT plugin；构建时 logger.warn 提示实验性 | PR3 实验性 |
+| parcel | ⚠️ JIT only | ❌ | ❌ | Parcel 无官方 Angular transformer；构建时 logger.warn 提示实验性 | PR3 实验性 |
+
+> ⏳ = 已规划，待 PR 合入。`bundler-vite/src/index.ts` 已写入 angular 分支，dynamic import 失败时会 `logger.warn` 但不阻断构建（用户需在自己项目 `package.json` 安装 `@analogjs/vite-plugin-angular`）。

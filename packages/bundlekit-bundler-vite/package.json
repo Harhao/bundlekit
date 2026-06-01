@@ -1,6 +1,6 @@
 {
   "name": "@bundlekit/bundler-vite",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "description": "A vite bundler for @bundlekit/service",
   "types": "./dist/index.d.ts",
   "main": "./dist/index.js",
@@ -26,9 +26,12 @@
   ],
   "dependencies": {
     "@bundlekit/shared-utils": "workspace:*",
+    "@sveltejs/vite-plugin-svelte": "^3.1.1",
     "@vitejs/plugin-react": "^4.4.1",
     "@vitejs/plugin-vue": "^5.0.0",
     "schema-utils": "^4.3.0",
+    "svelte": "^4.2.0",
+    "svelte-preprocess": "^5.1.0",
     "vite": "^4.3.9",
     "vite-plugin-html": "^3.2.2"
   },

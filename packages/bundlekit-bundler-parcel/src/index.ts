@@ -1,6 +1,5 @@
 import path from "path";
 import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync } from "fs";
-import { createRequire } from "module";
 import { Parcel, createWorkerFarm } from "@parcel/core";
 
 import {
@@ -133,6 +132,19 @@ export default class ParcelBundler implements IBuildToolAdapter {
 
         // ── SSR server pass 检测 ──────────────────────────────────────────────
         const isServerPass = rawEnvConfig.__isServerPass === true;
+
+        // ── Framework 提示（Angular 在 Parcel 上为实验性，仅 JIT） ─────────────
+        // Parcel 没有官方 Angular transformer，社区 parcel-plugin-angular 维护停滞。
+        // 用户可在 .parcelrc 自行配置 transformer，bundlekit 不强加任何东西，
+        // 仅在 angular framework 时打 warn 提醒（避免用户以为 bundle 是 AOT 优化过的）。
+        const framework = rawEnvConfig.framework as string | undefined;
+        if (framework === "angular") {
+            this.logger.warn(
+                "experimental: angular on parcel uses JIT mode (no AOT template compilation). " +
+                "Parcel has no official Angular transformer; bundle size will be larger and SSR is not supported. " +
+                "Prefer vite / webpack / rspack / rollup / rolldown for production Angular projects.",
+            );
+        }
 
         // ── Entry ────────────────────────────────────────────────────────────
         const entry = rawEnvConfig.entry

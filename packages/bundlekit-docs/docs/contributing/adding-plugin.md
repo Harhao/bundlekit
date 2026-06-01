@@ -237,3 +237,23 @@ pnpm changeset
 - [ ] 集成测试 fixture（可选，SPA + Library + SSR 三档）
 - [ ] changeset 写好
 - [ ] docs `plugins.md` 简介
+
+## 9. Angular 接入参考
+
+Angular 的编译模型与 React/Vue/Svelte 显著不同（强依赖装饰器 + AOT 模板编译 +
+zone.js polyfill + 异步 SSR render），bundlekit 的 7 个 bundler 因生态成熟度
+不同走了三套方案：
+
+| 方案 | 适用 bundler | 工作机制 | 第一版状态 |
+|---|---|---|---|
+| **A. analogjs（rollup-API 兼容）** | vite / rollup / rolldown | dynamic import `@analogjs/vite-plugin-angular`，应用到 `frameworkPlugins` 数组 | ✅ 已落地 |
+| **B. @ngtools/webpack（webpack 官方）** | webpack / rspack | `_require("@ngtools/webpack")` 取 `AngularWebpackPlugin`，注册到 `plugins` 数组 + 替换 ts-loader 为 `@ngtools/webpack` loader | ✅ 已落地 |
+| **C. JIT-only 实验性** | esbuild / parcel | 不接 AOT plugin，依赖运行时 `@angular/compiler` 即时编译模板；构建时 `logger.warn` 提示 bundle 体积偏大 | ⚠️ 仅基础支持 |
+
+新 framework 接入时建议优先选方案 A（如果该框架在 vite 生态有官方 / 准官方插件），
+其次方案 B（webpack 官方插件），最后退化到方案 C（仅装饰器 / 转译）。
+
+参考 commit：
+- vite/rollup/rolldown：`bundler-vite/src/index.ts` `framework === "angular"` 分支
+- webpack/rspack：`bundler-webpack/src/transformConfig.ts` 的 `transformScriptRules` + `transformFrameworkPlugins`
+- esbuild/parcel：`bundler-esbuild/src/index.ts` / `bundler-parcel/src/index.ts` 仅 `logger.warn` + 依赖 tsconfig 装饰器配置

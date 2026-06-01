@@ -288,7 +288,8 @@ export default class RolldownBundler implements IBuildToolAdapter {
 
         this.logger.info("开始转换rolldown配置");
 
-        // 框架插件：Vue 3 SFC 支持。@vitejs/plugin-vue 是 rollup-API 兼容的 plugin，
+        // 框架插件：Vue 3 / Svelte SFC 支持。
+        // @vitejs/plugin-vue / rollup-plugin-svelte 均是 rollup-API 兼容，
         // rolldown 兼容 rollup plugin 接口，可以直接复用
         const frameworkPlugins: any[] = [];
         if (framework === "vue3") {
@@ -297,6 +298,49 @@ export default class RolldownBundler implements IBuildToolAdapter {
                 frameworkPlugins.push((vue as any)());
             } catch {
                 this.logger.warn("framework 为 vue3 但未安装 @vitejs/plugin-vue，跳过");
+            }
+        } else if (framework === "svelte") {
+            try {
+                // rollup-plugin-svelte 是社区维护的 rollup 插件，rolldown 兼容
+                const sveltePluginMod = await import("rollup-plugin-svelte");
+                const sveltePlugin = (sveltePluginMod as any).default || sveltePluginMod;
+                let preprocess: any = undefined;
+                try {
+                    const preprocessMod = await import("svelte-preprocess");
+                    const factory = (preprocessMod as any).default || (preprocessMod as any);
+                    preprocess = typeof factory === "function" ? factory() : factory;
+                } catch {
+                    this.logger.warn("framework 为 svelte 但未安装 svelte-preprocess，将无法处理 <script lang=\"ts\">");
+                }
+                frameworkPlugins.push(
+                    sveltePlugin({
+                        ...(preprocess ? { preprocess } : {}),
+                        compilerOptions: {
+                            generate: isServerPass ? "ssr" : "dom",
+                            hydratable: !!rawEnvConfig.ssr,
+                        },
+                        emitCss: false,
+                    }),
+                );
+            } catch {
+                this.logger.warn("framework 为 svelte 但未安装 rollup-plugin-svelte，跳过");
+            }
+        } else if (framework === "angular") {
+            // Angular：复用 @analogjs/vite-plugin-angular（rollup-API 兼容；rolldown 兼容 rollup plugin 接口）
+            // 软依赖：不进 bundler-rolldown 的 dependencies（避免给非 angular 用户拉
+            // 入 ~50MB 的 @angular/compiler-cli），tsc 找不到声明时用 ts-ignore 兜底。
+            try {
+                // @ts-ignore - optional peer dep, may not be installed
+                const angularMod = await import("@analogjs/vite-plugin-angular");
+                const angular = (angularMod as any).default || (angularMod as any).angular;
+                if (typeof angular !== "function") {
+                    this.logger.warn("framework 为 angular 但 @analogjs/vite-plugin-angular 未导出 angular() 工厂函数，跳过");
+                } else {
+                    const result = angular();
+                    frameworkPlugins.push(...(([] as any[]).concat(result)));
+                }
+            } catch {
+                this.logger.warn("framework 为 angular 但未安装 @analogjs/vite-plugin-angular，跳过");
             }
         }
 
@@ -348,7 +392,11 @@ export default class RolldownBundler implements IBuildToolAdapter {
             resolve: {
                 extensions: framework === "vue3"
                     ? [".ts", ".tsx", ".js", ".jsx", ".json", ".vue"]
-                    : [".ts", ".tsx", ".js", ".jsx", ".json"],
+                    : framework === "svelte"
+                        ? [".ts", ".tsx", ".js", ".jsx", ".json", ".svelte"]
+                        : framework === "angular"
+                            ? [".ts", ".tsx", ".js", ".jsx", ".json"]
+                            : [".ts", ".tsx", ".js", ".jsx", ".json"],
                 alias: Object.entries(alias).reduce((acc, [key, val]) => {
                     acc[key] = path.resolve(this.context, String(val));
                     return acc;

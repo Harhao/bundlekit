@@ -12,8 +12,8 @@ export interface GeneratorOptions {
 // 【低14】SSR / Library 相关文件名常量，避免在逻辑中散落硬编码字符串
 /** SSR 模式下需要跳过的 non-SSR 入口文件名（不含 .ejs 后缀） */
 const NON_SSR_SKIP_NAMES = new Set([
-    "index.tsx", "index.jsx", "main.ts", "main.js",
-    "index.tsx.ejs", "index.jsx.ejs", "main.ts.ejs", "main.js.ejs",
+    "index.tsx", "index.jsx", "index.ts", "index.js", "main.ts", "main.js",
+    "index.tsx.ejs", "index.jsx.ejs", "index.ts.ejs", "index.js.ejs", "main.ts.ejs", "main.js.ejs",
 ]);
 
 /** 非 SSR 模式下需要跳过的文件名关键词（这些文件仅用于 SSR） */

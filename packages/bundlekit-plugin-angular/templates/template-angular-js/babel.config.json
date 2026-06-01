@@ -1,0 +1,9 @@
+{
+  "presets": [
+    ["@babel/preset-env", { "targets": { "esmodules": true } }]
+  ],
+  "plugins": [
+    ["@babel/plugin-proposal-decorators", { "legacy": true }],
+    ["@babel/plugin-transform-class-properties", { "loose": true }]
+  ]
+}

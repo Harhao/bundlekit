@@ -1,5 +1,12 @@
 # @bundlekit/shared-utils
 
+## 0.0.10
+
+### Patch Changes
+
+- 71acfd9: 增加 angular 得模版
+- c00d434: 增加 svelte 模版支持
+
 ## 0.0.9
 
 ### Patch Changes

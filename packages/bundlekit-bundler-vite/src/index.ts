@@ -70,6 +70,55 @@ export default class ViteBundler implements IBuildToolAdapter<InlineConfig> {
             } catch {
                 this.logger.warn("framework 为 vue3 但未安装 @vitejs/plugin-vue，跳过");
             }
+        } else if (framework === "svelte") {
+            try {
+                // @sveltejs/vite-plugin-svelte 是 svelte 官方维护的 vite 插件
+                // 它内部根据 vite 的 ssrLoadModule 自动设置 generate=ssr/dom，
+                // 用户不能再显式覆盖（vite-plugin-svelte 会 warn 并忽略）
+                const sveltePlugin = await import("@sveltejs/vite-plugin-svelte");
+                const svelte = (sveltePlugin as any).svelte || (sveltePlugin as any).default;
+                // svelte-preprocess 让 .svelte 内部 <script lang="ts"> / <style lang="scss">
+                // 等也能被识别。dynamic import 失败时不阻断（svelte 4 默认能处理纯 JS）
+                let preprocess: any = undefined;
+                try {
+                    const preprocessMod = await import("svelte-preprocess");
+                    const factory = (preprocessMod as any).default || (preprocessMod as any);
+                    preprocess = typeof factory === "function" ? factory() : factory;
+                } catch {
+                    this.logger.warn("framework 为 svelte 但未安装 svelte-preprocess，将无法处理 <script lang=\"ts\">");
+                }
+                frameworkPlugins.push(
+                    svelte({
+                        ...(preprocess ? { preprocess: [preprocess] } : {}),
+                        compilerOptions: {
+                            hydratable: !!envConfig.ssr,
+                        },
+                    }),
+                );
+            } catch {
+                this.logger.warn("framework 为 svelte 但未安装 @sveltejs/vite-plugin-svelte，跳过");
+            }
+        } else if (framework === "angular") {
+            try {
+                // @analogjs/vite-plugin-angular 处理 Angular 17+ standalone components
+                // 的装饰器、AOT 模板编译、HMR、SSR 转译。它在 client / server 双 pass
+                // 都需要应用（包括 __isServerPass=true 的 SSR 服务端构建）。
+                //
+                // 软依赖：不进 bundler-vite 的 dependencies（避免给非 angular 用户
+                // 拉入 ~50MB 的 @angular/compiler-cli）。tsc 找不到声明时用 ts-ignore
+                // 兜底，runtime 通过 try/catch 优雅降级。
+                // @ts-ignore - optional peer dep, may not be installed
+                const angularMod = await import("@analogjs/vite-plugin-angular");
+                const angular = (angularMod as any).default || (angularMod as any).angular;
+                if (typeof angular !== "function") {
+                    this.logger.warn("framework 为 angular 但 @analogjs/vite-plugin-angular 未导出 angular() 工厂函数，跳过");
+                } else {
+                    const result = angular();
+                    frameworkPlugins.push(...(([] as Plugin[]).concat(result as unknown as Plugin[])));
+                }
+            } catch {
+                this.logger.warn("framework 为 angular 但未安装 @analogjs/vite-plugin-angular，跳过");
+            }
         }
 
         const rollupInput: Record<string, string> = {};
@@ -155,7 +204,7 @@ export default class ViteBundler implements IBuildToolAdapter<InlineConfig> {
             mode: this.mode === "development" ? "development" : "production",
             configFile: false,
             resolve: {
-                extensions: ['.tsx', '.ts', '.js', '.mjs', '.mts', '.jsx', '.json', '.less', '.scss', '.css'],
+                extensions: ['.tsx', '.ts', '.js', '.mjs', '.mts', '.jsx', '.json', '.svelte', '.less', '.scss', '.css'],
                 alias: Object.entries(alias).reduce((acc, [key, val]) => {
                     acc[key] = path.resolve(this.context, String(val));
                     return acc;
@@ -365,8 +414,8 @@ export default class ViteBundler implements IBuildToolAdapter<InlineConfig> {
                 }
                 const appHtml = await render(url);
                 const html = template.includes(placeholder)
-                    ? template.replace(placeholder, appHtml)
-                    : template.replace(/<\/body>/i, `${appHtml}</body>`);
+                    ? template.replace(placeholder, String(appHtml))
+                    : template.replace(/<\/body>/i, `${String(appHtml)}</body>`);
 
                 res.statusCode = 200;
                 res.setHeader("Content-Type", "text/html");

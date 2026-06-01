@@ -157,7 +157,11 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
         const framework    = rawEnvConfig.framework as string | undefined;
         const extensions   = framework === "vue3"
             ? [".js", ".jsx", ".ts", ".tsx", ".vue"]
-            : [".js", ".jsx", ".ts", ".tsx"];
+            : framework === "svelte"
+                ? [".js", ".jsx", ".ts", ".tsx", ".svelte"]
+                : framework === "angular"
+                    ? [".ts", ".tsx", ".js", ".jsx"]
+                    : [".js", ".jsx", ".ts", ".tsx"];
 
         // SSR server pass 检测
         const isServerPass = rawEnvConfig.__isServerPass === true;
@@ -196,8 +200,7 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
         // ── Plugins ───────────────────────────────────────────────────────────
         const nodeEnv = this.mode === "production" ? "production" : "development";
 
-        // 框架插件：Vue 3 SFC 支持。@vitejs/plugin-vue 是 rollup-API 兼容的，
-        // 直接放到 rollup plugins 列表即可。dynamic import 失败时仅 warn。
+        // 框架插件：Vue 3 / Svelte SFC 支持。
         const frameworkPlugins: Plugin[] = [];
         if (framework === "vue3") {
             try {
@@ -205,6 +208,50 @@ export default class rollupBundler implements IBuildToolAdapter<RollupOptions> {
                 frameworkPlugins.push((vue as any)());
             } catch {
                 this.logger.warn("framework 为 vue3 但未安装 @vitejs/plugin-vue，跳过");
+            }
+        } else if (framework === "svelte") {
+            try {
+                const sveltePluginMod = await import("rollup-plugin-svelte");
+                const sveltePlugin = (sveltePluginMod as any).default || sveltePluginMod;
+                let preprocess: any = undefined;
+                try {
+                    const preprocessMod = await import("svelte-preprocess");
+                    const factory = (preprocessMod as any).default || (preprocessMod as any);
+                    preprocess = typeof factory === "function" ? factory() : factory;
+                } catch {
+                    this.logger.warn("framework 为 svelte 但未安装 svelte-preprocess，将无法处理 <script lang=\"ts\">");
+                }
+                frameworkPlugins.push(
+                    sveltePlugin({
+                        ...(preprocess ? { preprocess } : {}),
+                        compilerOptions: {
+                            generate: isServerPass ? "ssr" : "dom",
+                            hydratable: !!rawEnvConfig.ssr,
+                        },
+                        emitCss: false,
+                    }),
+                );
+            } catch {
+                this.logger.warn("framework 为 svelte 但未安装 rollup-plugin-svelte，跳过");
+            }
+        } else if (framework === "angular") {
+            // Angular：复用 @analogjs/vite-plugin-angular（rollup-API 兼容）
+            // 该插件处理装饰器、AOT 模板编译、HMR、SSR 转译，client / server pass
+            // 都需要应用。dynamic import 失败时 warn 但不阻断（用户需在自己项目装）。
+            // 软依赖：不进 bundler-rollup 的 dependencies（避免给非 angular 用户拉
+            // 入 ~50MB 的 @angular/compiler-cli），tsc 找不到声明时用 ts-ignore 兜底。
+            try {
+                // @ts-ignore - optional peer dep, may not be installed
+                const angularMod = await import("@analogjs/vite-plugin-angular");
+                const angular = (angularMod as any).default || (angularMod as any).angular;
+                if (typeof angular !== "function") {
+                    this.logger.warn("framework 为 angular 但 @analogjs/vite-plugin-angular 未导出 angular() 工厂函数，跳过");
+                } else {
+                    const result = angular();
+                    frameworkPlugins.push(...(([] as Plugin[]).concat(result as unknown as Plugin[])));
+                }
+            } catch {
+                this.logger.warn("framework 为 angular 但未安装 @analogjs/vite-plugin-angular，跳过");
             }
         }
 

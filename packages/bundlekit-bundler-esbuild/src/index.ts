@@ -278,9 +278,9 @@ export default class EsbuildBundler implements IBuildToolAdapter {
 
         this.logger.info("开始转换 esbuild 配置");
 
-        // 框架插件：Vue 3 SFC 支持。esbuild 没有官方 vue 插件，使用社区 esbuild-plugin-vue3。
-        // 提前到 SSR pass 分支前面 — server pass 也需要 .vue 编译能力，否则 server compiler
-        // 卡在 ".vue 文件没人处理" → dev SSR 启动 timeout。
+        // 框架插件：Vue 3 / Svelte SFC 支持。esbuild 没有官方 vue/svelte 插件，
+        // 使用社区 esbuild-plugin-vue3 / esbuild-svelte。
+        // 提前到 SSR pass 分支前面 — server pass 也需要 .vue / .svelte 编译能力。
         const frameworkPlugins: esbuild.Plugin[] = [];
         if (framework === "vue3") {
             try {
@@ -290,6 +290,38 @@ export default class EsbuildBundler implements IBuildToolAdapter {
             } catch {
                 this.logger.warn("framework 为 vue3 但未安装 esbuild-plugin-vue3，跳过");
             }
+        } else if (framework === "svelte") {
+            try {
+                const svelteModule = await import("esbuild-svelte");
+                const sveltePluginFactory = (svelteModule as any).default || svelteModule;
+                let preprocess: any = undefined;
+                try {
+                    const preprocessMod = await import("svelte-preprocess");
+                    const factory = (preprocessMod as any).default || (preprocessMod as any);
+                    preprocess = typeof factory === "function" ? factory() : factory;
+                } catch {
+                    this.logger.warn("framework 为 svelte 但未安装 svelte-preprocess，将无法处理 <script lang=\"ts\">");
+                }
+                frameworkPlugins.push(
+                    sveltePluginFactory({
+                        ...(preprocess ? { preprocess } : {}),
+                        compilerOptions: {
+                            generate: isServerPass ? "ssr" : "dom",
+                            hydratable: !!rawEnvConfig.ssr,
+                        },
+                    }),
+                );
+            } catch {
+                this.logger.warn("framework 为 svelte 但未安装 esbuild-svelte，跳过");
+            }
+        } else if (framework === "angular") {
+            // esbuild 原生支持 TypeScript decorators 与 emitDecoratorMetadata（通过 tsconfig）；
+            // 但不做 AOT 模板编译。第一版仅保证 JIT 可跑，logger.warn 标注实验性。
+            // 未来若要加 AOT，可对接社区 esbuild-angular plugin（目前维护停滞）。
+            this.logger.warn(
+                "experimental: angular on esbuild uses JIT mode (no AOT template compilation). " +
+                "Bundle size will be larger; for production prefer vite / webpack / rspack / rollup / rolldown.",
+            );
         }
 
         // ── SSR server pass ───────────────────────────────────────────────────

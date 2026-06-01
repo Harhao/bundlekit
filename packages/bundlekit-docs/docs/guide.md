@@ -35,7 +35,7 @@ bc create my-app
 
 cli 会引导你完成以下步骤（TTY 终端使用 ink 渲染 banner + 步骤选择）：
 
-1. 选择模板：`react-ts` / `react-js` / `vue3-ts` / `vue3-js` / `node-ts`
+1. 选择模板：`react-ts` / `react-js` / `vue3-ts` / `vue3-js` / `svelte-ts` / `svelte-js` / `angular-ts` / `angular-js` / `node-ts`
 2. 选择默认 bundler：`vite` / `webpack` / `rspack` / `rollup` / `rolldown` / `parcel` / `esbuild`
 3. 选择是否启用 SSR（`node-ts` 与 `--lib` 模式自动跳过）
 4. 输入项目描述（可选）

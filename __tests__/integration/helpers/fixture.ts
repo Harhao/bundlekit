@@ -12,13 +12,15 @@ import { spawnSync } from "node:child_process";
  *   - 必须在 monorepo 文件树内才能保证相对路径解析正确
  *
  * mode 参数控制使用哪份 .bundlekitrc：
- *   - 'spa'     → .bundlekitrc.spa.ts → 复制为 .bundlekitrc.ts
- *   - 'dev-spa' → .bundlekitrc.dev-spa.ts → 复制为 .bundlekitrc.ts（dev CSR HTTP smoke）
- *   - 'lib'     → .bundlekitrc.lib.ts → 复制为 .bundlekitrc.ts
- *   - 'lib-umd' → .bundlekitrc.lib-umd.ts → 复制为 .bundlekitrc.ts（library + UMD + libraryName）
- *   - 'ssr'     → .bundlekitrc.ssr.ts → 复制为 .bundlekitrc.ts
+ *   - 'spa'         → .bundlekitrc.spa.ts → 复制为 .bundlekitrc.ts
+ *   - 'dev-spa'     → .bundlekitrc.dev-spa.ts → 复制为 .bundlekitrc.ts（dev CSR HTTP smoke）
+ *   - 'lib'         → .bundlekitrc.lib.ts → 复制为 .bundlekitrc.ts
+ *   - 'lib-umd'     → .bundlekitrc.lib-umd.ts → 复制为 .bundlekitrc.ts（library + UMD + libraryName）
+ *   - 'ssr'         → .bundlekitrc.ssr.ts → 复制为 .bundlekitrc.ts
+ *   - 'angular-spa' → .bundlekitrc.angular-spa.ts，并复制 shared-angular/
+ *   - 'angular-ssr' → .bundlekitrc.angular-ssr.ts，并复制 shared-angular/
  */
-export type FixtureMode = "spa" | "dev-spa" | "lib" | "lib-umd" | "ssr";
+export type FixtureMode = "spa" | "dev-spa" | "lib" | "lib-umd" | "ssr" | "angular-spa" | "angular-ssr";
 
 export interface IFixtureHandle {
     /** 临时项目根目录 */
@@ -49,6 +51,15 @@ export async function copyFixture(bundler: string, mode: FixtureMode): Promise<I
         path.join(FIXTURES_ROOT, "shared"),
         path.join(tmpRoot, "shared"),
     );
+
+    // 2b) 对 angular-* 模式额外拷 shared-angular/ 进去（含 angular component / entry / package.json）
+    if (mode === "angular-spa" || mode === "angular-ssr") {
+        const sharedAngular = path.join(FIXTURES_ROOT, "shared-angular");
+        const sharedAngularStat = await fs.stat(sharedAngular).catch(() => null);
+        if (sharedAngularStat?.isDirectory()) {
+            await copyDir(sharedAngular, path.join(tmpRoot, "shared-angular"));
+        }
+    }
 
     // 3) 把 .bundlekitrc.<mode>.ts 选定为 .bundlekitrc.ts
     const modeConfig = path.join(tmpRoot, `.bundlekitrc.${mode}.ts`);

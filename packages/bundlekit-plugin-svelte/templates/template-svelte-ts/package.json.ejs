@@ -1,0 +1,21 @@
+{
+  "name": "<%= projectName %>",
+  "version": "1.0.0",
+  "description": "<%= description %>",
+  "scripts": {
+    "clean": "rimraf dist",
+    "dev": "bundlekit-service serve --bundler <%= bundler %> --mode development",
+    "build": "bundlekit-service build --bundler <%= bundler %> --mode production"
+  },
+  "dependencies": {
+    "svelte": "^4.2.0"
+  },
+  "devDependencies": {
+    "@bundlekit/service": "workspace:^",
+    "@bundlekit/plugin-svelte": "workspace:^",
+    "@tsconfig/svelte": "^5.0.0",
+    "svelte-check": "^3.6.0",
+    "svelte-preprocess": "^5.1.0",
+    "typescript": "^5.8.0"
+  }
+}

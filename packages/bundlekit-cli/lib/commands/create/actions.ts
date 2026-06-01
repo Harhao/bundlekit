@@ -45,23 +45,59 @@ export function validateProject(name: string, cwd: string): { targetDir: string 
 export function resolvePluginPkgName(template: string): string {
     const normalized = normalizeTemplate(template);
     if (normalized.startsWith("vue")) return "@bundlekit/plugin-vue";
+    if (normalized.startsWith("svelte")) return "@bundlekit/plugin-svelte";
+    if (normalized.startsWith("angular")) return "@bundlekit/plugin-angular";
     if (normalized.startsWith("node")) return "@bundlekit/plugin-node";
     return "@bundlekit/plugin-react";
 }
 
 export function normalizeTemplate(template: string): string {
     const aliases: Record<string, string> = {
-        react:      "react-ts",
-        vue:        "vue3-ts",
-        vue3:       "vue3-ts",
-        "react-ts": "react-ts",
-        "react-js": "react-js",
-        "vue3-ts":  "vue3-ts",
-        "vue3-js":  "vue3-js",
-        node:       "node-ts",
-        "node-ts":  "node-ts",
+        react:        "react-ts",
+        vue:          "vue3-ts",
+        vue3:         "vue3-ts",
+        svelte:       "svelte-ts",
+        angular:      "angular-ts",
+        "react-ts":   "react-ts",
+        "react-js":   "react-js",
+        "vue3-ts":    "vue3-ts",
+        "vue3-js":    "vue3-js",
+        "svelte-ts":  "svelte-ts",
+        "svelte-js":  "svelte-js",
+        "angular-ts": "angular-ts",
+        "angular-js": "angular-js",
+        node:         "node-ts",
+        "node-ts":    "node-ts",
     };
     return aliases[template] ?? template;
+}
+
+/**
+ * 已知不兼容的「模板 × 打包器」组合。
+ *
+ * 入参用归一后的 template / bundler 短名。返回 null 表示组合可用，
+ * 否则返回带「根因 + 建议」的提示串，供 CLI/UI 拦截 + 展示用。
+ *
+ * 当前已知组合：
+ *   - svelte-ts / svelte-js × parcel
+ *     · 根因：Parcel 官方未提供 *.svelte transformer；社区 parcel-transformer-svelte
+ *       最后发布于 2021-11，仅声明支持 Svelte 3，与本仓库使用的 Svelte 4 不兼容。
+ *     · 建议：改用 vite / webpack / rspack / rollup / rolldown / esbuild 之一。
+ */
+export function checkTemplateBundlerCombo(
+    template: string,
+    bundler: string,
+): string | null {
+    const normalized = normalizeTemplate(template);
+    if (normalized.startsWith("svelte") && bundler === "parcel") {
+        return (
+            "Svelte 模板暂不支持 parcel 打包器：\n" +
+            "  - Parcel 官方未维护 .svelte transformer\n" +
+            "  - 社区 parcel-transformer-svelte 仅兼容 Svelte 3\n" +
+            "  - 建议改用 vite / webpack / rspack / rollup / rolldown / esbuild 之一"
+        );
+    }
+    return null;
 }
 
 /** 解析模板目录路径（require.resolve 优先 / 相对路径兜底） */
@@ -81,7 +117,7 @@ export function resolveTemplateDir(template: string): string {
     const monorepoDir = path.resolve(__dir, "../../../..", pluginDirName, "templates", `template-${normalized}`);
     if (fs.existsSync(monorepoDir)) return monorepoDir;
 
-    throw new Error(`模板 "${template}" 未找到，可用模板：react-ts / react-js / vue3-ts / vue3-js / node-ts`);
+    throw new Error(`模板 "${template}" 未找到，可用模板：react-ts / react-js / vue3-ts / vue3-js / svelte-ts / svelte-js / angular-ts / angular-js / node-ts`);
 }
 
 /** 渲染模板到 targetDir */
