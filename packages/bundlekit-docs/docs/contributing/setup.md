@@ -51,7 +51,7 @@ cli 检测到 monorepo 后会自动用 `link:` 协议指向本地 `packages/`，
 
 ```bash
 # 在 monorepo 根目录跑
-pnpm exec dc create my-demo -t react-ts -b vite --pm pnpm
+pnpm exec bc create my-demo -t react-ts -b vite --pm pnpm
 
 # 生成的项目 package.json 含：
 #   "@bundlekit/service": "link:/abs/path/to/packages/bundlekit-service"
@@ -124,16 +124,16 @@ registry=https://registry.npmjs.org/
 
 国内开发可暂时切淘宝镜像：`pnpm config set registry https://registry.npmmirror.com`。
 
-### `dc create` 创建项目卡在 install
+### `bc create` 创建项目卡在 install
 
 预期行为：在 monorepo 内自动走 link 模式，install 秒级。如果卡住：
 
 ```bash
 # 跳过 install，让你手工处理
-DEVKIT_SKIP_INSTALL=1 pnpm exec dc create my-demo -t react-ts
+DEVKIT_SKIP_INSTALL=1 pnpm exec bc create my-demo -t react-ts
 
 # 或强制 npm 模式（包未发布时会失败，仅用于验证替换逻辑）
-DEVKIT_DEP_MODE=npm pnpm exec dc create my-demo -t react-ts
+DEVKIT_DEP_MODE=npm pnpm exec bc create my-demo -t react-ts
 ```
 
 ### TypeScript 报 "Cannot find module"

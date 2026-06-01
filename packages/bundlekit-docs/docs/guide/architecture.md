@@ -14,18 +14,23 @@ bundlekit/
 ├── packages/
 │   ├── bundlekit-service          # 核心服务（命令调度 + 插件加载 + 打包器调度）
 │   ├── bundlekit-cli              # 脚手架 CLI（create / add）
+│   ├── bundlekit-cli-mcp          # MCP server（暴露 CLI 能力给 AI 代理）
 │   ├── bundlekit-shared-utils     # 公共类型、工具函数
 │   ├── bundlekit-bundler-webpack  # ┐
-│   ├── bundlekit-bundler-vite     # │ 各打包器适配器
-│   ├── bundlekit-bundler-rollup   # │ 均实现 IBuildToolAdapter
-│   ├── bundlekit-bundler-rspack   # │
-│   ├── bundlekit-bundler-rolldown # ┘
+│   ├── bundlekit-bundler-vite     # │
+│   ├── bundlekit-bundler-rollup   # │ 7 个打包器适配器
+│   ├── bundlekit-bundler-rspack   # │ 均实现 IBuildToolAdapter
+│   ├── bundlekit-bundler-rolldown # │
+│   ├── bundlekit-bundler-parcel   # │
+│   ├── bundlekit-bundler-esbuild  # ┘
 │   ├── bundlekit-plugin-react     # ┐
-│   ├── bundlekit-plugin-vue       # ├ 构建插件（写入 framework 字段）
-│   ├── bundlekit-plugin-mock      # ┘
+│   ├── bundlekit-plugin-vue       # │ 构建插件（写入 framework 字段）
+│   ├── bundlekit-plugin-node      # │  - plugin-node: 写 framework=node，去 devServer
+│   ├── bundlekit-plugin-mock      # ┘  - plugin-mock: 注册 mock server 命令
 │   ├── bundlekit-request          # 运行时 HTTP 客户端（axios / fetch）
-│   └── bundlekit-docs             # 文档站（基于 dumi）
-└── docs/                       # 文档源文件
+│   ├── bundlekit-docs             # 文档站（基于 dumi）
+│   └── bundlekit-docs-agent       # Cloudflare Worker RAG 文档查询 agent
+└── openspec/                      # OpenSpec 变更管理（spec / changes / archive）
 ```
 
 ## 核心数据流
@@ -70,17 +75,22 @@ bundlekit-service serve/build
        │                      │                          │
 ┌──────▼──────────┐   ┌───────▼────────────┐   ┌─────────▼─────────┐
 │ @bundlekit/cli     │   │ @bundlekit/service    │   │ @bundlekit/bundler-* │
-│ bc create/add   │   │ ds serve/build     │   │ (5 个适配器)       │
-│ deps: plugin-*  │   │ optional peer:     │   │ 各自 deps webpack/ │
-└─────────────────┘   │   bundler-*        │   │ vite/rspack/rollup │
-                      └────┬───────────────┘   └──────┬────────────┘
-                           │ 运行时按需 import        │
-                           └──────────────────────────┘
+│ bc create/add   │   │ ds serve/build     │   │ (7 个适配器)       │
+│ deps: plugin-*  │   │ optional peer:     │   │ webpack/vite/      │
+└─────────────────┘   │   bundler-*        │   │ rspack/rollup/     │
+       │              └────┬───────────────┘   │ rolldown/parcel/   │
+       │ 复用 CLI 能力       │ 运行时按需 import   │ esbuild            │
+       │                   └──────────────────────────┘
+┌──────▼──────────┐
+│ @bundlekit/cli-mcp │   ── MCP server，把 create/add 暴露为 MCP tools
+└─────────────────┘       供 Cursor / Claude / Windsurf 等 AI 客户端调用
 
       ❌ 不再有：service → bundler-* 的 hard dependency
 ```
 
-`@bundlekit/service` 不再硬绑 5 个 bundler 适配器；它们以 `peerDependenciesMeta.optional` 声明，由用户工程的 `devDependencies` 提供（cli `create -b X` 自动写入；`bc add bundler-X` 显式追加；service 启动时缺失则弹出 prompt 安装）。
+`@bundlekit/service` 不再硬绑 bundler 适配器；它们以 `peerDependenciesMeta.optional` 声明，由用户工程的 `devDependencies` 提供（cli `create -b X` 自动写入；`bc add bundler-X` 显式追加；service 启动时缺失则弹出 prompt 安装）。
+
+`@bundlekit/cli-mcp` 是 CLI 的 MCP 包装层，把 `bc create` / `bc add` / `bc help` 暴露为 MCP tools，让 AI 编程客户端能通过自然语言驱动 BundleKit。详见 [AI Agent 集成](/guide/cli-mcp)。
 
 ## 运行时动态加载打包器
 
@@ -143,8 +153,10 @@ Service.startBuilder()
 interface IBuildToolAdapter<T = any> {
   name: string;
   transformConfig(config: IBuildConfig): T;       // 抽象配置 → 打包器原生配置
-  validateConfig(config: T, buildConfig?: IBuildConfig): boolean;
+  validateConfig?(config: T, buildConfig?: IBuildConfig): boolean;
   run(config: T): Promise<void>;                  // 启动构建或开发服务
+  /** 启用 ssr.dev=true 时由 service 调用，返回 connect 风格中间件链 */
+  createSSRMiddleware?(config: IBuildConfig, ctx: ISSRMiddlewareCtx): Promise<IRequestHandler | IRequestHandler[]>;
 }
 ```
 
@@ -154,17 +166,19 @@ interface IBuildToolAdapter<T = any> {
 bundlekit-shared-utils
     ↓（被所有包依赖）
 bundlekit-bundler-webpack
-bundlekit-bundler-vite        （并行构建）
-bundlekit-bundler-rollup
+bundlekit-bundler-vite
+bundlekit-bundler-rollup       （并行构建）
 bundlekit-bundler-rspack
 bundlekit-bundler-rolldown
+bundlekit-bundler-parcel
+bundlekit-bundler-esbuild
     ↓
 bundlekit-service             （仅依赖 shared-utils；bundler-* 在 peerDependenciesMeta.optional）
 ```
 
 **`turbo.json` 中 `service:build` 不再 dependsOn 任何 bundler-*** —— 因为 service 在运行时通过 `require.resolve` 动态加载 bundler，编译期无需 bundler dist。原本 `dependsOn: ["bundler-webpack:build", ...]` 已删除。
 
-`bundlekit-cli` 和 `bundlekit-request` 独立构建，不在此链路中。
+`bundlekit-cli` / `bundlekit-cli-mcp` / `bundlekit-request` / `bundlekit-plugin-*` 独立构建，不在此链路中。
 
 ## 设计原则
 

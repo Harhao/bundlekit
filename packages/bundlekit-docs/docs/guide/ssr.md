@@ -321,4 +321,4 @@ export async function render(url: string): Promise<string> {
   },
 ```
 
-> 💡 vue 模板用 `dc create my-app -t vue3-ts --ssr` 自动生成。
+> 💡 vue 模板用 `bc create my-app -t vue3-ts --ssr` 自动生成。

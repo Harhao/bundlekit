@@ -95,6 +95,27 @@ plugins: ["@bundlekit/plugin-vue"]
 
 ---
 
+### Node.js 插件
+
+包名：`@bundlekit/plugin-node`
+
+```ts
+plugins: ["@bundlekit/plugin-node"]
+```
+
+**效果：**
+
+- 写入 `framework: "node"`，告知 bundler 适配器目标平台是 Node.js
+  - **rollup / rolldown**：设置 `platform: "node"`，自动 externalize Node 内置模块
+  - **esbuild**：设置 `target: "node18"` 等
+- 自动清空所有 env 的 `devServer` 字段（Node 库不需要 dev server）
+
+**适用场景：**纯 TypeScript SDK、CLI 工具、Node.js 服务端库等无浏览器入口的项目。
+
+> `bc create my-sdk -t node-ts -b rollup --lib` 会一步生成包含 plugin-node + library 模式的项目骨架（esm/cjs 双格式输出）。
+
+---
+
 ### Mock 插件
 
 包名：`@bundlekit/plugin-mock`
@@ -241,7 +262,7 @@ export default async function generate(
   // 2. 通过 api.prompt() 向用户询问（底层由 CLI 的 Enquirer 驱动）
   //    注意：在以下情况下 prompt 会被自动跳过（使用默认值）：
   //    - 非 TTY 环境（如 CI pipelines）
-  //    - 设置了 DEVKIT_NO_PROMPT=1（dc create 会自动注入）
+  //    - 设置了 DEVKIT_NO_PROMPT=1（bc create 会自动注入）
   //    - CI=true 或 CI=1
   const { installRequest } = await api.prompt<{ installRequest: boolean }>([
     {
