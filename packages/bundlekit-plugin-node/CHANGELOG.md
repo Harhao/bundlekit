@@ -1,5 +1,12 @@
 # @bundlekit/plugin-node
 
+## 0.0.6
+
+### Patch Changes
+
+- Updated dependencies [29e8509]
+  - @bundlekit/shared-utils@0.0.11
+
 ## 0.0.5
 
 ### Patch Changes

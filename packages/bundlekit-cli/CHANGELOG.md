@@ -1,5 +1,17 @@
 # @bundlekit/cli
 
+## 0.0.20
+
+### Patch Changes
+
+- Updated dependencies [29e8509]
+  - @bundlekit/shared-utils@0.0.11
+  - @bundlekit/plugin-angular@0.0.3
+  - @bundlekit/plugin-node@0.0.6
+  - @bundlekit/plugin-react@0.0.14
+  - @bundlekit/plugin-svelte@0.0.3
+  - @bundlekit/plugin-vue@0.0.14
+
 ## 0.0.19
 
 ### Patch Changes

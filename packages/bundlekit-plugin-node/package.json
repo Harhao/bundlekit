@@ -1,6 +1,6 @@
 {
   "name": "@bundlekit/plugin-node",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Node.js / pure TypeScript plugin for bundlekit - library / CLI / server SDK templates",
   "main": "./index.ts",
   "type": "module",

@@ -1,5 +1,11 @@
 # @bundlekit/shared-utils
 
+## 0.0.11
+
+### Patch Changes
+
+- 29e8509: 处理 angular 相关 bundler 异常
+
 ## 0.0.10
 
 ### Patch Changes

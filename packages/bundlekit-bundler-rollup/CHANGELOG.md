@@ -1,5 +1,13 @@
 # @bundlekit/bundler-rollup
 
+## 0.0.18
+
+### Patch Changes
+
+- 29e8509: 处理 angular 相关 bundler 异常
+- Updated dependencies [29e8509]
+  - @bundlekit/shared-utils@0.0.11
+
 ## 0.0.17
 
 ### Patch Changes
