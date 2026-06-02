@@ -7,6 +7,9 @@
 [English](#english) | [中文](#chinese)
 
 <a href="https://llm-chat-app.harhao.workers.dev" target="_blank">bundlekit docs agent</a>
+<p align="center">
+  <img src=".github/assets/images/bundlekit-install-and-init.gif" alt="bundlekit banner" />
+</p>
 
 ---
 
