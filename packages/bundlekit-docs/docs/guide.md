@@ -33,6 +33,8 @@ npm install -g @bundlekit/cli
 bc create my-app
 ```
 
+![bundlekit 脚手架创建演示](/bundlekit-install-and-init.gif)
+
 cli 会引导你完成以下步骤（TTY 终端使用 ink 渲染 banner + 步骤选择）：
 
 1. 选择模板：`react-ts` / `react-js` / `vue3-ts` / `vue3-js` / `svelte-ts` / `svelte-js` / `angular-ts` / `angular-js` / `node-ts`
