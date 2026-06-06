@@ -1,6 +1,4 @@
-<p align="center">
-  <img src=".github/assets/logo.png" alt="BundleKit Logo" width="200" />
-</p>
+<p align="center"></p>
 
 <h1 align="center">BundleKit</h1>
 
