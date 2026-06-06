@@ -1,298 +1,299 @@
 <p align="center">
-  <img src=".github/assets/images/poster.png" alt="bundlekit banner" />
+  <img src=".github/assets/logo.png" alt="BundleKit Logo" width="200" />
 </p>
 
-# bundlekit
+<h1 align="center">BundleKit</h1>
 
-[English](#english) | [中文](#chinese)
-
-<a href="https://llm-chat-app.harhao.workers.dev" target="_blank">bundlekit docs agent</a>
 <p align="center">
-  <img src=".github/assets/images/bundlekit-install-and-init.gif" alt="bundlekit banner" />
+  前端多构建器工具集——一套配置，驱动多种构建工具
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/@bundlekit/service"><img src="https://img.shields.io/npm/v/@bundlekit/service.svg" alt="npm version" /></a>
+  <a href="https://www.npmjs.com/package/@bundlekit/cli"><img src="https://img.shields.io/npm/v/@bundlekit/cli.svg" alt="npm version" /></a>
+  <a href="https://github.com/Harhao/bundlekit/blob/master/LICENSE"><img src="https://img.shields.io/npm/l/@bundlekit/service.svg" alt="license" /></a>
+  <a href="https://bundlekit.harhao.workers.dev"><img src="https://img.shields.io/badge/docs-online-blue" alt="docs" /></a>
 </p>
 
 ---
 
-<a name="chinese"></a>
+## 简介
 
-## 中文
+BundleKit 是一个**前端多构建器统一工具集**，目标是让开发者通过**一份 `.bundlekitrc.ts` 配置文件**，即可自由切换底层构建工具，无需关心各构建器之间配置的差异。
 
-前端多打包器构建工具集 —— 一套 `.bundlekitrc.ts` 配置，驱动 Webpack / Vite / Rollup / Rspack / Rolldown / Parcel / esbuild 七种主流打包器。
+目前已支持的构建器包括：Webpack、Vite、Rollup、Rspack、Rolldown、Parcel、esbuild。
 
-### 架构概览
+## 特性
 
-```
-.bundlekitrc.ts
-    ↓ ConfigLoader 解析
-IBuildConfig（抽象配置）
-    ↓ Plugin.apply() 注入框架信息（framework 字段）
-    ↓ BundlerAdapter.transformConfig()
-各打包器原生配置
-    ↓ BundlerAdapter.run()
-构建产物
-```
+- 🚀 **多构建器支持**：一套配置，支持切换 Webpack / Vite / Rollup / Rspack / Rolldown / Parcel / esbuild
+- 🧩 **插件化架构**：通过插件扩展框架支持（React / Vue 3 / Svelte / Angular / Node.js）
+- 🎯 **CLI 脚手架**：一行命令创建项目，交互式选择框架、构建器、语言
+- 🔌 **插件管理**：为已有项目添加框架插件（`bundlekit-cli add`）
+- 📦 **库模式**：支持 ESM / CJS / UMD 多格式输出（`--lib` / `--library-name`）
+- 🖥️ **SSR 支持**：内置服务端渲染支持，双通道构建（`--ssr`）
+- 🤖 **MCP 集成**：提供 MCP Server，支持通过 AI 工具链创建和管理项目
+- 📖 **文档站点**：基于 dumi 的完整文档和贡献指南
+- ✅ **完善的测试**：单元测试 + 集成测试 + E2E 测试
 
-**核心包说明：**
+## 快速开始
 
-| 包名 | 说明 |
-|------|------|
-| `@bundlekit/service` | 核心服务，负责插件加载、配置解析、打包器调度 |
-| `@bundlekit/cli` | 脚手架工具，提供 `create` 与 `add` 命令 |
-| `@bundlekit/shared-utils` | 公共工具与类型定义 |
-| `@bundlekit/bundler-webpack` | Webpack 5 适配器 |
-| `@bundlekit/bundler-vite` | Vite 适配器 |
-| `@bundlekit/bundler-rollup` | Rollup 4 适配器 |
-| `@bundlekit/bundler-rspack` | Rspack 适配器（Rust 实现，极速） |
-| `@bundlekit/bundler-rolldown` | Rolldown 适配器（实验性） |
-| `@bundlekit/bundler-parcel` | Parcel 2 适配器（零配置） |
-| `@bundlekit/bundler-esbuild` | esbuild 适配器（极速编译） |
-| `@bundlekit/plugin-react` | React 构建插件 |
-| `@bundlekit/plugin-vue` | Vue 3 构建插件 |
-| `@bundlekit/plugin-mock` | Mock API 插件 |
-| `@bundlekit/request` | 运行时 HTTP 客户端（axios / fetch 双引擎） |
-
-### 安装
-
-确保 `node >= 18.0.0`，推荐使用 `pnpm`。
-
-#### 方式一：脚手架创建（推荐）
+### 创建新项目
 
 ```bash
-npx @bundlekit/cli create my-app
-```
-
-cli 会引导你选择模板与 bundler，并自动安装 `@bundlekit/service` + 框架插件 + 你选择的 bundler 适配器到新项目。
-
-#### 方式二：现有项目接入
-
-```bash
-pnpm add -D @bundlekit/service @bundlekit/plugin-react @bundlekit/bundler-vite
-```
-
-或：
-
-```bash
-pnpm add -D @bundlekit/cli
-dc add react
-dc add bundler-vite
-```
-
-### 快速开始
-
-```bash
-# 创建项目（交互式）
+# 使用完整命令
 bundlekit-cli create my-app
 
-# 指定模板和打包器
-bundlekit-cli create my-app --template react-ts --bundler vite
+# 或使用短别名
+bc create my-app
+```
 
-# 追加插件
-bundlekit-cli add mock
+创建过程中会交互式选择：
 
-# 启动开发服务
-npx bundlekit-service serve --bundler vite
+- 项目模板（框架 + 语言）
+- 构建器
+- 包管理器
+- 是否启用 SSR
+- 是否为库模式
+
+### 为已有项目添加插件
+
+```bash
+bc add react
+bc add vue
+bc add svelte
+bc add angular
+bc add node
+```
+
+### 常用选项
+
+```bash
+# 跳过交互，直接指定参数
+bc create my-app --template react-ts --bundler vite
+
+# 创建 SSR 项目
+bc create my-app --template vue3-ts --bundler vite --ssr
+
+# 创建库项目
+bc create my-lib --template node-ts --bundler rollup --lib --library-name MyLib
+```
+
+**可用模板**：`react-ts` `react-js` `vue3-ts` `vue3-js` `svelte-ts` `svelte-js` `angular-ts` `angular-js` `node-ts`
+
+**可用构建器**：`vite` `webpack` `rspack` `rollup` `rolldown` `parcel` `esbuild`
+
+**包管理器**：`npm` `yarn` `pnpm`（默认 pnpm）
+
+## 配置说明
+
+项目根目录创建 `.bundlekitrc.ts`（或 `.bundlekitrc.js`）文件：
+
+```typescript
+import { defineConfig } from '@bundlekit/service';
+
+export default defineConfig({
+  bundler: 'vite',
+  plugins: ['react'],
+  // SSR 配置（可选）
+  ssr: {
+    enabled: true,
+  },
+  // 开发环境配置
+  dev: {
+    port: 3000,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      },
+    },
+  },
+  // 生产环境配置
+  build: {
+    outDir: 'dist',
+    sourcemap: true,
+  },
+});
+```
+
+## 使用构建服务
+
+```bash
+# 启动开发服务器
+ds serve
 
 # 生产构建
-npx bundlekit-service build --bundler webpack --mode production
+ds build
 ```
 
-### 运行时切换打包器
+## MCP Server
 
-无需修改配置，`--bundler` 参数即可切换：
+BundleKit 提供了 MCP（Model Context Protocol）Server，可以通过 AI 工具链来创建和管理项目：
 
 ```bash
-bundlekit-service serve --bundler rspack    # Rust 实现，冷启动极速
-bundlekit-service build --bundler rollup    # 适合库打包
+# 启动 MCP Server
+bundlekit-cli-mcp
 ```
 
-### 配置文件示例
+MCP Server 提供以下工具：
 
-```ts
-// .bundlekitrc.ts
-import type { IBuildConfig } from "@bundlekit/shared-utils";
+- `create-project` — 创建新项目
+- `add-plugin` — 添加框架插件
+- `list-templates` — 列出可用模板
+- `help` — 获取帮助信息
 
-const config: IBuildConfig = {
-  bundler: "vite",
-  plugins: ["@bundlekit/plugin-react"],
-  config: {
-    development: {
-      entry: "src/index.tsx",
-      output: { dir: "dist", filename: "[name].js", formats: "umd" },
-      devServer: { host: "0.0.0.0", port: 3000 },
-    },
-    production: {
-      entry: "src/index.tsx",
-      output: { dir: "dist", filename: "[name].[contenthash:8].js", formats: "umd" },
-      js: { minify: true },
-    },
-  },
-};
+适用于与支持 MCP 协议的 AI 助手集成，实现自然语言驱动的项目脚手架。
 
-export default config;
+## 项目结构
+
+```
+bundlekit/
+├── packages/
+│   ├── bundlekit-cli/              # CLI 脚手架工具 (@bundlekit/cli)
+│   ├── bundlekit-service/          # 构建服务 (@bundlekit/service)
+│   ├── bundlekit-shared-utils/     # 共享工具库 (@bundlekit/shared-utils)
+│   ├── bundlekit-cli-mcp/          # MCP Server (@bundlekit/cli-mcp)
+│   ├── bundlekit-bundler-webpack/  # Webpack 适配器
+│   ├── bundlekit-bundler-vite/     # Vite 适配器
+│   ├── bundlekit-bundler-rollup/   # Rollup 适配器
+│   ├── bundlekit-bundler-rspack/   # Rspack 适配器
+│   ├── bundlekit-bundler-rolldown/ # Rolldown 适配器
+│   ├── bundlekit-bundler-parcel/   # Parcel 适配器
+│   ├── bundlekit-bundler-esbuild/  # esbuild 适配器
+│   ├── bundlekit-plugin-react/     # React 框架插件
+│   ├── bundlekit-plugin-vue/       # Vue 3 框架插件
+│   ├── bundlekit-plugin-svelte/    # Svelte 框架插件
+│   ├── bundlekit-plugin-angular/   # Angular 框架插件
+│   ├── bundlekit-plugin-node/      # Node.js 插件
+│   ├── bundlekit-plugin-mock/      # Mock API 插件
+│   ├── bundlekit-request/          # HTTP 请求工具 (@bundlekit/request)
+│   ├── bundlekit-docs/             # 文档站点 (dumi)
+│   └── bundlekit-docs-agent/       # 文档查询 Agent
+├── __tests__/                      # 测试目录
+│   ├── unit/                       # 单元测试
+│   └── integration/                # 集成测试 & E2E 测试
+├── scripts/                        # 构建验证脚本
+├── openspec/                       # AI Spec 配置
+└── turbo.json                      # Turborepo 任务编排
 ```
 
-### Monorepo 构建
+## 包列表
+
+| 包名 | npm 名 | 说明 |
+|------|--------|------|
+| `bundlekit-cli` | `@bundlekit/cli` | CLI 脚手架工具 |
+| `bundlekit-service` | `@bundlekit/service` | 核心构建服务 |
+| `bundlekit-shared-utils` | `@bundlekit/shared-utils` | 共享工具库 |
+| `bundlekit-cli-mcp` | `@bundlekit/cli-mcp` | MCP Server |
+| `bundlekit-bundler-webpack` | `@bundlekit/bundler-webpack` | Webpack 适配器 |
+| `bundlekit-bundler-vite` | `@bundlekit/bundler-vite` | Vite 适配器 |
+| `bundlekit-bundler-rollup` | `@bundlekit/bundler-rollup` | Rollup 适配器 |
+| `bundlekit-bundler-rspack` | `@bundlekit/bundler-rspack` | Rspack 适配器 |
+| `bundlekit-bundler-rolldown` | `@bundlekit/bundler-rolldown` | Rolldown 适配器 |
+| `bundlekit-bundler-parcel` | `@bundlekit/bundler-parcel` | Parcel 适配器 |
+| `bundlekit-bundler-esbuild` | `@bundlekit/bundler-esbuild` | esbuild 适配器 |
+| `bundlekit-plugin-react` | `@bundlekit/plugin-react` | React 框架插件 |
+| `bundlekit-plugin-vue` | `@bundlekit/plugin-vue` | Vue 3 框架插件 |
+| `bundlekit-plugin-svelte` | `@bundlekit/plugin-svelte` | Svelte 框架插件 |
+| `bundlekit-plugin-angular` | `@bundlekit/plugin-angular` | Angular 框架插件 |
+| `bundlekit-plugin-node` | `@bundlekit/plugin-node` | Node.js / TypeScript 插件 |
+| `bundlekit-plugin-mock` | `@bundlekit/plugin-mock` | Mock API 插件 |
+| `bundlekit-request` | `@bundlekit/request` | HTTP 请求工具 |
+
+## 开发
+
+### 环境要求
+
+- Node.js >= 20
+- pnpm >= 8.15.9
+
+### 安装依赖
 
 ```bash
-# 构建所有包（按依赖顺序）
-pnpm build:service
+pnpm install
+```
+
+### 构建
+
+```bash
+# 构建所有包
+pnpm build:all
 
 # 单独构建
-pnpm build:shared    # shared-utils
-pnpm build:webpack   # bundler-webpack
-pnpm build:vite      # bundler-vite
-pnpm build:rollup    # bundler-rollup
-pnpm build:rspack    # bundler-rspack
-pnpm build:parcel    # bundler-parcel
-pnpm build:esbuild   # bundler-esbuild
+pnpm build:shared      # 先构建共享工具
+pnpm build:webpack     # 构建 webpack 适配器
+pnpm build:vite        # 构建 vite 适配器
+pnpm build:rollup      # 构建 rollup 适配器
+pnpm build:rspack      # 构建 rspack 适配器
+pnpm build:parcel      # 构建 parcel 适配器
+pnpm build:esbuild     # 构建 esbuild 适配器
+pnpm build:service     # 构建服务（依赖适配器）
+pnpm build:docs        # 构建文档站点
 ```
 
-### 文档
-
-详细文档请访问 `docs/` 目录或运行本地文档站：
+### 测试
 
 ```bash
-cd docs
-pnpm install && pnpm start
+# 单元测试
+pnpm test
+
+# 集成测试
+pnpm test:integration
+
+# E2E 测试
+pnpm test:e2e
+
+# 全部测试
+pnpm test:all
 ```
 
----
-
-<a name="english"></a>
-
-## English
-
-A frontend multi-bundler toolkit — one `.bundlekitrc.ts` config drives Webpack / Vite / Rollup / Rspack / Rolldown / Parcel / esbuild.
-
-### Architecture
-
-```
-.bundlekitrc.ts
-    ↓ ConfigLoader parses config
-IBuildConfig (abstract config)
-    ↓ Plugin.apply() injects framework info
-    ↓ BundlerAdapter.transformConfig()
-Bundler-native config
-    ↓ BundlerAdapter.run()
-Build output
-```
-
-**Packages:**
-
-| Package | Description |
-|---------|-------------|
-| `@bundlekit/service` | Core service: plugin loading, config resolution, bundler dispatch |
-| `@bundlekit/cli` | CLI scaffold with `create` and `add` commands |
-| `@bundlekit/shared-utils` | Shared utilities and type definitions |
-| `@bundlekit/bundler-webpack` | Webpack 5 adapter |
-| `@bundlekit/bundler-vite` | Vite adapter |
-| `@bundlekit/bundler-rollup` | Rollup 4 adapter |
-| `@bundlekit/bundler-rspack` | Rspack adapter (Rust-based, ultra-fast) |
-| `@bundlekit/bundler-rolldown` | Rolldown adapter (experimental) |
-| `@bundlekit/bundler-parcel` | Parcel 2 adapter (zero-config) |
-| `@bundlekit/bundler-esbuild` | esbuild adapter (ultra-fast compilation) |
-| `@bundlekit/plugin-react` | React build plugin |
-| `@bundlekit/plugin-vue` | Vue 3 build plugin |
-| `@bundlekit/plugin-mock` | Mock API plugin |
-| `@bundlekit/request` | Runtime HTTP client (axios / fetch dual engine) |
-
-### Installation
-
-Requires `node >= 18.0.0`. `pnpm` is recommended.
-
-#### Option 1: scaffold (recommended)
+### 构建验证
 
 ```bash
-npx @bundlekit/cli create my-app
+# 验证包产物
+pnpm verify:pack
+
+# 验证模板完整性
+node scripts/validate-templates.mjs
 ```
 
-The cli interactively picks a template and bundler, then installs `@bundlekit/service` + framework plugin + the chosen bundler adapter into the new project.
+## 文档
 
-#### Option 2: manual integration
+文档站点源码位于 `packages/bundlekit-docs/`，基于 [dumi](https://d.umijs.org/) 构建。
 
 ```bash
-pnpm add -D @bundlekit/service @bundlekit/plugin-react @bundlekit/bundler-vite
+# 本地启动文档站点
+cd packages/bundlekit-docs
+pnpm dev
 ```
 
-### Quick Start
+在线文档：[bundlekit.harhao.workers.dev](https://bundlekit.harhao.workers.dev)
 
-```bash
-# Create a project (interactive)
-bundlekit-cli create my-app
+💬 **AI 文档助手**：[llm-chat-app.harhao.workers.dev](https://llm-chat-app.harhao.workers.dev) — 基于 RAG 的智能文档问答，支持自然语言查询 BundleKit 用法和配置
 
-# Specify template and bundler
-bundlekit-cli create my-app --template react-ts --bundler vite
+## 贡献指南
 
-# Add a plugin
-bundlekit-cli add mock
+贡献文档位于 `packages/bundlekit-docs/docs/contributing/`，包含：
 
-# Start dev server
-npx bundlekit-service serve --bundler vite
+- [贡献总览](packages/bundlekit-docs/docs/contributing/index.md)
+- [环境搭建](packages/bundlekit-docs/docs/contributing/setup.md)
+- [测试指南](packages/bundlekit-docs/docs/contributing/testing.md)
+- [发布流程](packages/bundlekit-docs/docs/contributing/release.md)
+- [新增构建器](packages/bundlekit-docs/docs/contributing/adding-bundler.md)
+- [新增插件](packages/bundlekit-docs/docs/contributing/adding-plugin.md)
 
-# Production build
-npx bundlekit-service build --bundler webpack --mode production
-```
+## CI/CD
 
-### Switch Bundler at Runtime
+项目使用 GitHub Actions 自动化：
 
-No config changes needed — just pass `--bundler`:
+- **publish-npm**：推送 `master` 分支时自动构建、测试、发布 npm 包（Changesets）
+- **create-release-pr**：自动创建版本发布 PR
+- **deploy-docs**：自动部署文档站点
 
-```bash
-bundlekit-service serve --bundler rspack    # Rust-based, ultra-fast cold start
-bundlekit-service build --bundler rollup    # Great for library builds
-```
+## Star History
 
-### Config Example
+[![Star History Chart](https://api.star-history.com/svg?repos=Harhao/bundlekit&type=Date)](https://star-history.com/#Harhao/bundlekit&Date)
 
-```ts
-// .bundlekitrc.ts
-import type { IBuildConfig } from "@bundlekit/shared-utils";
+## 许可证
 
-const config: IBuildConfig = {
-  bundler: "vite",
-  plugins: ["@bundlekit/plugin-react"],
-  config: {
-    development: {
-      entry: "src/index.tsx",
-      output: { dir: "dist", filename: "[name].js", formats: "umd" },
-      devServer: { host: "0.0.0.0", port: 3000 },
-    },
-    production: {
-      entry: "src/index.tsx",
-      output: { dir: "dist", filename: "[name].[contenthash:8].js", formats: "umd" },
-      js: { minify: true },
-    },
-  },
-};
-
-export default config;
-```
-
-### Monorepo Build
-
-```bash
-# Build all packages (dependency order handled by Turbo)
-pnpm build:service
-
-# Build individually
-pnpm build:shared    # shared-utils
-pnpm build:webpack   # bundler-webpack
-pnpm build:vite      # bundler-vite
-pnpm build:rollup    # bundler-rollup
-pnpm build:rspack    # bundler-rspack
-pnpm build:parcel    # bundler-parcel
-pnpm build:esbuild   # bundler-esbuild
-```
-
-### Documentation
-
-See the `docs/` directory or run the local docs site:
-
-```bash
-cd docs
-pnpm install && pnpm start
-```
-
-### License
-
-MIT
+[MIT](./LICENSE) © [harhao](https://github.com/Harhao)
